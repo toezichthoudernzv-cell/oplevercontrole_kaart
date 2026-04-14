@@ -10,24 +10,16 @@
 :root{--nz:#1a5276;--nzl:#2980b9;--nzd:#0e2f44}
 *{margin:0;padding:0;box-sizing:border-box}
 body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;overflow:hidden;height:100vh;width:100vw}
-
-/* Header */
 #hdr{position:fixed;top:0;left:0;right:0;z-index:1100;background:linear-gradient(135deg,var(--nzd),var(--nz));color:#fff;padding:10px 16px;display:flex;align-items:center;justify-content:space-between;height:56px;box-shadow:0 2px 8px rgba(0,0,0,.3)}
 #hdr h1{font-size:16px;font-weight:700;display:flex;align-items:center;gap:8px}
 .hbs{display:flex;gap:6px}
 .hb{background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.25);color:#fff;border-radius:8px;width:38px;height:38px;display:flex;align-items:center;justify-content:center;font-size:18px;cursor:pointer}
 .hb:hover{background:rgba(255,255,255,.3)}
-
-/* Map */
 #map{position:fixed;top:90px;bottom:0;left:0;right:0}
-
-/* Voortgang */
 #vbar{position:fixed;top:56px;left:0;right:0;z-index:1050;background:#fff;padding:8px 16px;box-shadow:0 2px 8px rgba(0,0,0,.1);display:flex;align-items:center;gap:12px;font-size:13px}
 .btr{flex:1;height:8px;background:#e0e6ed;border-radius:4px;overflow:hidden}
 .bfl{height:100%;border-radius:4px;background:linear-gradient(90deg,#27ae60,#2ecc71);transition:width .5s}
 .blb{font-weight:600;color:var(--nz);white-space:nowrap}
-
-/* Filter panel */
 #fp{position:fixed;top:56px;right:-320px;width:310px;height:calc(100vh - 56px);background:#fff;z-index:1200;box-shadow:-4px 0 20px rgba(0,0,0,.15);overflow-y:auto;padding:20px;transition:right .3s}
 #fp.open{right:0}
 .pt{font-size:15px;color:var(--nzd);margin-bottom:14px;font-weight:700}
@@ -44,18 +36,12 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;overflow
 .sts{display:flex;flex-wrap:wrap;gap:6px;margin-top:16px}
 .sta{display:flex;align-items:center;gap:5px;padding:5px 10px;border-radius:20px;font-size:12px;font-weight:600;background:#f5f7fa}
 .sta .dot{width:10px;height:10px;border-radius:50%}
-
-/* GPS */
 #gps{position:fixed;bottom:24px;left:16px;z-index:1100;background:#fff;border-radius:12px;padding:8px 14px;box-shadow:0 2px 12px rgba(0,0,0,.15);display:flex;align-items:center;gap:8px;font-size:13px;font-weight:500;cursor:pointer}
 .gd{width:10px;height:10px;border-radius:50%;background:#95a5a6}
 .gd.on{background:#27ae60;animation:pls 2s infinite}
 @keyframes pls{0%,100%{box-shadow:0 0 0 0 rgba(39,174,96,.4)}50%{box-shadow:0 0 0 8px rgba(39,174,96,0)}}
-
-/* Refresh btn */
 #rbtn{position:fixed;bottom:24px;right:16px;z-index:1100;background:var(--nz);color:#fff;border:none;border-radius:12px;padding:10px 16px;box-shadow:0 2px 12px rgba(0,0,0,.2);font-size:13px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px}
 #rbtn:hover{background:var(--nzd)}
-
-/* Popup */
 .leaflet-popup-content-wrapper{border-radius:12px!important;box-shadow:0 4px 20px rgba(0,0,0,.2)!important;padding:0!important}
 .leaflet-popup-content{margin:0!important;width:290px!important}
 .pc{padding:16px}
@@ -68,8 +54,6 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;overflow
 .pca button{flex:1;padding:8px;border:none;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer}
 .bts{background:var(--nz);color:#fff}
 .btv{background:#e8f8f0;color:#27ae60}
-
-/* Modal */
 #mdl{display:none;position:fixed;inset:0;z-index:2000;background:rgba(0,0,0,.5);align-items:center;justify-content:center}
 #mdl.open{display:flex}
 .mdc{background:#fff;border-radius:16px;width:90%;max-width:340px;padding:24px}
@@ -85,8 +69,6 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;overflow
 .mbs button{flex:1;padding:12px;border:none;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer}
 .msv{background:var(--nz);color:#fff}
 .mcn{background:#f0f4f8;color:#7f8c8d}
-
-/* List panel */
 #lpl{position:fixed;bottom:-100%;left:0;right:0;height:60vh;background:#fff;border-radius:20px 20px 0 0;z-index:1150;transition:bottom .3s;box-shadow:0 -4px 20px rgba(0,0,0,.15)}
 #lpl.open{bottom:0}
 .lhd{width:40px;height:4px;border-radius:2px;background:#ccc;margin:10px auto}
@@ -98,23 +80,26 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;overflow
 .li .lit{flex:1;min-width:0}
 .li .lin{font-size:13px;font-weight:500;color:#2c3e50;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .li .lis{font-size:11px;color:#95a5a6;margin-top:2px}
-
-/* Toast */
+.li .lis .no-loc{color:#e74c3c;font-weight:600}
 #toast{position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:var(--nzd);color:#fff;padding:10px 20px;border-radius:10px;font-size:13px;z-index:2000;opacity:0;transition:opacity .3s;pointer-events:none}
 #toast.show{opacity:1}
-
-/* Loading */
 #ldg{position:fixed;inset:0;z-index:3000;background:linear-gradient(135deg,var(--nzd),var(--nz));display:flex;flex-direction:column;align-items:center;justify-content:center;color:#fff;transition:opacity .5s}
 #ldg.done{opacity:0;pointer-events:none}
 .spin{width:48px;height:48px;border:4px solid rgba(255,255,255,.2);border-top-color:#fff;border-radius:50%;animation:spn .8s linear infinite;margin-bottom:16px}
 @keyframes spn{to{transform:rotate(360deg)}}
 #ldg p{font-size:14px;opacity:.8}
 #prg{font-size:12px;opacity:.6;margin-top:8px}
+#geocount{font-size:11px;opacity:.5;margin-top:4px}
 </style>
 </head>
 <body>
 
-<div id="ldg"><div class="spin"></div><p>Data laden uit Google Sheets...</p><p id="prg"></p></div>
+<div id="ldg">
+  <div class="spin"></div>
+  <p>Data laden uit Google Sheets...</p>
+  <p id="prg"></p>
+  <p id="geocount"></p>
+</div>
 
 <div id="hdr">
   <h1><span style="font-size:22px">🗺️</span> Oplevercontrole NZ</h1>
@@ -166,12 +151,12 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;overflow
 
 <script>
 // ═══════════════════════════════════════════
-// GOOGLE SHEETS CSV URL - HARDCODED
+// GOOGLE SHEETS CSV URL
 // ═══════════════════════════════════════════
 const CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vR_NrG6KU4uNBlnMdZ3K9Ibk5f6to8L-sc80B-SZ0XtWwYSQ2D12EaS1shEynPhLg/pub?gid=1328454275&single=true&output=csv';
 
 // ═══════════════════════════════════════════
-// STATUSSEN (kleur + symbool = colorblind-proof)
+// STATUSSEN
 // ═══════════════════════════════════════════
 const STAT = [
   { id:'todo',   l:'Nog te controleren',    i:'⏳', c:'#e67e22' },
@@ -180,7 +165,6 @@ const STAT = [
   { id:'vanaf',  l:'Ziet er vanaf',          i:'🚫', c:'#95a5a6' },
   { id:'overig', l:'Overig',                 i:'📋', c:'#8e44ad' },
 ];
-
 const gS = id => STAT.find(s => s.id === id) || STAT[0];
 
 function mapStatus(raw) {
@@ -194,27 +178,59 @@ function mapStatus(raw) {
 }
 
 // ═══════════════════════════════════════════
-// GEOCODING CACHE (localStorage)
+// GEOCODING CACHE
 // ═══════════════════════════════════════════
-const GK = 'oplev_geo_v3';
+const GK = 'oplev_geo_v4';
 let gc = {};
 try { gc = JSON.parse(localStorage.getItem(GK) || '{}'); } catch(e) {}
 function saveGC() { try { localStorage.setItem(GK, JSON.stringify(gc)); } catch(e) {} }
+
+// Verbeterde address cleaning voor Nominatim
+function cleanAddress(addr) {
+  if (!addr) return '';
+  let clean = addr.trim();
+  // "Straat 12 te Plaats" → "Straat 12, Plaats"
+  clean = clean.replace(/\s+te\s+/gi, ', ');
+  // Verwijder dubbele komma's/spaties
+  clean = clean.replace(/,\s*,/g, ',').replace(/\s+/g, ' ');
+  return clean;
+}
 
 async function geocode(addr) {
   if (!addr) return null;
   const k = addr.toLowerCase().trim();
   if (gc[k]) return gc[k];
-  try {
-    const q = addr.replace(/\s+te\s+/g, ' ') + ', Groningen, Nederland';
-    const r = await fetch('https://nominatim.openstreetmap.org/search?format=json&q=' +
-      encodeURIComponent(q) + '&limit=1&countrycodes=nl', { headers: { 'User-Agent': 'OpleverNZ/1.0' }});
-    const d = await r.json();
-    if (d && d.length) {
-      const res = { lat: +d[0].lat, lng: +d[0].lon };
-      gc[k] = res; saveGC(); return res;
+
+  // Probeer eerst het exacte adres
+  const cleaned = cleanAddress(addr);
+  const queries = [
+    cleaned + ', provincie Groningen, Nederland',
+    cleaned + ', Groningen, Nederland',
+    cleaned + ', Nederland',
+  ];
+
+  for (const q of queries) {
+    try {
+      const url = 'https://nominatim.openstreetmap.org/search?format=json&q=' +
+        encodeURIComponent(q) + '&limit=1&countrycodes=nl';
+      const r = await fetch(url, { headers: { 'User-Agent': 'OplevercontroleNZ/1.0' } });
+      const d = await r.json();
+      if (d && d.length > 0) {
+        const res = { lat: parseFloat(d[0].lat), lng: parseFloat(d[0].lon) };
+        gc[k] = res;
+        saveGC();
+        return res;
+      }
+    } catch(e) {
+      console.warn('Geocode error:', q, e);
     }
-  } catch(e) { console.warn('Geocode error:', addr, e); }
+    // Wacht tussen retries
+    await new Promise(r => setTimeout(r, 1100));
+  }
+
+  // Markeer als niet gevonden zodat we niet elke keer opnieuw proberen
+  gc[k] = null;
+  saveGC();
   return null;
 }
 
@@ -255,13 +271,10 @@ function parseLine(line) {
   return r;
 }
 
-// ═══════════════════════════════════════════
-// HELPER
-// ═══════════════════════════════════════════
 const $ = id => document.getElementById(id);
 
 // ═══════════════════════════════════════════
-// MAP SETUP
+// MAP
 // ═══════════════════════════════════════════
 const map = L.map('map', { center: [53.22, 6.56], zoom: 11, zoomControl: false });
 L.control.zoom({ position: 'topright' }).addTo(map);
@@ -281,7 +294,7 @@ function makeIcon(statusId) {
     html: `<div style="width:32px;height:32px;border-radius:50%;background:${s.c};color:#fff;
       display:flex;align-items:center;justify-content:center;font-size:16px;
       border:3px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,.3)">${s.i}</div>`,
-    iconSize: [32,32], iconAnchor: [16,16], popupAnchor: [0,-20]
+    iconSize: [32, 32], iconAnchor: [16, 16], popupAnchor: [0, -20]
   });
 }
 
@@ -324,14 +337,12 @@ function toggleF(id, on) {
 function apply() {
   const q = $('si').value.toLowerCase();
   mLayer.clearLayers();
-
   const filtered = allData.filter(item => {
     if (!activeFilters.has(item.status)) return false;
     if (q && !item.zaakonderwerp.toLowerCase().includes(q) &&
         !(item.adres || '').toLowerCase().includes(q)) return false;
     return true;
   });
-
   filtered.forEach(item => {
     if (item.lat && item.lng) {
       const marker = L.marker([item.lat, item.lng], { icon: makeIcon(item.status) })
@@ -340,7 +351,6 @@ function apply() {
       item._m = marker;
     }
   });
-
   updateStats(filtered);
   updateList(filtered);
 }
@@ -349,16 +359,13 @@ function updateStats(data) {
   const counts = {};
   STAT.forEach(s => counts[s.id] = 0);
   data.forEach(d => counts[d.status]++);
-
   const done = counts.goed + counts.vanaf;
   const total = data.length;
   const pct = total > 0 ? Math.round(done / total * 100) : 0;
-
   $('dc').textContent = done;
   $('tc').textContent = total;
   $('pct').textContent = pct + '%';
   $('bf').style.width = pct + '%';
-
   $('stsd').innerHTML = STAT.map(s =>
     `<div class="sta"><div class="dot" style="background:${s.c}"></div>${s.i} ${counts[s.id]}</div>`
   ).join('');
@@ -368,35 +375,34 @@ function updateList(data) {
   $('lc').textContent = data.length;
   $('lww').innerHTML = data.map(item => {
     const s = gS(item.status);
+    const hasLoc = item.lat && item.lng;
+    const locTag = hasLoc ? '' : '<span class="no-loc">⚠ Geen locatie</span>';
     const sub = [item.verzn ? `ZN ${item.verzn}` : '', s.l, item.datum_aanvraag || '']
       .filter(Boolean).join(' · ');
-    return `<div class="li" onclick="flyTo(${item.nr})">
+    return `<div class="li" onclick="flyTo(${item.nr})" style="${hasLoc ? '' : 'opacity:.6'}">
       <div class="lic" style="background:${s.c}">${s.i}</div>
       <div class="lit">
         <div class="lin">${item.zaakonderwerp}</div>
-        <div class="lis">${sub}</div>
+        <div class="lis">${locTag || sub}</div>
       </div></div>`;
   }).join('');
 }
 
 // ═══════════════════════════════════════════
-// STATUS MODAL
+// MODAL
 // ═══════════════════════════════════════════
 let modalNr = null, modalSt = null;
 
 function openModal(nr) {
   const item = allData.find(d => d.nr === nr);
   if (!item) return;
-  modalNr = nr;
-  modalSt = item.status;
+  modalNr = nr; modalSt = item.status;
   map.closePopup();
-
   $('moo').innerHTML = STAT.map(s => `
     <div class="mo ${s.id === item.status ? 'sel' : ''}" onclick="selSt('${s.id}',this)">
       <div class="oi" style="background:${s.c}">${s.i}</div>
       <div class="ol">${s.l}</div>
     </div>`).join('');
-
   $('mn').value = item.notitie || '';
   $('mdl').classList.add('open');
 }
@@ -412,15 +418,14 @@ function saveS() {
   if (!item) return;
   item.status = modalSt;
   item.notitie = $('mn').value;
-  closeM();
-  apply();
+  closeM(); apply();
   toast(gS(item.status).i + ' ' + gS(item.status).l);
 }
 
 function closeM() { $('mdl').classList.remove('open'); }
 
 // ═══════════════════════════════════════════
-// GPS TRACKING
+// GPS
 // ═══════════════════════════════════════════
 function startGPS() {
   if (!navigator.geolocation) return;
@@ -428,20 +433,14 @@ function startGPS() {
     const { latitude, longitude, accuracy, heading } = pos.coords;
     $('gdd').classList.add('on');
     $('gt').textContent = `GPS ±${Math.round(accuracy)}m`;
-
     const rot = heading && !isNaN(heading) ? `transform:rotate(${heading}deg)` : '';
     const icon = L.divIcon({
       className: '',
       html: `<div style="font-size:28px;${rot};filter:drop-shadow(0 2px 4px rgba(0,0,0,.3))">🚗</div>`,
-      iconSize: [28,28], iconAnchor: [14,14]
+      iconSize: [28, 28], iconAnchor: [14, 14]
     });
-
-    if (!gpsMarker) {
-      gpsMarker = L.marker([latitude, longitude], { icon, zIndexOffset: 1000 }).addTo(map);
-    } else {
-      gpsMarker.setLatLng([latitude, longitude]);
-      gpsMarker.setIcon(icon);
-    }
+    if (!gpsMarker) gpsMarker = L.marker([latitude, longitude], { icon, zIndexOffset: 1000 }).addTo(map);
+    else { gpsMarker.setLatLng([latitude, longitude]); gpsMarker.setIcon(icon); }
   }, () => { $('gt').textContent = 'GPS N/A'; },
   { enableHighAccuracy: true, maximumAge: 5000 });
 }
@@ -461,12 +460,14 @@ function flyTo(nr) {
   if (item && item.lat && item.lng) {
     map.setView([item.lat, item.lng], 16);
     if (item._m) item._m.openPopup();
+  } else {
+    toast('⚠ Geen locatie gevonden voor dit adres');
   }
   $('lpl').classList.remove('open');
 }
 
 // ═══════════════════════════════════════════
-// UI TOGGLES
+// UI
 // ═══════════════════════════════════════════
 function togP(id) {
   ['fp', 'lpl'].forEach(p => {
@@ -480,16 +481,18 @@ function toast(msg) {
   const t = $('toast');
   t.textContent = msg;
   t.classList.add('show');
-  setTimeout(() => t.classList.remove('show'), 2500);
+  setTimeout(() => t.classList.remove('show'), 3000);
 }
 
 // ═══════════════════════════════════════════
-// DATA LADEN UIT GOOGLE SHEETS
+// DATA LADEN
 // ═══════════════════════════════════════════
 async function loadData() {
   const prg = $('prg');
+  const gcnt = $('geocount');
   $('ldg').classList.remove('done');
-  prg.textContent = 'CSV ophalen uit Google Sheets...';
+  prg.textContent = 'CSV ophalen...';
+  gcnt.textContent = '';
 
   try {
     const response = await fetch(CSV_URL);
@@ -497,62 +500,91 @@ async function loadData() {
     const text = await response.text();
     const rows = parseCSV(text);
 
-    prg.textContent = `${rows.length} rijen geladen, verwerken...`;
+    prg.textContent = `${rows.length} rijen geladen`;
     allData = [];
+
+    let geoOk = 0, geoFail = 0, geoCached = 0, geoSkip = 0;
 
     for (let i = 0; i < rows.length; i++) {
       const r = rows[i];
-      // Flexibel: probeer verschillende kolomnamen
-      const nummer = r.Nummer || r.nummer || '';
-      const zaakonderwerp = r.Zaakonderwerp || r.zaakonderwerp || '';
+      const nummer = r.Nummer || '';
+      const zaakonderwerp = r.Zaakonderwerp || '';
       if (!nummer && !zaakonderwerp) continue;
 
       const item = {
         nr: parseInt(nummer) || i + 1,
-        verzn: r.Vergunning_ZN || r.vergunning_zn || '',
-        oplzn: r.Oplever_ZN || r.oplever_zn || '',
+        verzn: r.Vergunning_ZN || '',
+        oplzn: r.Oplever_ZN || '',
         zaakonderwerp: zaakonderwerp,
-        adres: r.Adres || r.adres || '',
-        lat: parseFloat(r.Lat || r.lat) || null,
-        lng: parseFloat(r.Lng || r.lng) || null,
-        status: mapStatus(r.Status || r.status),
-        datum_aanvraag: r.Datum_aanvraag || r.datum_aanvraag || '',
-        notitie: r.Notitie || r.notitie || '',
+        adres: r.Adres || '',
+        lat: parseFloat(r.Lat) || null,
+        lng: parseFloat(r.Lng) || null,
+        status: mapStatus(r.Status),
+        datum_aanvraag: r.Datum_aanvraag || '',
+        notitie: r.Notitie || '',
         _m: null,
       };
 
-      // Auto-geocode als geen lat/lng maar wel adres
-      if ((!item.lat || !item.lng) && item.adres) {
-        prg.textContent = `Geocoderen ${i + 1}/${rows.length}: ${item.adres.substring(0, 35)}...`;
-        const geo = await geocode(item.adres);
-        if (geo) { item.lat = geo.lat; item.lng = geo.lng; }
-        // Rate limit Nominatim (1 req/sec) — alleen als niet gecached
-        if (!gc[item.adres.toLowerCase().trim()]) {
+      // Heeft al coordinaten uit de sheet?
+      if (item.lat && item.lng) {
+        geoSkip++;
+      }
+      // Geen coords maar wel adres? Geocoden!
+      else if (item.adres) {
+        const cacheKey = item.adres.toLowerCase().trim();
+
+        // Check cache (inclusief null = eerder niet gevonden)
+        if (gc[cacheKey] !== undefined) {
+          if (gc[cacheKey]) {
+            item.lat = gc[cacheKey].lat;
+            item.lng = gc[cacheKey].lng;
+            geoCached++;
+          } else {
+            geoFail++;
+          }
+        } else {
+          // Nieuw adres, geocoden
+          prg.textContent = `Geocoderen ${i + 1}/${rows.length}...`;
+          gcnt.textContent = `${item.adres.substring(0, 40)}`;
+
+          const result = await geocode(item.adres);
+          if (result) {
+            item.lat = result.lat;
+            item.lng = result.lng;
+            geoOk++;
+          } else {
+            geoFail++;
+          }
+          // Rate limit alleen voor niet-gecachte requests
           await new Promise(resolve => setTimeout(resolve, 1100));
         }
+      } else {
+        geoFail++; // Geen adres en geen coords
       }
 
       allData.push(item);
     }
 
-    const geocoded = allData.filter(d => d.lat && d.lng).length;
-    prg.textContent = `${allData.length} controles, ${geocoded} op kaart`;
+    const totalOnMap = allData.filter(d => d.lat && d.lng).length;
+    prg.textContent = `${totalOnMap}/${allData.length} op kaart`;
+    gcnt.textContent = geoFail > 0 ? `${geoFail} niet gevonden` : '';
+
+    if (geoFail > 0) {
+      console.log('Niet gevonden adressen:');
+      allData.filter(d => !d.lat && d.adres).forEach(d =>
+        console.log(`  ${d.nr}: "${d.adres}"`));
+    }
 
   } catch(e) {
-    console.error('Fout bij laden:', e);
-    prg.textContent = 'Fout bij laden! Controleer of de Sheet gepubliceerd is als CSV.';
-    await new Promise(r => setTimeout(r, 3000));
+    console.error('Laden mislukt:', e);
+    prg.textContent = 'Fout bij laden! Check of Sheet is gepubliceerd als CSV.';
+    gcnt.textContent = e.message;
+    await new Promise(r => setTimeout(r, 4000));
   }
 
-  // Render
   apply();
-
-  // Zoom naar alle markers
   const coords = allData.filter(d => d.lat && d.lng).map(d => [d.lat, d.lng]);
-  if (coords.length > 0) {
-    map.fitBounds(L.latLngBounds(coords).pad(0.1));
-  }
-
+  if (coords.length > 0) map.fitBounds(L.latLngBounds(coords).pad(0.1));
   $('ldg').classList.add('done');
 }
 
