@@ -1,0 +1,569 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Oplevercontrole Kaart - Noorderzijlvest</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<style>
+:root{--nz:#1a5276;--nzl:#2980b9;--nzd:#0e2f44}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;overflow:hidden;height:100vh;width:100vw}
+
+/* Header */
+#hdr{position:fixed;top:0;left:0;right:0;z-index:1100;background:linear-gradient(135deg,var(--nzd),var(--nz));color:#fff;padding:10px 16px;display:flex;align-items:center;justify-content:space-between;height:56px;box-shadow:0 2px 8px rgba(0,0,0,.3)}
+#hdr h1{font-size:16px;font-weight:700;display:flex;align-items:center;gap:8px}
+.hbs{display:flex;gap:6px}
+.hb{background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.25);color:#fff;border-radius:8px;width:38px;height:38px;display:flex;align-items:center;justify-content:center;font-size:18px;cursor:pointer}
+.hb:hover{background:rgba(255,255,255,.3)}
+
+/* Map */
+#map{position:fixed;top:90px;bottom:0;left:0;right:0}
+
+/* Voortgang */
+#vbar{position:fixed;top:56px;left:0;right:0;z-index:1050;background:#fff;padding:8px 16px;box-shadow:0 2px 8px rgba(0,0,0,.1);display:flex;align-items:center;gap:12px;font-size:13px}
+.btr{flex:1;height:8px;background:#e0e6ed;border-radius:4px;overflow:hidden}
+.bfl{height:100%;border-radius:4px;background:linear-gradient(90deg,#27ae60,#2ecc71);transition:width .5s}
+.blb{font-weight:600;color:var(--nz);white-space:nowrap}
+
+/* Filter panel */
+#fp{position:fixed;top:56px;right:-320px;width:310px;height:calc(100vh - 56px);background:#fff;z-index:1200;box-shadow:-4px 0 20px rgba(0,0,0,.15);overflow-y:auto;padding:20px;transition:right .3s}
+#fp.open{right:0}
+.pt{font-size:15px;color:var(--nzd);margin-bottom:14px;font-weight:700}
+.fg{margin-bottom:20px}
+.fg>label{font-size:12px;color:#7f8c8d;text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:8px;font-weight:600}
+.sf{display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:8px;cursor:pointer;margin-bottom:4px;font-size:14px}
+.sf:hover{background:#f5f7fa}
+.sf input{display:none}
+.sf .ck{width:22px;height:22px;border-radius:6px;border:2px solid #ccc;display:flex;align-items:center;justify-content:center;font-size:14px}
+.sf input:checked+.ck{border-color:var(--nz);background:var(--nz);color:#fff}
+.sf .sw{width:14px;height:14px;border-radius:4px}
+.sb{width:100%;padding:10px 12px;border:2px solid #e0e6ed;border-radius:8px;font-size:14px;outline:none}
+.sb:focus{border-color:var(--nzl)}
+.sts{display:flex;flex-wrap:wrap;gap:6px;margin-top:16px}
+.sta{display:flex;align-items:center;gap:5px;padding:5px 10px;border-radius:20px;font-size:12px;font-weight:600;background:#f5f7fa}
+.sta .dot{width:10px;height:10px;border-radius:50%}
+
+/* GPS */
+#gps{position:fixed;bottom:24px;left:16px;z-index:1100;background:#fff;border-radius:12px;padding:8px 14px;box-shadow:0 2px 12px rgba(0,0,0,.15);display:flex;align-items:center;gap:8px;font-size:13px;font-weight:500;cursor:pointer}
+.gd{width:10px;height:10px;border-radius:50%;background:#95a5a6}
+.gd.on{background:#27ae60;animation:pls 2s infinite}
+@keyframes pls{0%,100%{box-shadow:0 0 0 0 rgba(39,174,96,.4)}50%{box-shadow:0 0 0 8px rgba(39,174,96,0)}}
+
+/* Refresh btn */
+#rbtn{position:fixed;bottom:24px;right:16px;z-index:1100;background:var(--nz);color:#fff;border:none;border-radius:12px;padding:10px 16px;box-shadow:0 2px 12px rgba(0,0,0,.2);font-size:13px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px}
+#rbtn:hover{background:var(--nzd)}
+
+/* Popup */
+.leaflet-popup-content-wrapper{border-radius:12px!important;box-shadow:0 4px 20px rgba(0,0,0,.2)!important;padding:0!important}
+.leaflet-popup-content{margin:0!important;width:290px!important}
+.pc{padding:16px}
+.pcs{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:20px;font-size:11px;font-weight:700;text-transform:uppercase;margin-bottom:10px}
+.pc h4{font-size:13px;color:#2c3e50;line-height:1.4;margin-bottom:8px}
+.pcm{font-size:12px;color:#7f8c8d;margin-bottom:3px}
+.pcm strong{color:#2c3e50}
+.pcd{display:inline-flex;align-items:center;gap:4px;font-size:11px;color:#7f8c8d;background:#f5f7fa;padding:3px 8px;border-radius:12px;margin-top:6px}
+.pca{display:flex;gap:6px;margin-top:12px;padding-top:12px;border-top:1px solid #eee}
+.pca button{flex:1;padding:8px;border:none;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer}
+.bts{background:var(--nz);color:#fff}
+.btv{background:#e8f8f0;color:#27ae60}
+
+/* Modal */
+#mdl{display:none;position:fixed;inset:0;z-index:2000;background:rgba(0,0,0,.5);align-items:center;justify-content:center}
+#mdl.open{display:flex}
+.mdc{background:#fff;border-radius:16px;width:90%;max-width:340px;padding:24px}
+.mdc h3{font-size:16px;margin-bottom:16px;color:var(--nzd)}
+.mo{display:flex;align-items:center;gap:10px;padding:12px;border-radius:10px;cursor:pointer;margin-bottom:6px;border:2px solid transparent}
+.mo:hover{background:#f5f7fa}
+.mo.sel{border-color:var(--nz);background:#ebf5fb}
+.mo .oi{width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:16px;color:#fff}
+.mo .ol{font-size:14px;font-weight:500}
+.mta{width:100%;margin-top:12px;padding:10px;border:2px solid #e0e6ed;border-radius:8px;font-size:13px;resize:vertical;min-height:60px;font-family:inherit;outline:none}
+.mta:focus{border-color:var(--nzl)}
+.mbs{display:flex;gap:8px;margin-top:16px}
+.mbs button{flex:1;padding:12px;border:none;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer}
+.msv{background:var(--nz);color:#fff}
+.mcn{background:#f0f4f8;color:#7f8c8d}
+
+/* List panel */
+#lpl{position:fixed;bottom:-100%;left:0;right:0;height:60vh;background:#fff;border-radius:20px 20px 0 0;z-index:1150;transition:bottom .3s;box-shadow:0 -4px 20px rgba(0,0,0,.15)}
+#lpl.open{bottom:0}
+.lhd{width:40px;height:4px;border-radius:2px;background:#ccc;margin:10px auto}
+.ltt{padding:8px 20px 12px;border-bottom:1px solid #eee;font-size:15px;font-weight:700;color:var(--nzd)}
+.lwp{overflow-y:auto;height:calc(60vh - 60px);padding:8px 16px}
+.li{display:flex;align-items:center;gap:10px;padding:12px;border-radius:10px;margin-bottom:4px;cursor:pointer}
+.li:hover{background:#f5f7fa}
+.li .lic{width:36px;height:36px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:16px;color:#fff;flex-shrink:0}
+.li .lit{flex:1;min-width:0}
+.li .lin{font-size:13px;font-weight:500;color:#2c3e50;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.li .lis{font-size:11px;color:#95a5a6;margin-top:2px}
+
+/* Toast */
+#toast{position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:var(--nzd);color:#fff;padding:10px 20px;border-radius:10px;font-size:13px;z-index:2000;opacity:0;transition:opacity .3s;pointer-events:none}
+#toast.show{opacity:1}
+
+/* Loading */
+#ldg{position:fixed;inset:0;z-index:3000;background:linear-gradient(135deg,var(--nzd),var(--nz));display:flex;flex-direction:column;align-items:center;justify-content:center;color:#fff;transition:opacity .5s}
+#ldg.done{opacity:0;pointer-events:none}
+.spin{width:48px;height:48px;border:4px solid rgba(255,255,255,.2);border-top-color:#fff;border-radius:50%;animation:spn .8s linear infinite;margin-bottom:16px}
+@keyframes spn{to{transform:rotate(360deg)}}
+#ldg p{font-size:14px;opacity:.8}
+#prg{font-size:12px;opacity:.6;margin-top:8px}
+</style>
+</head>
+<body>
+
+<div id="ldg"><div class="spin"></div><p>Data laden uit Google Sheets...</p><p id="prg"></p></div>
+
+<div id="hdr">
+  <h1><span style="font-size:22px">🗺️</span> Oplevercontrole NZ</h1>
+  <div class="hbs">
+    <div class="hb" onclick="togP('lpl')" title="Lijst">📋</div>
+    <div class="hb" onclick="togP('fp')" title="Filters">⚙️</div>
+    <div class="hb" onclick="goGPS()" title="Mijn locatie">📍</div>
+  </div>
+</div>
+
+<div id="vbar">
+  <span class="blb"><span id="dc">0</span>/<span id="tc">0</span></span>
+  <div class="btr"><div class="bfl" id="bf"></div></div>
+  <span class="blb" id="pct">0%</span>
+</div>
+
+<div id="map"></div>
+
+<div id="gps" onclick="goGPS()"><div class="gd" id="gdd"></div><span id="gt">GPS uit</span></div>
+<button id="rbtn" onclick="loadData()">🔄 Vernieuwen</button>
+
+<div id="fp">
+  <h3 class="pt">Filters</h3>
+  <div class="fg"><label>Zoek</label><input type="text" class="sb" id="si" placeholder="Zoek op onderwerp of adres..." oninput="apply()"></div>
+  <div class="fg"><label>Status</label><div id="sfl"></div></div>
+  <div class="sts" id="stsd"></div>
+</div>
+
+<div id="lpl">
+  <div class="lhd"></div>
+  <div class="ltt">Controles (<span id="lc">0</span>)</div>
+  <div class="lwp" id="lww"></div>
+</div>
+
+<div id="mdl">
+  <div class="mdc">
+    <h3>Status wijzigen</h3>
+    <div id="moo"></div>
+    <label style="display:block;margin-top:12px;font-size:12px;color:#7f8c8d;font-weight:600">NOTITIE</label>
+    <textarea class="mta" id="mn" placeholder="Optionele notitie..."></textarea>
+    <div class="mbs">
+      <button class="mcn" onclick="closeM()">Annuleren</button>
+      <button class="msv" onclick="saveS()">Opslaan</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+// ═══════════════════════════════════════════
+// GOOGLE SHEETS CSV URL - HARDCODED
+// ═══════════════════════════════════════════
+const CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vR_NrG6KU4uNBlnMdZ3K9Ibk5f6to8L-sc80B-SZ0XtWwYSQ2D12EaS1shEynPhLg/pub?gid=1328454275&single=true&output=csv';
+
+// ═══════════════════════════════════════════
+// STATUSSEN (kleur + symbool = colorblind-proof)
+// ═══════════════════════════════════════════
+const STAT = [
+  { id:'todo',   l:'Nog te controleren',    i:'⏳', c:'#e67e22' },
+  { id:'bezig',  l:'Niet begonnen (bezig)',  i:'🔨', c:'#3498db' },
+  { id:'goed',   l:'Goedgekeurd',           i:'✅', c:'#27ae60' },
+  { id:'vanaf',  l:'Ziet er vanaf',          i:'🚫', c:'#95a5a6' },
+  { id:'overig', l:'Overig',                 i:'📋', c:'#8e44ad' },
+];
+
+const gS = id => STAT.find(s => s.id === id) || STAT[0];
+
+function mapStatus(raw) {
+  if (!raw) return 'todo';
+  const s = raw.toLowerCase().trim();
+  if (s === 'goedgekeurd') return 'goed';
+  if (s === 'ziet er vanaf') return 'vanaf';
+  if (s.includes('niet begonnen') || s.includes('bezig')) return 'bezig';
+  if (s === 'overig') return 'overig';
+  return 'todo';
+}
+
+// ═══════════════════════════════════════════
+// GEOCODING CACHE (localStorage)
+// ═══════════════════════════════════════════
+const GK = 'oplev_geo_v3';
+let gc = {};
+try { gc = JSON.parse(localStorage.getItem(GK) || '{}'); } catch(e) {}
+function saveGC() { try { localStorage.setItem(GK, JSON.stringify(gc)); } catch(e) {} }
+
+async function geocode(addr) {
+  if (!addr) return null;
+  const k = addr.toLowerCase().trim();
+  if (gc[k]) return gc[k];
+  try {
+    const q = addr.replace(/\s+te\s+/g, ' ') + ', Groningen, Nederland';
+    const r = await fetch('https://nominatim.openstreetmap.org/search?format=json&q=' +
+      encodeURIComponent(q) + '&limit=1&countrycodes=nl', { headers: { 'User-Agent': 'OpleverNZ/1.0' }});
+    const d = await r.json();
+    if (d && d.length) {
+      const res = { lat: +d[0].lat, lng: +d[0].lon };
+      gc[k] = res; saveGC(); return res;
+    }
+  } catch(e) { console.warn('Geocode error:', addr, e); }
+  return null;
+}
+
+// ═══════════════════════════════════════════
+// CSV PARSER
+// ═══════════════════════════════════════════
+function parseCSV(text) {
+  const lines = text.split('\n');
+  if (lines.length < 2) return [];
+  const headers = parseLine(lines[0]);
+  const rows = [];
+  for (let i = 1; i < lines.length; i++) {
+    const l = lines[i].trim();
+    if (!l) continue;
+    const vals = parseLine(l);
+    const obj = {};
+    headers.forEach((h, j) => { obj[h.trim()] = (vals[j] || '').trim(); });
+    rows.push(obj);
+  }
+  return rows;
+}
+
+function parseLine(line) {
+  const r = []; let c = '', q = false;
+  for (let i = 0; i < line.length; i++) {
+    const ch = line[i];
+    if (q) {
+      if (ch === '"' && line[i+1] === '"') { c += '"'; i++; }
+      else if (ch === '"') q = false;
+      else c += ch;
+    } else {
+      if (ch === '"') q = true;
+      else if (ch === ',') { r.push(c); c = ''; }
+      else c += ch;
+    }
+  }
+  r.push(c);
+  return r;
+}
+
+// ═══════════════════════════════════════════
+// HELPER
+// ═══════════════════════════════════════════
+const $ = id => document.getElementById(id);
+
+// ═══════════════════════════════════════════
+// MAP SETUP
+// ═══════════════════════════════════════════
+const map = L.map('map', { center: [53.22, 6.56], zoom: 11, zoomControl: false });
+L.control.zoom({ position: 'topright' }).addTo(map);
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+  attribution: '&copy; OpenStreetMap', maxZoom: 19
+}).addTo(map);
+
+let mLayer = L.layerGroup().addTo(map);
+let allData = [];
+let gpsMarker = null;
+let activeFilters = new Set(STAT.map(s => s.id));
+
+function makeIcon(statusId) {
+  const s = gS(statusId);
+  return L.divIcon({
+    className: '',
+    html: `<div style="width:32px;height:32px;border-radius:50%;background:${s.c};color:#fff;
+      display:flex;align-items:center;justify-content:center;font-size:16px;
+      border:3px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,.3)">${s.i}</div>`,
+    iconSize: [32,32], iconAnchor: [16,16], popupAnchor: [0,-20]
+  });
+}
+
+function makePopup(item) {
+  const s = gS(item.status);
+  const datumHtml = item.datum_aanvraag
+    ? `<div class="pcd">📅 Aangevraagd: ${item.datum_aanvraag}</div>` : '';
+  return `<div class="pc">
+    <div class="pcs" style="background:${s.c}20;color:${s.c}">${s.i} ${s.l}</div>
+    <h4>${item.zaakonderwerp}</h4>
+    <div class="pcm">Vergunning ZN: <strong>${item.verzn || '-'}</strong></div>
+    <div class="pcm">Oplever ZN: <strong>${item.oplzn || '-'}</strong></div>
+    <div class="pcm">Adres: <strong>${item.adres || '-'}</strong></div>
+    ${datumHtml}
+    ${item.notitie ? `<div class="pcm" style="margin-top:6px;font-style:italic">"${item.notitie}"</div>` : ''}
+    <div class="pca">
+      <button class="bts" onclick="openModal(${item.nr})">Status wijzigen</button>
+      <button class="btv" onclick="navTo(${item.lat},${item.lng})">🧭 Route</button>
+    </div></div>`;
+}
+
+// ═══════════════════════════════════════════
+// FILTERS
+// ═══════════════════════════════════════════
+function buildFilters() {
+  $('sfl').innerHTML = STAT.map(s => `
+    <label class="sf">
+      <input type="checkbox" checked value="${s.id}" onchange="toggleF('${s.id}',this.checked)">
+      <span class="ck">✓</span>
+      <span class="sw" style="background:${s.c}"></span>
+      <span>${s.i} ${s.l}</span>
+    </label>`).join('');
+}
+
+function toggleF(id, on) {
+  if (on) activeFilters.add(id); else activeFilters.delete(id);
+  apply();
+}
+
+function apply() {
+  const q = $('si').value.toLowerCase();
+  mLayer.clearLayers();
+
+  const filtered = allData.filter(item => {
+    if (!activeFilters.has(item.status)) return false;
+    if (q && !item.zaakonderwerp.toLowerCase().includes(q) &&
+        !(item.adres || '').toLowerCase().includes(q)) return false;
+    return true;
+  });
+
+  filtered.forEach(item => {
+    if (item.lat && item.lng) {
+      const marker = L.marker([item.lat, item.lng], { icon: makeIcon(item.status) })
+        .bindPopup(makePopup(item));
+      mLayer.addLayer(marker);
+      item._m = marker;
+    }
+  });
+
+  updateStats(filtered);
+  updateList(filtered);
+}
+
+function updateStats(data) {
+  const counts = {};
+  STAT.forEach(s => counts[s.id] = 0);
+  data.forEach(d => counts[d.status]++);
+
+  const done = counts.goed + counts.vanaf;
+  const total = data.length;
+  const pct = total > 0 ? Math.round(done / total * 100) : 0;
+
+  $('dc').textContent = done;
+  $('tc').textContent = total;
+  $('pct').textContent = pct + '%';
+  $('bf').style.width = pct + '%';
+
+  $('stsd').innerHTML = STAT.map(s =>
+    `<div class="sta"><div class="dot" style="background:${s.c}"></div>${s.i} ${counts[s.id]}</div>`
+  ).join('');
+}
+
+function updateList(data) {
+  $('lc').textContent = data.length;
+  $('lww').innerHTML = data.map(item => {
+    const s = gS(item.status);
+    const sub = [item.verzn ? `ZN ${item.verzn}` : '', s.l, item.datum_aanvraag || '']
+      .filter(Boolean).join(' · ');
+    return `<div class="li" onclick="flyTo(${item.nr})">
+      <div class="lic" style="background:${s.c}">${s.i}</div>
+      <div class="lit">
+        <div class="lin">${item.zaakonderwerp}</div>
+        <div class="lis">${sub}</div>
+      </div></div>`;
+  }).join('');
+}
+
+// ═══════════════════════════════════════════
+// STATUS MODAL
+// ═══════════════════════════════════════════
+let modalNr = null, modalSt = null;
+
+function openModal(nr) {
+  const item = allData.find(d => d.nr === nr);
+  if (!item) return;
+  modalNr = nr;
+  modalSt = item.status;
+  map.closePopup();
+
+  $('moo').innerHTML = STAT.map(s => `
+    <div class="mo ${s.id === item.status ? 'sel' : ''}" onclick="selSt('${s.id}',this)">
+      <div class="oi" style="background:${s.c}">${s.i}</div>
+      <div class="ol">${s.l}</div>
+    </div>`).join('');
+
+  $('mn').value = item.notitie || '';
+  $('mdl').classList.add('open');
+}
+
+function selSt(id, el) {
+  modalSt = id;
+  document.querySelectorAll('.mo').forEach(o => o.classList.remove('sel'));
+  el.classList.add('sel');
+}
+
+function saveS() {
+  const item = allData.find(d => d.nr === modalNr);
+  if (!item) return;
+  item.status = modalSt;
+  item.notitie = $('mn').value;
+  closeM();
+  apply();
+  toast(gS(item.status).i + ' ' + gS(item.status).l);
+}
+
+function closeM() { $('mdl').classList.remove('open'); }
+
+// ═══════════════════════════════════════════
+// GPS TRACKING
+// ═══════════════════════════════════════════
+function startGPS() {
+  if (!navigator.geolocation) return;
+  navigator.geolocation.watchPosition(pos => {
+    const { latitude, longitude, accuracy, heading } = pos.coords;
+    $('gdd').classList.add('on');
+    $('gt').textContent = `GPS ±${Math.round(accuracy)}m`;
+
+    const rot = heading && !isNaN(heading) ? `transform:rotate(${heading}deg)` : '';
+    const icon = L.divIcon({
+      className: '',
+      html: `<div style="font-size:28px;${rot};filter:drop-shadow(0 2px 4px rgba(0,0,0,.3))">🚗</div>`,
+      iconSize: [28,28], iconAnchor: [14,14]
+    });
+
+    if (!gpsMarker) {
+      gpsMarker = L.marker([latitude, longitude], { icon, zIndexOffset: 1000 }).addTo(map);
+    } else {
+      gpsMarker.setLatLng([latitude, longitude]);
+      gpsMarker.setIcon(icon);
+    }
+  }, () => { $('gt').textContent = 'GPS N/A'; },
+  { enableHighAccuracy: true, maximumAge: 5000 });
+}
+
+function goGPS() {
+  if (gpsMarker) map.setView(gpsMarker.getLatLng(), 15);
+  else navigator.geolocation?.getCurrentPosition(p =>
+    map.setView([p.coords.latitude, p.coords.longitude], 15));
+}
+
+function navTo(lat, lng) {
+  window.open(`https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`, '_blank');
+}
+
+function flyTo(nr) {
+  const item = allData.find(d => d.nr === nr);
+  if (item && item.lat && item.lng) {
+    map.setView([item.lat, item.lng], 16);
+    if (item._m) item._m.openPopup();
+  }
+  $('lpl').classList.remove('open');
+}
+
+// ═══════════════════════════════════════════
+// UI TOGGLES
+// ═══════════════════════════════════════════
+function togP(id) {
+  ['fp', 'lpl'].forEach(p => {
+    const el = $(p);
+    if (p === id) el.classList.toggle('open');
+    else el.classList.remove('open');
+  });
+}
+
+function toast(msg) {
+  const t = $('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+// ═══════════════════════════════════════════
+// DATA LADEN UIT GOOGLE SHEETS
+// ═══════════════════════════════════════════
+async function loadData() {
+  const prg = $('prg');
+  $('ldg').classList.remove('done');
+  prg.textContent = 'CSV ophalen uit Google Sheets...';
+
+  try {
+    const response = await fetch(CSV_URL);
+    if (!response.ok) throw new Error('HTTP ' + response.status);
+    const text = await response.text();
+    const rows = parseCSV(text);
+
+    prg.textContent = `${rows.length} rijen geladen, verwerken...`;
+    allData = [];
+
+    for (let i = 0; i < rows.length; i++) {
+      const r = rows[i];
+      // Flexibel: probeer verschillende kolomnamen
+      const nummer = r.Nummer || r.nummer || '';
+      const zaakonderwerp = r.Zaakonderwerp || r.zaakonderwerp || '';
+      if (!nummer && !zaakonderwerp) continue;
+
+      const item = {
+        nr: parseInt(nummer) || i + 1,
+        verzn: r.Vergunning_ZN || r.vergunning_zn || '',
+        oplzn: r.Oplever_ZN || r.oplever_zn || '',
+        zaakonderwerp: zaakonderwerp,
+        adres: r.Adres || r.adres || '',
+        lat: parseFloat(r.Lat || r.lat) || null,
+        lng: parseFloat(r.Lng || r.lng) || null,
+        status: mapStatus(r.Status || r.status),
+        datum_aanvraag: r.Datum_aanvraag || r.datum_aanvraag || '',
+        notitie: r.Notitie || r.notitie || '',
+        _m: null,
+      };
+
+      // Auto-geocode als geen lat/lng maar wel adres
+      if ((!item.lat || !item.lng) && item.adres) {
+        prg.textContent = `Geocoderen ${i + 1}/${rows.length}: ${item.adres.substring(0, 35)}...`;
+        const geo = await geocode(item.adres);
+        if (geo) { item.lat = geo.lat; item.lng = geo.lng; }
+        // Rate limit Nominatim (1 req/sec) — alleen als niet gecached
+        if (!gc[item.adres.toLowerCase().trim()]) {
+          await new Promise(resolve => setTimeout(resolve, 1100));
+        }
+      }
+
+      allData.push(item);
+    }
+
+    const geocoded = allData.filter(d => d.lat && d.lng).length;
+    prg.textContent = `${allData.length} controles, ${geocoded} op kaart`;
+
+  } catch(e) {
+    console.error('Fout bij laden:', e);
+    prg.textContent = 'Fout bij laden! Controleer of de Sheet gepubliceerd is als CSV.';
+    await new Promise(r => setTimeout(r, 3000));
+  }
+
+  // Render
+  apply();
+
+  // Zoom naar alle markers
+  const coords = allData.filter(d => d.lat && d.lng).map(d => [d.lat, d.lng]);
+  if (coords.length > 0) {
+    map.fitBounds(L.latLngBounds(coords).pad(0.1));
+  }
+
+  $('ldg').classList.add('done');
+}
+
+// ═══════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════
+buildFilters();
+map.on('click', () => { $('fp').classList.remove('open'); });
+$('mdl').addEventListener('click', e => { if (e.target === e.currentTarget) closeM(); });
+startGPS();
+loadData();
+</script>
+</body>
+</html>
