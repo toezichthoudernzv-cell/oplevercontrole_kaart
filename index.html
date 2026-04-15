@@ -184,11 +184,12 @@ const CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vR_NrG6KU4uNBln
 // STATUSSEN
 // ═══════════════════════════════════════════
 const STAT = [
-  { id:'todo',  l:'Nog te controleren',   i:'⏳', c:'#e67e22' },
-  { id:'bezig', l:'Niet begonnen (bezig)', i:'🔨', c:'#3498db' },
-  { id:'goed',  l:'Goedgekeurd',          i:'✅', c:'#27ae60' },
-  { id:'vanaf', l:'Ziet er vanaf',         i:'🚫', c:'#95a5a6' },
-  { id:'overig',l:'Overig',                i:'📋', c:'#8e44ad' },
+  { id:'todo',      l:'Nog te controleren',    i:'⏳', c:'#e67e22' },
+  { id:'bezig',     l:'Niet begonnen (bezig)',  i:'🔨', c:'#3498db' },
+  { id:'begonnen',  l:'Zijn begonnen',          i:'🚧', c:'#2196F3' },
+  { id:'goed',      l:'Goedgekeurd',            i:'✅', c:'#27ae60' },
+  { id:'vanaf',     l:'Ziet er vanaf',           i:'🚫', c:'#95a5a6' },
+  { id:'overig',    l:'Overig',                  i:'📋', c:'#8e44ad' },
 ];
 const gS = id => STAT.find(s => s.id === id) || STAT[0];
 function mapStatus(raw) {
@@ -196,6 +197,7 @@ function mapStatus(raw) {
   const s = raw.toLowerCase().trim();
   if (s === 'goedgekeurd') return 'goed';
   if (s === 'ziet er vanaf') return 'vanaf';
+  if (s === 'zijn begonnen') return 'begonnen';
   if (s.includes('niet begonnen') || s.includes('bezig')) return 'bezig';
   if (s === 'overig') return 'overig';
   return 'todo';
@@ -283,11 +285,12 @@ function makeIcon(sid) {
 function makePopup(item) {
   const s = gS(item.status);
   const dt = item.datum_aanvraag ? `<div class="pcd">📅 Aangevraagd: ${item.datum_aanvraag}</div>` : '';
+  const dc = item.datum_controle ? `<div class="pcd">🔍 Gecontroleerd: ${item.datum_controle}</div>` : '';
   return `<div class="pc"><div class="pcs" style="background:${s.c}20;color:${s.c}">${s.i} ${s.l}</div>
     <h4>${item.zaakonderwerp}</h4>
     <div class="pcm">Vergunning ZN: <strong>${item.verzn||'-'}</strong></div>
     <div class="pcm">Oplever ZN: <strong>${item.oplzn||'-'}</strong></div>
-    <div class="pcm">Adres: <strong>${item.adres||'-'}</strong></div>${dt}
+    <div class="pcm">Adres: <strong>${item.adres||'-'}</strong></div>${dt}${dc}
     ${item.notitie?`<div class="pcm" style="margin-top:6px;font-style:italic">"${item.notitie}"</div>`:''}
     <div class="pca"><button class="bts" onclick="openModal(${item.nr})">Status wijzigen</button>
     <button class="btv" onclick="navTo(${item.lat},${item.lng})">🧭 Route</button></div></div>`;
@@ -474,7 +477,8 @@ async function loadData() {
         zaakonderwerp: r.Zaakonderwerp || '', adres: r.Adres || '',
         lat: parseDec(r.Lat), lng: parseDec(r.Lng),
         status: mapStatus(r.Status),
-        datum_aanvraag: r.Datum_aanvraag || '', notitie: r.Notitie || '', _m: null,
+        datum_aanvraag: r.Datum_aanvraag || '', datum_controle: r.Datum_controle || '',
+        notitie: r.Notitie || '', controleur: r.Controleur || '', _m: null,
       };
 
       // Coordinaten gaan voor, anders geocoden
@@ -540,7 +544,8 @@ async function loadCSVFile(file) {
       zaakonderwerp: r.Zaakonderwerp || '', adres: r.Adres || '',
       lat: parseDec(r.Lat), lng: parseDec(r.Lng),
       status: mapStatus(r.Status),
-      datum_aanvraag: r.Datum_aanvraag || '', notitie: r.Notitie || '', _m: null,
+      datum_aanvraag: r.Datum_aanvraag || '', datum_controle: r.Datum_controle || '',
+      notitie: r.Notitie || '', controleur: r.Controleur || '', _m: null,
     };
     if (item.lat && item.lng) { /* klaar */ }
     else if (item.adres) {
