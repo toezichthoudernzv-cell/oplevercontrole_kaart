@@ -163,6 +163,9 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;overflow
   <div class="fg"><label>Zoek</label><input type="text" class="sb" id="si" placeholder="Zoek op onderwerp of adres..." oninput="apply()"></div>
   <div class="fg"><label>Status</label><div id="sfl"></div></div>
   <div class="sts" id="stsd"></div>
+  <div style="margin-top:24px;padding-top:16px;border-top:1px solid #eee">
+    <button onclick="clearAllCache()" style="width:100%;padding:12px;border:none;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;background:#fee2e2;color:#dc2626">🗑️ Cache wissen & herladen</button>
+  </div>
 </div>
 
 <div id="lpl"><div class="lhd"></div><div class="ltt">Controles (<span id="lc">0</span>)</div><div class="lwp" id="lww"></div></div>
@@ -443,6 +446,7 @@ function flyTo(nr) { const i = allData.find(d => d.nr === nr); if (i?.lat) { map
 // UI
 function togP(id) { ['fp','lpl'].forEach(p => { const el = $(p); if (p===id) el.classList.toggle('open'); else el.classList.remove('open'); }); }
 function toast(m) { const t = $('toast'); t.textContent = m; t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 3000); }
+function clearAllCache() { try { localStorage.clear(); } catch(e) {} location.reload(); }
 
 // ═══════════════════════════════════════════
 // DATA LADEN
@@ -474,7 +478,7 @@ async function loadData() {
       };
 
       // Coordinaten gaan voor, anders geocoden
-      if (item.lat && item.lng) { /* klaar */ }
+      if (item.lat && item.lng) { console.log(`✅ #${item.nr} coords uit sheet: ${item.lat}, ${item.lng}`); }
       else if (item.adres) {
         const k = item.adres.toLowerCase().trim();
         if (gc[k] !== undefined) { if (gc[k]) { item.lat = gc[k].lat; item.lng = gc[k].lng; } else geoFail++; }
@@ -494,9 +498,68 @@ async function loadData() {
     gcnt.textContent = geoFail > 0 ? `${geoFail} zonder locatie` : '';
   } catch(e) {
     console.error(e);
-    prg.textContent = 'Fout bij laden!'; gcnt.textContent = e.message;
-    await new Promise(r => setTimeout(r, 4000));
+    prg.textContent = 'Kan Google Sheets niet bereiken (lokaal bestand?)';
+    gcnt.innerHTML = 'Upload je CSV of zet de app op GitHub Pages';
+    // Toon file input als fallback
+    if (!$('csv-fallback')) {
+      const div = document.createElement('div');
+      div.id = 'csv-fallback';
+      div.style.cssText = 'margin-top:16px;text-align:center';
+      div.innerHTML = '<label style="background:#fff;color:var(--nzd);padding:12px 24px;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;display:inline-block">📂 CSV bestand kiezen<input type="file" accept=".csv" style="display:none" onchange="loadCSVFile(this.files[0])"></label>';
+      $('ldg').appendChild(div);
+    }
+    return; // Stop hier, niet verder
   }
+
+  apply();
+  const coords = allData.filter(d => d.lat && d.lng).map(d => [d.lat, d.lng]);
+  if (coords.length) map.fitBounds(L.latLngBounds(coords).pad(0.1));
+  $('ldg').classList.add('done');
+}
+
+// CSV bestand laden als fallback (lokaal gebruik)
+async function loadCSVFile(file) {
+  if (!file) return;
+  const prg = $('prg'), gcnt = $('geocount');
+  prg.textContent = 'Bestand lezen...'; gcnt.textContent = '';
+  const fb = $('csv-fallback');
+  if (fb) fb.style.display = 'none';
+
+  const text = await file.text();
+  const rows = parseCSV(text);
+  prg.textContent = `${rows.length} rijen geladen`;
+  allData = [];
+  let geoFail = 0;
+
+  for (let i = 0; i < rows.length; i++) {
+    const r = rows[i];
+    if (!r.Nummer && !r.Zaakonderwerp) continue;
+    const item = {
+      nr: parseInt(r.Nummer) || i+1,
+      verzn: r.Vergunning_ZN || '', oplzn: r.Oplever_ZN || '',
+      zaakonderwerp: r.Zaakonderwerp || '', adres: r.Adres || '',
+      lat: parseDec(r.Lat), lng: parseDec(r.Lng),
+      status: mapStatus(r.Status),
+      datum_aanvraag: r.Datum_aanvraag || '', notitie: r.Notitie || '', _m: null,
+    };
+    if (item.lat && item.lng) { /* klaar */ }
+    else if (item.adres) {
+      const k = item.adres.toLowerCase().trim();
+      if (gc[k] !== undefined) { if (gc[k]) { item.lat = gc[k].lat; item.lng = gc[k].lng; } else geoFail++; }
+      else {
+        prg.textContent = `Geocoderen ${i+1}/${rows.length}...`;
+        gcnt.textContent = item.adres.substring(0, 40);
+        const res = await geocode(item.adres);
+        if (res) { item.lat = res.lat; item.lng = res.lng; } else geoFail++;
+        await new Promise(r => setTimeout(r, 1100));
+      }
+    } else geoFail++;
+    allData.push(item);
+  }
+
+  const onMap = allData.filter(d => d.lat && d.lng).length;
+  prg.textContent = `${onMap}/${allData.length} op kaart`;
+  gcnt.textContent = geoFail > 0 ? `${geoFail} zonder locatie` : '';
 
   apply();
   const coords = allData.filter(d => d.lat && d.lng).map(d => [d.lat, d.lng]);
