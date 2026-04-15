@@ -122,6 +122,23 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;overflow
 
 #toast{position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:var(--nzd);color:#fff;padding:10px 20px;border-radius:10px;font-size:13px;z-index:2000;opacity:0;transition:opacity .3s;pointer-events:none}
 #toast.show{opacity:1}
+
+/* Dagrapport */
+#rapport{display:none;position:fixed;top:56px;left:0;right:0;bottom:0;z-index:1300;background:#fff;overflow-y:auto}
+#rapport.open{display:block}
+#rpt-header{position:sticky;top:0;background:#fff;padding:16px 20px;border-bottom:1px solid #eee;display:flex;align-items:center;justify-content:space-between;z-index:1}
+#rpt-header h3{font-size:16px;color:var(--nzd)}
+#rpt-summary{padding:16px 20px;background:#f8fafc;border-bottom:1px solid #eee;display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.rpt-stat{background:#fff;border-radius:10px;padding:12px;text-align:center;box-shadow:0 1px 4px rgba(0,0,0,.06)}
+.rpt-stat .rv{font-size:22px;font-weight:700;color:var(--nz);font-family:monospace}
+.rpt-stat .rl{font-size:11px;color:#95a5a6;margin-top:2px}
+#rpt-stops{padding:16px 20px}
+.rpt-stop{display:flex;gap:12px;padding:14px;border-radius:10px;margin-bottom:8px;background:#f8fafc;border-left:4px solid var(--nzl)}
+.rpt-stop .rs-time{font-family:monospace;font-size:12px;color:var(--nz);font-weight:600;white-space:nowrap;min-width:50px}
+.rpt-stop .rs-info{flex:1;min-width:0}
+.rpt-stop .rs-name{font-size:13px;font-weight:600;color:#2c3e50;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rpt-stop .rs-detail{font-size:11px;color:#95a5a6;margin-top:2px}
+.rpt-empty{text-align:center;padding:40px;color:#95a5a6;font-size:14px}
 #ldg{position:fixed;inset:0;z-index:3000;background:linear-gradient(135deg,var(--nzd),var(--nz));display:flex;flex-direction:column;align-items:center;justify-content:center;color:#fff;transition:opacity .5s}
 #ldg.done{opacity:0;pointer-events:none}
 .spin{width:48px;height:48px;border:4px solid rgba(255,255,255,.2);border-top-color:#fff;border-radius:50%;animation:spn .8s linear infinite;margin-bottom:16px}
@@ -138,6 +155,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;overflow
 <div id="hdr">
   <h1><span style="font-size:22px">🗺️</span> Oplevercontrole NZ</h1>
   <div class="hbs">
+    <div class="hb" onclick="toggleRapport()" title="Dagrapport">📊</div>
     <div class="hb" onclick="togP('lpl')" title="Lijst">📋</div>
     <div class="hb" onclick="togP('fp')" title="Filters">⚙️</div>
     <div class="hb" onclick="goGPS()" title="Mijn locatie">📍</div>
@@ -194,6 +212,19 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;overflow
 <div id="lpl"><div class="lhd"></div><div class="ltt">Controles (<span id="lc">0</span>)</div><div class="lwp" id="lww"></div></div>
 
 <div id="mdl"><div class="mdc"><h3>Status wijzigen</h3><div id="moo"></div><label style="display:block;margin-top:12px;font-size:12px;color:#7f8c8d;font-weight:600">NOTITIE</label><textarea class="mta" id="mn" placeholder="Optionele notitie..."></textarea><div class="mbs"><button class="mcn" onclick="closeM()">Annuleren</button><button class="msv" onclick="saveS()">Opslaan</button></div></div></div>
+
+<!-- Dagrapport panel -->
+<div id="rapport">
+  <div id="rpt-header">
+    <h3>📊 Dagrapport</h3>
+    <div style="display:flex;gap:6px">
+      <select id="rpt-dag" onchange="toonRapport()" style="padding:6px 10px;border-radius:8px;border:2px solid #e0e6ed;font-size:13px"></select>
+      <button onclick="toggleRapport()" style="background:none;border:none;font-size:20px;cursor:pointer;color:#95a5a6">✕</button>
+    </div>
+  </div>
+  <div id="rpt-summary"></div>
+  <div id="rpt-stops"></div>
+</div>
 
 <div id="toast"></div>
 
@@ -355,14 +386,18 @@ function saveS() { const i = allData.find(d => d.nr === modalNr); if (!i) return
 function closeM() { $('mdl').classList.remove('open'); }
 
 // ═══════════════════════════════════════════
-// GPS + RIT TRACKING
+// GPS + RIT TRACKING + DAGRAPPORT
 // ═══════════════════════════════════════════
 let ritActive = false, ritPaused = false;
 let ritStart = null, ritKm = 0, ritSpeeds = [], ritStops = 0;
+let ritStopLog = []; // [{aankomst, vertrek, duur, naam, adres, lat, lng}]
 let lastPos = null, ritTimer = null;
 let stillSince = null, isControlling = false, controleTimer = null;
+let controleStart = null, controleNearItem = null;
 const STILL_THRESHOLD = 2 * 60 * 1000; // 2 minuten
-const RIT_KEY = 'oplev_rit_' + new Date().toISOString().slice(0, 10);
+const VANDAAG = new Date().toISOString().slice(0, 10);
+const RIT_KEY = 'oplev_rit_' + VANDAAG;
+const LOG_KEY = 'oplev_log_'; // + datum
 
 function haversine(lat1, lon1, lat2, lon2) {
   const R = 6371, dLat = (lat2-lat1)*Math.PI/180, dLon = (lon2-lon1)*Math.PI/180;
@@ -370,8 +405,28 @@ function haversine(lat1, lon1, lat2, lon2) {
   return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
 }
 
-function loadRit() { try { const s = JSON.parse(localStorage.getItem(RIT_KEY)); if (s) { ritStart=s.start; ritKm=s.km||0; ritSpeeds=s.speeds||[]; ritStops=s.stops||0; ritActive=s.active||false; ritPaused=s.paused||false; } } catch(e) {} }
-function saveRit() { try { localStorage.setItem(RIT_KEY, JSON.stringify({ start:ritStart, km:ritKm, speeds:ritSpeeds, stops:ritStops, active:ritActive, paused:ritPaused })); } catch(e) {} }
+function loadRit() {
+  try {
+    const s = JSON.parse(localStorage.getItem(RIT_KEY));
+    if (s) { ritStart=s.start; ritKm=s.km||0; ritSpeeds=s.speeds||[]; ritStops=s.stops||0; ritActive=s.active||false; ritPaused=s.paused||false; }
+  } catch(e) {}
+  try { ritStopLog = JSON.parse(localStorage.getItem(LOG_KEY + VANDAAG) || '[]'); } catch(e) { ritStopLog = []; }
+}
+
+function saveRit() {
+  try { localStorage.setItem(RIT_KEY, JSON.stringify({ start:ritStart, km:ritKm, speeds:ritSpeeds, stops:ritStops, active:ritActive, paused:ritPaused })); } catch(e) {}
+  try { localStorage.setItem(LOG_KEY + VANDAAG, JSON.stringify(ritStopLog)); } catch(e) {}
+}
+
+// Vind dichtstbijzijnde controlepunt
+function findNearestItem(lat, lng) {
+  let closest = null, minDist = Infinity;
+  allData.filter(d => d.lat && d.lng).forEach(d => {
+    const dist = haversine(lat, lng, d.lat, d.lng);
+    if (dist < minDist) { minDist = dist; closest = d; }
+  });
+  return (closest && minDist < 0.5) ? closest : null; // Binnen 500m
+}
 
 function startRit() {
   ritActive = true; ritPaused = false;
@@ -385,8 +440,18 @@ function pauzeRit() {
   ritPaused = !ritPaused;
   $('btn-pauze').textContent = ritPaused ? '▶' : '⏸';
   $('btn-pauze').className = 'rit-btn ' + (ritPaused ? 'rit-start' : 'rit-pauze');
-  if (ritPaused) releaseWakeLock(); else requestWakeLock();
-  saveRit(); toast(ritPaused ? '⏸ Pauze' : '▶ Hervat');
+  if (ritPaused) {
+    releaseWakeLock();
+    // Log pauze als stop
+    ritStopLog.push({ aankomst: Date.now(), vertrek: null, naam: '⏸ Pauze', adres: '', type: 'pauze' });
+    saveRit();
+  } else {
+    requestWakeLock();
+    // Sluit pauze-stop
+    const lastStop = ritStopLog.filter(s => s.type === 'pauze' && !s.vertrek).pop();
+    if (lastStop) { lastStop.vertrek = Date.now(); lastStop.duur = Math.round((lastStop.vertrek - lastStop.aankomst) / 1000); saveRit(); }
+  }
+  toast(ritPaused ? '⏸ Pauze' : '▶ Hervat');
 }
 function stopRit() {
   ritActive = false; ritPaused = false;
@@ -410,8 +475,10 @@ function updateRitDisplay() {
 
 function startControle() {
   isControlling = true; ritStops++;
+  controleStart = Date.now();
+  // Vind dichtstbijzijnde controlepunt
+  controleNearItem = lastPos ? findNearestItem(lastPos.lat, lastPos.lng) : null;
   $('controle-alert').style.display = 'block';
-  const controleStart = Date.now();
   controleTimer = setInterval(() => {
     const sec = Math.floor((Date.now() - controleStart) / 1000);
     $('controle-timer').textContent = `${Math.floor(sec/60)}:${(sec%60).toString().padStart(2,'0')}`;
@@ -419,7 +486,22 @@ function startControle() {
   saveRit();
 }
 function endControle() {
-  isControlling = false;
+  if (isControlling && controleStart) {
+    const duur = Math.round((Date.now() - controleStart) / 1000);
+    const naam = controleNearItem ? controleNearItem.zaakonderwerp : 'Onbekende locatie';
+    const adres = controleNearItem ? (controleNearItem.adres || '') : '';
+    ritStopLog.push({
+      aankomst: controleStart,
+      vertrek: Date.now(),
+      duur: duur,
+      naam: naam.substring(0, 80),
+      adres: adres,
+      nr: controleNearItem ? controleNearItem.nr : null,
+      type: 'controle'
+    });
+    saveRit();
+  }
+  isControlling = false; controleStart = null; controleNearItem = null;
   $('controle-alert').style.display = 'none';
   if (controleTimer) { clearInterval(controleTimer); controleTimer = null; }
 }
@@ -624,6 +706,87 @@ async function loadCSVFile(file) {
   const coords = allData.filter(d => d.lat && d.lng).map(d => [d.lat, d.lng]);
   if (coords.length) map.fitBounds(L.latLngBounds(coords).pad(0.1));
   $('ldg').classList.add('done');
+}
+
+// ═══════════════════════════════════════════
+// DAGRAPPORT
+// ═══════════════════════════════════════════
+function toggleRapport() {
+  const r = $('rapport');
+  if (r.classList.contains('open')) { r.classList.remove('open'); return; }
+  // Vul dag-dropdown met beschikbare dagen
+  const dagen = [];
+  for (let i = 0; i < localStorage.length; i++) {
+    const key = localStorage.key(i);
+    if (key.startsWith('oplev_log_')) dagen.push(key.replace('oplev_log_', ''));
+    if (key.startsWith('oplev_rit_')) { const d = key.replace('oplev_rit_', ''); if (!dagen.includes(d)) dagen.push(d); }
+  }
+  dagen.sort().reverse();
+  if (!dagen.includes(VANDAAG)) dagen.unshift(VANDAAG);
+  $('rpt-dag').innerHTML = dagen.map(d => {
+    const label = d === VANDAAG ? `${d} (vandaag)` : d;
+    return `<option value="${d}" ${d===VANDAAG?'selected':''}>${label}</option>`;
+  }).join('');
+  r.classList.add('open');
+  toonRapport();
+}
+
+function toonRapport() {
+  const dag = $('rpt-dag').value;
+  // Laad ritdata voor die dag
+  let rd = null;
+  try { rd = JSON.parse(localStorage.getItem('oplev_rit_' + dag)); } catch(e) {}
+  let stops = [];
+  try { stops = JSON.parse(localStorage.getItem('oplev_log_' + dag) || '[]'); } catch(e) {}
+
+  // Summary
+  const km = rd ? (rd.km || 0).toFixed(1) : '0.0';
+  const rijtijd = rd && rd.start ? formatDuur(Math.floor((Date.now() - rd.start) / 1000)) : '00:00';
+  const avgSpeed = rd && rd.speeds && rd.speeds.length ? Math.round(rd.speeds.reduce((a,b)=>a+b,0)/rd.speeds.length*3.6) : 0;
+  const controles = stops.filter(s => s.type === 'controle').length;
+  const pauzes = stops.filter(s => s.type === 'pauze').length;
+  const totalControleTijd = stops.filter(s => s.type === 'controle' && s.duur).reduce((a, s) => a + s.duur, 0);
+
+  $('rpt-summary').innerHTML = `
+    <div class="rpt-stat"><div class="rv">${km}</div><div class="rl">KM gereden</div></div>
+    <div class="rpt-stat"><div class="rv">${rijtijd}</div><div class="rl">Rijtijd</div></div>
+    <div class="rpt-stat"><div class="rv">${avgSpeed}</div><div class="rl">km/u gemiddeld</div></div>
+    <div class="rpt-stat"><div class="rv">${controles}</div><div class="rl">Controles</div></div>
+    <div class="rpt-stat"><div class="rv">${formatDuur(totalControleTijd)}</div><div class="rl">Controle-tijd</div></div>
+    <div class="rpt-stat"><div class="rv">${pauzes}</div><div class="rl">Pauzes</div></div>`;
+
+  // Stops lijst
+  if (stops.length === 0) {
+    $('rpt-stops').innerHTML = '<div class="rpt-empty">Geen stops geregistreerd voor deze dag</div>';
+    return;
+  }
+
+  $('rpt-stops').innerHTML = '<h4 style="font-size:14px;color:var(--nzd);margin-bottom:12px">Stops</h4>' +
+    stops.map(s => {
+      const tijd = new Date(s.aankomst).toLocaleTimeString('nl-NL', {hour:'2-digit', minute:'2-digit'});
+      const duur = s.duur ? formatDuur(s.duur) : (s.vertrek ? formatDuur(Math.round((s.vertrek - s.aankomst)/1000)) : 'bezig...');
+      const icon = s.type === 'pauze' ? '⏸' : '🔍';
+      const borderColor = s.type === 'pauze' ? '#e67e22' : '#27ae60';
+      return `<div class="rpt-stop" style="border-left-color:${borderColor}">
+        <div class="rs-time">${tijd}</div>
+        <div class="rs-info">
+          <div class="rs-name">${icon} ${s.naam || 'Stop'}</div>
+          <div class="rs-detail">${s.adres ? s.adres + ' · ' : ''}⏱ ${duur}</div>
+        </div>
+      </div>`;
+    }).join('');
+}
+
+function formatDuur(sec) {
+  if (!sec || sec < 0) return '00:00';
+  const m = Math.floor(sec / 60);
+  const s = sec % 60;
+  if (m >= 60) {
+    const h = Math.floor(m / 60);
+    const rm = m % 60;
+    return `${h}:${rm.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}`;
+  }
+  return `${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}`;
 }
 
 // ═══════════════════════════════════════════
