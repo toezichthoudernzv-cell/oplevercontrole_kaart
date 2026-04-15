@@ -11,15 +11,39 @@
 *{margin:0;padding:0;box-sizing:border-box}
 body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;overflow:hidden;height:100vh;width:100vw}
 #hdr{position:fixed;top:0;left:0;right:0;z-index:1100;background:linear-gradient(135deg,var(--nzd),var(--nz));color:#fff;padding:10px 16px;display:flex;align-items:center;justify-content:space-between;height:56px;box-shadow:0 2px 8px rgba(0,0,0,.3)}
-#hdr h1{font-size:16px;font-weight:700;display:flex;align-items:center;gap:8px}
+#hdr h1{font-size:15px;font-weight:700;display:flex;align-items:center;gap:8px}
 .hbs{display:flex;gap:6px}
 .hb{background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.25);color:#fff;border-radius:8px;width:38px;height:38px;display:flex;align-items:center;justify-content:center;font-size:18px;cursor:pointer}
 .hb:hover{background:rgba(255,255,255,.3)}
-#map{position:fixed;top:90px;bottom:0;left:0;right:0}
-#vbar{position:fixed;top:56px;left:0;right:0;z-index:1050;background:#fff;padding:8px 16px;box-shadow:0 2px 8px rgba(0,0,0,.1);display:flex;align-items:center;gap:12px;font-size:13px}
+.hb.active{background:rgba(255,255,255,.35);border-color:rgba(255,255,255,.5)}
+
+/* Voortgang */
+#vbar{position:fixed;top:56px;left:0;right:0;z-index:1050;background:#fff;padding:6px 16px;box-shadow:0 2px 8px rgba(0,0,0,.1);display:flex;align-items:center;gap:12px;font-size:13px;height:34px}
 .btr{flex:1;height:8px;background:#e0e6ed;border-radius:4px;overflow:hidden}
 .bfl{height:100%;border-radius:4px;background:linear-gradient(90deg,#27ae60,#2ecc71);transition:width .5s}
 .blb{font-weight:600;color:var(--nz);white-space:nowrap}
+
+/* Ritbalk */
+#ritbar{position:fixed;top:90px;left:0;right:0;z-index:1040;background:linear-gradient(135deg,#1e3a5f,#2c5282);padding:6px 12px;display:flex;align-items:center;justify-content:space-between;color:#fff;font-size:12px;box-shadow:0 2px 6px rgba(0,0,0,.2);height:50px}
+.rit-stat{text-align:center;flex:1}
+.rit-val{font-size:17px;font-weight:700;font-family:monospace}
+.rit-lbl{font-size:9px;opacity:.7;margin-top:1px}
+.rit-btns{display:flex;gap:4px;flex-shrink:0}
+.rit-btn{border:none;border-radius:8px;padding:6px 10px;font-size:16px;cursor:pointer;color:#fff;display:flex;align-items:center;justify-content:center;width:36px;height:36px}
+.rit-start{background:rgba(39,174,96,.5)}
+.rit-pauze{background:rgba(230,126,34,.5)}
+.rit-stop{background:rgba(231,76,60,.5)}
+.rit-btn:disabled{opacity:.3}
+.rit-btn:hover:not(:disabled){filter:brightness(1.2)}
+
+/* Controle alert */
+#controle-alert{display:none;position:fixed;top:145px;left:10px;right:10px;z-index:1060;background:#27ae60;color:#fff;border-radius:12px;padding:10px 16px;text-align:center;font-size:13px;font-weight:600;box-shadow:0 4px 15px rgba(39,174,96,.4);animation:fadeIn .3s}
+@keyframes fadeIn{from{opacity:0;transform:translateY(-10px)}to{opacity:1;transform:translateY(0)}}
+
+/* Map */
+#map{position:fixed;top:140px;bottom:0;left:0;right:0}
+
+/* Panels */
 #fp{position:fixed;top:56px;right:-320px;width:310px;height:calc(100vh - 56px);background:#fff;z-index:1200;box-shadow:-4px 0 20px rgba(0,0,0,.15);overflow-y:auto;padding:20px;transition:right .3s}
 #fp.open{right:0}
 .pt{font-size:15px;color:var(--nzd);margin-bottom:14px;font-weight:700}
@@ -36,39 +60,43 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;overflow
 .sts{display:flex;flex-wrap:wrap;gap:6px;margin-top:16px}
 .sta{display:flex;align-items:center;gap:5px;padding:5px 10px;border-radius:20px;font-size:12px;font-weight:600;background:#f5f7fa}
 .sta .dot{width:10px;height:10px;border-radius:50%}
+
+/* GPS */
 #gps{position:fixed;bottom:24px;left:16px;z-index:1100;background:#fff;border-radius:12px;padding:8px 14px;box-shadow:0 2px 12px rgba(0,0,0,.15);display:flex;align-items:center;gap:8px;font-size:13px;font-weight:500;cursor:pointer}
 .gd{width:10px;height:10px;border-radius:50%;background:#95a5a6}
 .gd.on{background:#27ae60;animation:pls 2s infinite}
 @keyframes pls{0%,100%{box-shadow:0 0 0 0 rgba(39,174,96,.4)}50%{box-shadow:0 0 0 8px rgba(39,174,96,0)}}
-#rbtn{position:fixed;bottom:24px;right:16px;z-index:1100;background:var(--nz);color:#fff;border:none;border-radius:12px;padding:10px 16px;box-shadow:0 2px 12px rgba(0,0,0,.2);font-size:13px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px}
+
+#rbtn{position:fixed;bottom:24px;right:16px;z-index:1100;background:var(--nz);color:#fff;border:none;border-radius:12px;padding:10px 16px;box-shadow:0 2px 12px rgba(0,0,0,.2);font-size:13px;font-weight:600;cursor:pointer}
 #rbtn:hover{background:var(--nzd)}
+
+/* Popup */
 .leaflet-popup-content-wrapper{border-radius:12px!important;box-shadow:0 4px 20px rgba(0,0,0,.2)!important;padding:0!important}
 .leaflet-popup-content{margin:0!important;width:290px!important}
-.pc{padding:16px}
-.pcs{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:20px;font-size:11px;font-weight:700;text-transform:uppercase;margin-bottom:10px}
+.pc{padding:16px}.pcs{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:20px;font-size:11px;font-weight:700;text-transform:uppercase;margin-bottom:10px}
 .pc h4{font-size:13px;color:#2c3e50;line-height:1.4;margin-bottom:8px}
-.pcm{font-size:12px;color:#7f8c8d;margin-bottom:3px}
-.pcm strong{color:#2c3e50}
+.pcm{font-size:12px;color:#7f8c8d;margin-bottom:3px}.pcm strong{color:#2c3e50}
 .pcd{display:inline-flex;align-items:center;gap:4px;font-size:11px;color:#7f8c8d;background:#f5f7fa;padding:3px 8px;border-radius:12px;margin-top:6px}
 .pca{display:flex;gap:6px;margin-top:12px;padding-top:12px;border-top:1px solid #eee}
 .pca button{flex:1;padding:8px;border:none;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer}
-.bts{background:var(--nz);color:#fff}
-.btv{background:#e8f8f0;color:#27ae60}
+.bts{background:var(--nz);color:#fff}.btv{background:#e8f8f0;color:#27ae60}
+
+/* Modal */
 #mdl{display:none;position:fixed;inset:0;z-index:2000;background:rgba(0,0,0,.5);align-items:center;justify-content:center}
 #mdl.open{display:flex}
 .mdc{background:#fff;border-radius:16px;width:90%;max-width:340px;padding:24px}
 .mdc h3{font-size:16px;margin-bottom:16px;color:var(--nzd)}
 .mo{display:flex;align-items:center;gap:10px;padding:12px;border-radius:10px;cursor:pointer;margin-bottom:6px;border:2px solid transparent}
-.mo:hover{background:#f5f7fa}
-.mo.sel{border-color:var(--nz);background:#ebf5fb}
+.mo:hover{background:#f5f7fa}.mo.sel{border-color:var(--nz);background:#ebf5fb}
 .mo .oi{width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:16px;color:#fff}
 .mo .ol{font-size:14px;font-weight:500}
 .mta{width:100%;margin-top:12px;padding:10px;border:2px solid #e0e6ed;border-radius:8px;font-size:13px;resize:vertical;min-height:60px;font-family:inherit;outline:none}
 .mta:focus{border-color:var(--nzl)}
 .mbs{display:flex;gap:8px;margin-top:16px}
 .mbs button{flex:1;padding:12px;border:none;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer}
-.msv{background:var(--nz);color:#fff}
-.mcn{background:#f0f4f8;color:#7f8c8d}
+.msv{background:var(--nz);color:#fff}.mcn{background:#f0f4f8;color:#7f8c8d}
+
+/* List */
 #lpl{position:fixed;bottom:-100%;left:0;right:0;height:60vh;background:#fff;border-radius:20px 20px 0 0;z-index:1150;transition:bottom .3s;box-shadow:0 -4px 20px rgba(0,0,0,.15)}
 #lpl.open{bottom:0}
 .lhd{width:40px;height:4px;border-radius:2px;background:#ccc;margin:10px auto}
@@ -81,6 +109,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;overflow
 .li .lin{font-size:13px;font-weight:500;color:#2c3e50;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .li .lis{font-size:11px;color:#95a5a6;margin-top:2px}
 .li .lis .no-loc{color:#e74c3c;font-weight:600}
+
 #toast{position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:var(--nzd);color:#fff;padding:10px 20px;border-radius:10px;font-size:13px;z-index:2000;opacity:0;transition:opacity .3s;pointer-events:none}
 #toast.show{opacity:1}
 #ldg{position:fixed;inset:0;z-index:3000;background:linear-gradient(135deg,var(--nzd),var(--nz));display:flex;flex-direction:column;align-items:center;justify-content:center;color:#fff;transition:opacity .5s}
@@ -94,12 +123,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;overflow
 </head>
 <body>
 
-<div id="ldg">
-  <div class="spin"></div>
-  <p>Data laden uit Google Sheets...</p>
-  <p id="prg"></p>
-  <p id="geocount"></p>
-</div>
+<div id="ldg"><div class="spin"></div><p>Data laden uit Google Sheets...</p><p id="prg"></p><p id="geocount"></p></div>
 
 <div id="hdr">
   <h1><span style="font-size:22px">🗺️</span> Oplevercontrole NZ</h1>
@@ -116,8 +140,21 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;overflow
   <span class="blb" id="pct">0%</span>
 </div>
 
-<div id="map"></div>
+<div id="ritbar">
+  <div class="rit-stat"><div class="rit-val" id="rit-km">0.0</div><div class="rit-lbl">KM</div></div>
+  <div class="rit-stat"><div class="rit-val" id="rit-snelheid">0</div><div class="rit-lbl">km/u gem.</div></div>
+  <div class="rit-stat"><div class="rit-val" id="rit-tijd">00:00</div><div class="rit-lbl">Rijtijd</div></div>
+  <div class="rit-stat"><div class="rit-val" id="rit-stops">0</div><div class="rit-lbl">Stops</div></div>
+  <div class="rit-btns">
+    <button class="rit-btn rit-start" id="btn-start" onclick="startRit()" title="Start">▶</button>
+    <button class="rit-btn rit-pauze" id="btn-pauze" onclick="pauzeRit()" title="Pauze" disabled>⏸</button>
+    <button class="rit-btn rit-stop" id="btn-stop" onclick="stopRit()" title="Stop" disabled>⏹</button>
+  </div>
+</div>
 
+<div id="controle-alert">🔍 Controle bezig... <span id="controle-timer">0:00</span></div>
+
+<div id="map"></div>
 <div id="gps" onclick="goGPS()"><div class="gd" id="gdd"></div><span id="gt">GPS uit</span></div>
 <button id="rbtn" onclick="loadData()">🔄 Vernieuwen</button>
 
@@ -128,45 +165,29 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;overflow
   <div class="sts" id="stsd"></div>
 </div>
 
-<div id="lpl">
-  <div class="lhd"></div>
-  <div class="ltt">Controles (<span id="lc">0</span>)</div>
-  <div class="lwp" id="lww"></div>
-</div>
+<div id="lpl"><div class="lhd"></div><div class="ltt">Controles (<span id="lc">0</span>)</div><div class="lwp" id="lww"></div></div>
 
-<div id="mdl">
-  <div class="mdc">
-    <h3>Status wijzigen</h3>
-    <div id="moo"></div>
-    <label style="display:block;margin-top:12px;font-size:12px;color:#7f8c8d;font-weight:600">NOTITIE</label>
-    <textarea class="mta" id="mn" placeholder="Optionele notitie..."></textarea>
-    <div class="mbs">
-      <button class="mcn" onclick="closeM()">Annuleren</button>
-      <button class="msv" onclick="saveS()">Opslaan</button>
-    </div>
-  </div>
-</div>
+<div id="mdl"><div class="mdc"><h3>Status wijzigen</h3><div id="moo"></div><label style="display:block;margin-top:12px;font-size:12px;color:#7f8c8d;font-weight:600">NOTITIE</label><textarea class="mta" id="mn" placeholder="Optionele notitie..."></textarea><div class="mbs"><button class="mcn" onclick="closeM()">Annuleren</button><button class="msv" onclick="saveS()">Opslaan</button></div></div></div>
 
 <div id="toast"></div>
 
 <script>
 // ═══════════════════════════════════════════
-// GOOGLE SHEETS CSV URL
+// GOOGLE SHEETS CSV - GECORRIGEERDE URL
 // ═══════════════════════════════════════════
-const CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vR_NrG6KU4uNBlnMdZ3K9Ibk5f6to8L-sc80B-SZ0XtWwYSQ2D12EaS1shEynPhLg/pub?gid=1328454275&single=true&output=csv';
+const CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vR_NrG6KU4uNBlnMdZ3K9Ibk5f6to8L-sc80B-SZ0XtWwYSQ2D12EaS1shEynPhLg/pub?output=csv';
 
 // ═══════════════════════════════════════════
 // STATUSSEN
 // ═══════════════════════════════════════════
 const STAT = [
-  { id:'todo',   l:'Nog te controleren',    i:'⏳', c:'#e67e22' },
-  { id:'bezig',  l:'Niet begonnen (bezig)',  i:'🔨', c:'#3498db' },
-  { id:'goed',   l:'Goedgekeurd',           i:'✅', c:'#27ae60' },
-  { id:'vanaf',  l:'Ziet er vanaf',          i:'🚫', c:'#95a5a6' },
-  { id:'overig', l:'Overig',                 i:'📋', c:'#8e44ad' },
+  { id:'todo',  l:'Nog te controleren',   i:'⏳', c:'#e67e22' },
+  { id:'bezig', l:'Niet begonnen (bezig)', i:'🔨', c:'#3498db' },
+  { id:'goed',  l:'Goedgekeurd',          i:'✅', c:'#27ae60' },
+  { id:'vanaf', l:'Ziet er vanaf',         i:'🚫', c:'#95a5a6' },
+  { id:'overig',l:'Overig',                i:'📋', c:'#8e44ad' },
 ];
 const gS = id => STAT.find(s => s.id === id) || STAT[0];
-
 function mapStatus(raw) {
   if (!raw) return 'todo';
   const s = raw.toLowerCase().trim();
@@ -178,97 +199,65 @@ function mapStatus(raw) {
 }
 
 // ═══════════════════════════════════════════
-// GEOCODING CACHE
+// GEOCODING
 // ═══════════════════════════════════════════
-const GK = 'oplev_geo_v4';
+const GK = 'oplev_geo_v5';
 let gc = {};
 try { gc = JSON.parse(localStorage.getItem(GK) || '{}'); } catch(e) {}
 function saveGC() { try { localStorage.setItem(GK, JSON.stringify(gc)); } catch(e) {} }
 
-// Verbeterde address cleaning voor Nominatim
-function cleanAddress(addr) {
-  if (!addr) return '';
-  let clean = addr.trim();
-  // "Straat 12 te Plaats" → "Straat 12, Plaats"
-  clean = clean.replace(/\s+te\s+/gi, ', ');
-  // Verwijder dubbele komma's/spaties
-  clean = clean.replace(/,\s*,/g, ',').replace(/\s+/g, ' ');
-  return clean;
-}
-
 async function geocode(addr) {
   if (!addr) return null;
   const k = addr.toLowerCase().trim();
-  if (gc[k]) return gc[k];
-
-  // Probeer eerst het exacte adres
-  const cleaned = cleanAddress(addr);
-  const queries = [
-    cleaned + ', provincie Groningen, Nederland',
-    cleaned + ', Groningen, Nederland',
-    cleaned + ', Nederland',
-  ];
-
-  for (const q of queries) {
+  if (gc[k] !== undefined) return gc[k];
+  const clean = addr.replace(/\s+te\s+/gi, ', ').replace(/,\s*,/g, ',').trim();
+  for (const suffix of [', provincie Groningen, Nederland', ', Groningen, Nederland', ', Nederland']) {
     try {
-      const url = 'https://nominatim.openstreetmap.org/search?format=json&q=' +
-        encodeURIComponent(q) + '&limit=1&countrycodes=nl';
-      const r = await fetch(url, { headers: { 'User-Agent': 'OplevercontroleNZ/1.0' } });
+      const r = await fetch('https://nominatim.openstreetmap.org/search?format=json&q=' +
+        encodeURIComponent(clean + suffix) + '&limit=1&countrycodes=nl',
+        { headers: { 'User-Agent': 'OpleverNZ/1.0' }});
       const d = await r.json();
-      if (d && d.length > 0) {
-        const res = { lat: parseFloat(d[0].lat), lng: parseFloat(d[0].lon) };
-        gc[k] = res;
-        saveGC();
-        return res;
-      }
-    } catch(e) {
-      console.warn('Geocode error:', q, e);
-    }
-    // Wacht tussen retries
+      if (d && d.length) { const res = { lat: +d[0].lat, lng: +d[0].lon }; gc[k] = res; saveGC(); return res; }
+    } catch(e) {}
     await new Promise(r => setTimeout(r, 1100));
   }
-
-  // Markeer als niet gevonden zodat we niet elke keer opnieuw proberen
-  gc[k] = null;
-  saveGC();
-  return null;
+  gc[k] = null; saveGC(); return null;
 }
 
 // ═══════════════════════════════════════════
-// CSV PARSER
+// CSV PARSER (handles quoted fields with commas)
 // ═══════════════════════════════════════════
 function parseCSV(text) {
-  const lines = text.split('\n');
+  const lines = text.replace(/\r\n/g, '\n').replace(/\r/g, '\n').split('\n');
   if (lines.length < 2) return [];
-  const headers = parseLine(lines[0]);
+  const headers = csvLine(lines[0]);
   const rows = [];
   for (let i = 1; i < lines.length; i++) {
     const l = lines[i].trim();
     if (!l) continue;
-    const vals = parseLine(l);
+    const vals = csvLine(l);
     const obj = {};
     headers.forEach((h, j) => { obj[h.trim()] = (vals[j] || '').trim(); });
     rows.push(obj);
   }
   return rows;
 }
-
-function parseLine(line) {
+function csvLine(line) {
   const r = []; let c = '', q = false;
   for (let i = 0; i < line.length; i++) {
     const ch = line[i];
-    if (q) {
-      if (ch === '"' && line[i+1] === '"') { c += '"'; i++; }
-      else if (ch === '"') q = false;
-      else c += ch;
-    } else {
-      if (ch === '"') q = true;
-      else if (ch === ',') { r.push(c); c = ''; }
-      else c += ch;
-    }
+    if (q) { if (ch === '"' && line[i+1] === '"') { c += '"'; i++; } else if (ch === '"') q = false; else c += ch; }
+    else { if (ch === '"') q = true; else if (ch === ',') { r.push(c); c = ''; } else c += ch; }
   }
-  r.push(c);
-  return r;
+  r.push(c); return r;
+}
+
+// Parse decimaal met komma of punt
+function parseDec(val) {
+  if (!val) return null;
+  const v = val.toString().replace(',', '.').trim();
+  const n = parseFloat(v);
+  return isNaN(n) ? null : n;
 }
 
 const $ = id => document.getElementById(id);
@@ -278,313 +267,240 @@ const $ = id => document.getElementById(id);
 // ═══════════════════════════════════════════
 const map = L.map('map', { center: [53.22, 6.56], zoom: 11, zoomControl: false });
 L.control.zoom({ position: 'topright' }).addTo(map);
-L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-  attribution: '&copy; OpenStreetMap', maxZoom: 19
-}).addTo(map);
-
-let mLayer = L.layerGroup().addTo(map);
-let allData = [];
-let gpsMarker = null;
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OSM', maxZoom: 19 }).addTo(map);
+let mLayer = L.layerGroup().addTo(map), allData = [], gpsMarker = null;
 let activeFilters = new Set(STAT.map(s => s.id));
 
-function makeIcon(statusId) {
-  const s = gS(statusId);
-  return L.divIcon({
-    className: '',
-    html: `<div style="width:32px;height:32px;border-radius:50%;background:${s.c};color:#fff;
-      display:flex;align-items:center;justify-content:center;font-size:16px;
-      border:3px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,.3)">${s.i}</div>`,
-    iconSize: [32, 32], iconAnchor: [16, 16], popupAnchor: [0, -20]
-  });
+function makeIcon(sid) {
+  const s = gS(sid);
+  return L.divIcon({ className: '',
+    html: `<div style="width:32px;height:32px;border-radius:50%;background:${s.c};color:#fff;display:flex;align-items:center;justify-content:center;font-size:16px;border:3px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,.3)">${s.i}</div>`,
+    iconSize: [32,32], iconAnchor: [16,16], popupAnchor: [0,-20] });
 }
-
 function makePopup(item) {
   const s = gS(item.status);
-  const datumHtml = item.datum_aanvraag
-    ? `<div class="pcd">📅 Aangevraagd: ${item.datum_aanvraag}</div>` : '';
-  return `<div class="pc">
-    <div class="pcs" style="background:${s.c}20;color:${s.c}">${s.i} ${s.l}</div>
+  const dt = item.datum_aanvraag ? `<div class="pcd">📅 Aangevraagd: ${item.datum_aanvraag}</div>` : '';
+  return `<div class="pc"><div class="pcs" style="background:${s.c}20;color:${s.c}">${s.i} ${s.l}</div>
     <h4>${item.zaakonderwerp}</h4>
-    <div class="pcm">Vergunning ZN: <strong>${item.verzn || '-'}</strong></div>
-    <div class="pcm">Oplever ZN: <strong>${item.oplzn || '-'}</strong></div>
-    <div class="pcm">Adres: <strong>${item.adres || '-'}</strong></div>
-    ${datumHtml}
-    ${item.notitie ? `<div class="pcm" style="margin-top:6px;font-style:italic">"${item.notitie}"</div>` : ''}
-    <div class="pca">
-      <button class="bts" onclick="openModal(${item.nr})">Status wijzigen</button>
-      <button class="btv" onclick="navTo(${item.lat},${item.lng})">🧭 Route</button>
-    </div></div>`;
+    <div class="pcm">Vergunning ZN: <strong>${item.verzn||'-'}</strong></div>
+    <div class="pcm">Oplever ZN: <strong>${item.oplzn||'-'}</strong></div>
+    <div class="pcm">Adres: <strong>${item.adres||'-'}</strong></div>${dt}
+    ${item.notitie?`<div class="pcm" style="margin-top:6px;font-style:italic">"${item.notitie}"</div>`:''}
+    <div class="pca"><button class="bts" onclick="openModal(${item.nr})">Status wijzigen</button>
+    <button class="btv" onclick="navTo(${item.lat},${item.lng})">🧭 Route</button></div></div>`;
 }
 
-// ═══════════════════════════════════════════
-// FILTERS
-// ═══════════════════════════════════════════
+// Filters
 function buildFilters() {
-  $('sfl').innerHTML = STAT.map(s => `
-    <label class="sf">
-      <input type="checkbox" checked value="${s.id}" onchange="toggleF('${s.id}',this.checked)">
-      <span class="ck">✓</span>
-      <span class="sw" style="background:${s.c}"></span>
-      <span>${s.i} ${s.l}</span>
-    </label>`).join('');
+  $('sfl').innerHTML = STAT.map(s => `<label class="sf"><input type="checkbox" checked value="${s.id}" onchange="toggleF('${s.id}',this.checked)"><span class="ck">✓</span><span class="sw" style="background:${s.c}"></span><span>${s.i} ${s.l}</span></label>`).join('');
 }
-
-function toggleF(id, on) {
-  if (on) activeFilters.add(id); else activeFilters.delete(id);
-  apply();
-}
-
+function toggleF(id, on) { if (on) activeFilters.add(id); else activeFilters.delete(id); apply(); }
 function apply() {
-  const q = $('si').value.toLowerCase();
-  mLayer.clearLayers();
-  const filtered = allData.filter(item => {
-    if (!activeFilters.has(item.status)) return false;
-    if (q && !item.zaakonderwerp.toLowerCase().includes(q) &&
-        !(item.adres || '').toLowerCase().includes(q)) return false;
-    return true;
-  });
-  filtered.forEach(item => {
-    if (item.lat && item.lng) {
-      const marker = L.marker([item.lat, item.lng], { icon: makeIcon(item.status) })
-        .bindPopup(makePopup(item));
-      mLayer.addLayer(marker);
-      item._m = marker;
-    }
-  });
-  updateStats(filtered);
-  updateList(filtered);
+  const q = $('si').value.toLowerCase(); mLayer.clearLayers();
+  const f = allData.filter(i => { if (!activeFilters.has(i.status)) return false; if (q && !i.zaakonderwerp.toLowerCase().includes(q) && !(i.adres||'').toLowerCase().includes(q)) return false; return true; });
+  f.forEach(i => { if (i.lat && i.lng) { const m = L.marker([i.lat, i.lng], { icon: makeIcon(i.status) }).bindPopup(makePopup(i)); mLayer.addLayer(m); i._m = m; } });
+  updateStats(f); updateList(f);
 }
-
 function updateStats(data) {
-  const counts = {};
-  STAT.forEach(s => counts[s.id] = 0);
-  data.forEach(d => counts[d.status]++);
-  const done = counts.goed + counts.vanaf;
-  const total = data.length;
-  const pct = total > 0 ? Math.round(done / total * 100) : 0;
-  $('dc').textContent = done;
-  $('tc').textContent = total;
-  $('pct').textContent = pct + '%';
-  $('bf').style.width = pct + '%';
-  $('stsd').innerHTML = STAT.map(s =>
-    `<div class="sta"><div class="dot" style="background:${s.c}"></div>${s.i} ${counts[s.id]}</div>`
-  ).join('');
+  const c = {}; STAT.forEach(s => c[s.id] = 0); data.forEach(d => c[d.status]++);
+  const done = c.goed + c.vanaf, tot = data.length, pct = tot ? Math.round(done/tot*100) : 0;
+  $('dc').textContent = done; $('tc').textContent = tot; $('pct').textContent = pct+'%'; $('bf').style.width = pct+'%';
+  $('stsd').innerHTML = STAT.map(s => `<div class="sta"><div class="dot" style="background:${s.c}"></div>${s.i} ${c[s.id]}</div>`).join('');
 }
-
 function updateList(data) {
   $('lc').textContent = data.length;
-  $('lww').innerHTML = data.map(item => {
-    const s = gS(item.status);
-    const hasLoc = item.lat && item.lng;
-    const locTag = hasLoc ? '' : '<span class="no-loc">⚠ Geen locatie</span>';
-    const sub = [item.verzn ? `ZN ${item.verzn}` : '', s.l, item.datum_aanvraag || '']
-      .filter(Boolean).join(' · ');
-    return `<div class="li" onclick="flyTo(${item.nr})" style="${hasLoc ? '' : 'opacity:.6'}">
-      <div class="lic" style="background:${s.c}">${s.i}</div>
-      <div class="lit">
-        <div class="lin">${item.zaakonderwerp}</div>
-        <div class="lis">${locTag || sub}</div>
-      </div></div>`;
+  $('lww').innerHTML = data.map(i => { const s = gS(i.status); const has = i.lat && i.lng;
+    const sub = has ? [i.verzn?`ZN ${i.verzn}`:'', s.l, i.datum_aanvraag||''].filter(Boolean).join(' · ')
+      : '<span class="no-loc">⚠ Geen locatie</span>';
+    return `<div class="li" onclick="flyTo(${i.nr})" style="${has?'':'opacity:.6'}"><div class="lic" style="background:${s.c}">${s.i}</div><div class="lit"><div class="lin">${i.zaakonderwerp}</div><div class="lis">${sub}</div></div></div>`;
   }).join('');
 }
 
-// ═══════════════════════════════════════════
-// MODAL
-// ═══════════════════════════════════════════
+// Modal
 let modalNr = null, modalSt = null;
-
-function openModal(nr) {
-  const item = allData.find(d => d.nr === nr);
-  if (!item) return;
-  modalNr = nr; modalSt = item.status;
-  map.closePopup();
-  $('moo').innerHTML = STAT.map(s => `
-    <div class="mo ${s.id === item.status ? 'sel' : ''}" onclick="selSt('${s.id}',this)">
-      <div class="oi" style="background:${s.c}">${s.i}</div>
-      <div class="ol">${s.l}</div>
-    </div>`).join('');
-  $('mn').value = item.notitie || '';
-  $('mdl').classList.add('open');
-}
-
-function selSt(id, el) {
-  modalSt = id;
-  document.querySelectorAll('.mo').forEach(o => o.classList.remove('sel'));
-  el.classList.add('sel');
-}
-
-function saveS() {
-  const item = allData.find(d => d.nr === modalNr);
-  if (!item) return;
-  item.status = modalSt;
-  item.notitie = $('mn').value;
-  closeM(); apply();
-  toast(gS(item.status).i + ' ' + gS(item.status).l);
-}
-
+function openModal(nr) { const i = allData.find(d => d.nr === nr); if (!i) return; modalNr = nr; modalSt = i.status; map.closePopup();
+  $('moo').innerHTML = STAT.map(s => `<div class="mo ${s.id===i.status?'sel':''}" onclick="selSt('${s.id}',this)"><div class="oi" style="background:${s.c}">${s.i}</div><div class="ol">${s.l}</div></div>`).join('');
+  $('mn').value = i.notitie || ''; $('mdl').classList.add('open'); }
+function selSt(id, el) { modalSt = id; document.querySelectorAll('.mo').forEach(o => o.classList.remove('sel')); el.classList.add('sel'); }
+function saveS() { const i = allData.find(d => d.nr === modalNr); if (!i) return; i.status = modalSt; i.notitie = $('mn').value; closeM(); apply(); toast(gS(i.status).i+' '+gS(i.status).l); }
 function closeM() { $('mdl').classList.remove('open'); }
 
 // ═══════════════════════════════════════════
-// GPS
+// GPS + RIT TRACKING
 // ═══════════════════════════════════════════
+let ritActive = false, ritPaused = false;
+let ritStart = null, ritKm = 0, ritSpeeds = [], ritStops = 0;
+let lastPos = null, ritTimer = null;
+let stillSince = null, isControlling = false, controleTimer = null;
+const STILL_THRESHOLD = 2 * 60 * 1000; // 2 minuten
+const RIT_KEY = 'oplev_rit_' + new Date().toISOString().slice(0, 10);
+
+function haversine(lat1, lon1, lat2, lon2) {
+  const R = 6371, dLat = (lat2-lat1)*Math.PI/180, dLon = (lon2-lon1)*Math.PI/180;
+  const a = Math.sin(dLat/2)**2 + Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLon/2)**2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+}
+
+function loadRit() { try { const s = JSON.parse(localStorage.getItem(RIT_KEY)); if (s) { ritStart=s.start; ritKm=s.km||0; ritSpeeds=s.speeds||[]; ritStops=s.stops||0; ritActive=s.active||false; ritPaused=s.paused||false; } } catch(e) {} }
+function saveRit() { try { localStorage.setItem(RIT_KEY, JSON.stringify({ start:ritStart, km:ritKm, speeds:ritSpeeds, stops:ritStops, active:ritActive, paused:ritPaused })); } catch(e) {} }
+
+function startRit() {
+  ritActive = true; ritPaused = false;
+  if (!ritStart) ritStart = Date.now();
+  $('btn-start').disabled = true; $('btn-pauze').disabled = false; $('btn-stop').disabled = false;
+  if (!ritTimer) ritTimer = setInterval(updateRitDisplay, 1000);
+  saveRit(); toast('▶ Rit gestart');
+}
+function pauzeRit() {
+  ritPaused = !ritPaused;
+  $('btn-pauze').textContent = ritPaused ? '▶' : '⏸';
+  $('btn-pauze').className = 'rit-btn ' + (ritPaused ? 'rit-start' : 'rit-pauze');
+  saveRit(); toast(ritPaused ? '⏸ Pauze' : '▶ Hervat');
+}
+function stopRit() {
+  ritActive = false; ritPaused = false;
+  if (ritTimer) { clearInterval(ritTimer); ritTimer = null; }
+  $('btn-start').disabled = false; $('btn-pauze').disabled = true; $('btn-stop').disabled = true;
+  $('btn-pauze').textContent = '⏸'; $('btn-pauze').className = 'rit-btn rit-pauze';
+  // Reset controle
+  if (isControlling) endControle();
+  saveRit(); toast('⏹ Rit gestopt');
+}
+
+function updateRitDisplay() {
+  if (!ritStart || !ritActive || ritPaused) return;
+  const el = Math.floor((Date.now() - ritStart) / 1000);
+  $('rit-tijd').textContent = `${Math.floor(el/60).toString().padStart(2,'0')}:${(el%60).toString().padStart(2,'0')}`;
+  $('rit-km').textContent = ritKm.toFixed(1);
+  const avg = ritSpeeds.length ? Math.round(ritSpeeds.reduce((a,b)=>a+b,0)/ritSpeeds.length*3.6) : 0;
+  $('rit-snelheid').textContent = avg;
+  $('rit-stops').textContent = ritStops;
+}
+
+function startControle() {
+  isControlling = true; ritStops++;
+  $('controle-alert').style.display = 'block';
+  const controleStart = Date.now();
+  controleTimer = setInterval(() => {
+    const sec = Math.floor((Date.now() - controleStart) / 1000);
+    $('controle-timer').textContent = `${Math.floor(sec/60)}:${(sec%60).toString().padStart(2,'0')}`;
+  }, 1000);
+  saveRit();
+}
+function endControle() {
+  isControlling = false;
+  $('controle-alert').style.display = 'none';
+  if (controleTimer) { clearInterval(controleTimer); controleTimer = null; }
+}
+
 function startGPS() {
   if (!navigator.geolocation) return;
   navigator.geolocation.watchPosition(pos => {
-    const { latitude, longitude, accuracy, heading } = pos.coords;
+    const { latitude, longitude, accuracy, heading, speed } = pos.coords;
     $('gdd').classList.add('on');
     $('gt').textContent = `GPS ±${Math.round(accuracy)}m`;
+
+    if (ritActive && !ritPaused && accuracy < 50) {
+      // Afstand
+      if (lastPos) {
+        const dist = haversine(lastPos.lat, lastPos.lng, latitude, longitude);
+        if (dist > 0.005 && dist < 1.0) {
+          ritKm += dist;
+          stillSince = null; // Bewegen = niet stil
+          if (isControlling) endControle();
+        } else if (dist < 0.005) {
+          // Stilstand detectie
+          if (!stillSince) stillSince = Date.now();
+          else if (Date.now() - stillSince > STILL_THRESHOLD && !isControlling && !ritPaused) {
+            startControle();
+          }
+        }
+      }
+      lastPos = { lat: latitude, lng: longitude };
+      if (speed !== null && speed >= 0) {
+        ritSpeeds.push(speed);
+        if (ritSpeeds.length > 500) ritSpeeds = ritSpeeds.slice(-500);
+      }
+      saveRit();
+    } else if (!lastPos) {
+      lastPos = { lat: latitude, lng: longitude };
+    }
+
+    // Auto-icoon
     const rot = heading && !isNaN(heading) ? `transform:rotate(${heading}deg)` : '';
-    const icon = L.divIcon({
-      className: '',
+    const icon = L.divIcon({ className: '',
       html: `<div style="font-size:28px;${rot};filter:drop-shadow(0 2px 4px rgba(0,0,0,.3))">🚗</div>`,
-      iconSize: [28, 28], iconAnchor: [14, 14]
-    });
+      iconSize: [28,28], iconAnchor: [14,14] });
     if (!gpsMarker) gpsMarker = L.marker([latitude, longitude], { icon, zIndexOffset: 1000 }).addTo(map);
     else { gpsMarker.setLatLng([latitude, longitude]); gpsMarker.setIcon(icon); }
-  }, () => { $('gt').textContent = 'GPS N/A'; },
-  { enableHighAccuracy: true, maximumAge: 5000 });
+  }, () => { $('gt').textContent = 'GPS N/A'; }, { enableHighAccuracy: true, maximumAge: 3000 });
 }
 
-function goGPS() {
-  if (gpsMarker) map.setView(gpsMarker.getLatLng(), 15);
-  else navigator.geolocation?.getCurrentPosition(p =>
-    map.setView([p.coords.latitude, p.coords.longitude], 15));
-}
+function goGPS() { if (gpsMarker) map.setView(gpsMarker.getLatLng(), 15); else navigator.geolocation?.getCurrentPosition(p => map.setView([p.coords.latitude, p.coords.longitude], 15)); }
+function navTo(lat, lng) { window.open(`https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`, '_blank'); }
+function flyTo(nr) { const i = allData.find(d => d.nr === nr); if (i?.lat) { map.setView([i.lat, i.lng], 16); i._m?.openPopup(); } else toast('⚠ Geen locatie'); $('lpl').classList.remove('open'); }
 
-function navTo(lat, lng) {
-  window.open(`https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`, '_blank');
-}
-
-function flyTo(nr) {
-  const item = allData.find(d => d.nr === nr);
-  if (item && item.lat && item.lng) {
-    map.setView([item.lat, item.lng], 16);
-    if (item._m) item._m.openPopup();
-  } else {
-    toast('⚠ Geen locatie gevonden voor dit adres');
-  }
-  $('lpl').classList.remove('open');
-}
-
-// ═══════════════════════════════════════════
 // UI
-// ═══════════════════════════════════════════
-function togP(id) {
-  ['fp', 'lpl'].forEach(p => {
-    const el = $(p);
-    if (p === id) el.classList.toggle('open');
-    else el.classList.remove('open');
-  });
-}
-
-function toast(msg) {
-  const t = $('toast');
-  t.textContent = msg;
-  t.classList.add('show');
-  setTimeout(() => t.classList.remove('show'), 3000);
-}
+function togP(id) { ['fp','lpl'].forEach(p => { const el = $(p); if (p===id) el.classList.toggle('open'); else el.classList.remove('open'); }); }
+function toast(m) { const t = $('toast'); t.textContent = m; t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 3000); }
 
 // ═══════════════════════════════════════════
 // DATA LADEN
 // ═══════════════════════════════════════════
 async function loadData() {
-  const prg = $('prg');
-  const gcnt = $('geocount');
+  const prg = $('prg'), gcnt = $('geocount');
   $('ldg').classList.remove('done');
-  prg.textContent = 'CSV ophalen...';
-  gcnt.textContent = '';
+  prg.textContent = 'CSV ophalen...'; gcnt.textContent = '';
 
   try {
-    const response = await fetch(CSV_URL);
-    if (!response.ok) throw new Error('HTTP ' + response.status);
-    const text = await response.text();
+    const resp = await fetch(CSV_URL);
+    if (!resp.ok) throw new Error('HTTP ' + resp.status);
+    const text = await resp.text();
     const rows = parseCSV(text);
-
     prg.textContent = `${rows.length} rijen geladen`;
     allData = [];
-
-    let geoOk = 0, geoFail = 0, geoCached = 0, geoSkip = 0;
+    let geoFail = 0;
 
     for (let i = 0; i < rows.length; i++) {
       const r = rows[i];
-      const nummer = r.Nummer || '';
-      const zaakonderwerp = r.Zaakonderwerp || '';
-      if (!nummer && !zaakonderwerp) continue;
-
+      if (!r.Nummer && !r.Zaakonderwerp) continue;
       const item = {
-        nr: parseInt(nummer) || i + 1,
-        verzn: r.Vergunning_ZN || '',
-        oplzn: r.Oplever_ZN || '',
-        zaakonderwerp: zaakonderwerp,
-        adres: r.Adres || '',
-        lat: parseFloat(r.Lat) || null,
-        lng: parseFloat(r.Lng) || null,
+        nr: parseInt(r.Nummer) || i+1,
+        verzn: r.Vergunning_ZN || '', oplzn: r.Oplever_ZN || '',
+        zaakonderwerp: r.Zaakonderwerp || '', adres: r.Adres || '',
+        lat: parseDec(r.Lat), lng: parseDec(r.Lng),
         status: mapStatus(r.Status),
-        datum_aanvraag: r.Datum_aanvraag || '',
-        notitie: r.Notitie || '',
-        _m: null,
+        datum_aanvraag: r.Datum_aanvraag || '', notitie: r.Notitie || '', _m: null,
       };
 
-      // Heeft al coordinaten uit de sheet?
-      if (item.lat && item.lng) {
-        geoSkip++;
-      }
-      // Geen coords maar wel adres? Geocoden!
+      // Coordinaten gaan voor, anders geocoden
+      if (item.lat && item.lng) { /* klaar */ }
       else if (item.adres) {
-        const cacheKey = item.adres.toLowerCase().trim();
-
-        // Check cache (inclusief null = eerder niet gevonden)
-        if (gc[cacheKey] !== undefined) {
-          if (gc[cacheKey]) {
-            item.lat = gc[cacheKey].lat;
-            item.lng = gc[cacheKey].lng;
-            geoCached++;
-          } else {
-            geoFail++;
-          }
-        } else {
-          // Nieuw adres, geocoden
-          prg.textContent = `Geocoderen ${i + 1}/${rows.length}...`;
-          gcnt.textContent = `${item.adres.substring(0, 40)}`;
-
-          const result = await geocode(item.adres);
-          if (result) {
-            item.lat = result.lat;
-            item.lng = result.lng;
-            geoOk++;
-          } else {
-            geoFail++;
-          }
-          // Rate limit alleen voor niet-gecachte requests
-          await new Promise(resolve => setTimeout(resolve, 1100));
+        const k = item.adres.toLowerCase().trim();
+        if (gc[k] !== undefined) { if (gc[k]) { item.lat = gc[k].lat; item.lng = gc[k].lng; } else geoFail++; }
+        else {
+          prg.textContent = `Geocoderen ${i+1}/${rows.length}...`;
+          gcnt.textContent = item.adres.substring(0, 40);
+          const res = await geocode(item.adres);
+          if (res) { item.lat = res.lat; item.lng = res.lng; } else geoFail++;
+          await new Promise(r => setTimeout(r, 1100));
         }
-      } else {
-        geoFail++; // Geen adres en geen coords
-      }
-
+      } else geoFail++;
       allData.push(item);
     }
 
-    const totalOnMap = allData.filter(d => d.lat && d.lng).length;
-    prg.textContent = `${totalOnMap}/${allData.length} op kaart`;
-    gcnt.textContent = geoFail > 0 ? `${geoFail} niet gevonden` : '';
-
-    if (geoFail > 0) {
-      console.log('Niet gevonden adressen:');
-      allData.filter(d => !d.lat && d.adres).forEach(d =>
-        console.log(`  ${d.nr}: "${d.adres}"`));
-    }
-
+    const onMap = allData.filter(d => d.lat && d.lng).length;
+    prg.textContent = `${onMap}/${allData.length} op kaart`;
+    gcnt.textContent = geoFail > 0 ? `${geoFail} zonder locatie` : '';
   } catch(e) {
-    console.error('Laden mislukt:', e);
-    prg.textContent = 'Fout bij laden! Check of Sheet is gepubliceerd als CSV.';
-    gcnt.textContent = e.message;
+    console.error(e);
+    prg.textContent = 'Fout bij laden!'; gcnt.textContent = e.message;
     await new Promise(r => setTimeout(r, 4000));
   }
 
   apply();
   const coords = allData.filter(d => d.lat && d.lng).map(d => [d.lat, d.lng]);
-  if (coords.length > 0) map.fitBounds(L.latLngBounds(coords).pad(0.1));
+  if (coords.length) map.fitBounds(L.latLngBounds(coords).pad(0.1));
   $('ldg').classList.add('done');
 }
 
@@ -592,6 +508,14 @@ async function loadData() {
 // INIT
 // ═══════════════════════════════════════════
 buildFilters();
+loadRit();
+// Herstel ritbalk status bij herladen
+if (ritActive) {
+  $('btn-start').disabled = true; $('btn-pauze').disabled = false; $('btn-stop').disabled = false;
+  if (ritPaused) { $('btn-pauze').textContent = '▶'; $('btn-pauze').className = 'rit-btn rit-start'; }
+  ritTimer = setInterval(updateRitDisplay, 1000);
+  updateRitDisplay();
+}
 map.on('click', () => { $('fp').classList.remove('open'); });
 $('mdl').addEventListener('click', e => { if (e.target === e.currentTarget) closeM(); });
 startGPS();
