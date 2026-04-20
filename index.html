@@ -328,7 +328,7 @@ const map = L.map('map', { center: [53.22, 6.56], zoom: 11, zoomControl: false }
 L.control.zoom({ position: 'topright' }).addTo(map);
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OSM', maxZoom: 19 }).addTo(map);
 let mLayer = L.layerGroup().addTo(map), allData = [], gpsMarker = null;
-let activeFilters = new Set(STAT.map(s => s.id));
+let activeFilters = new Set(STAT.filter(s => s.id !== 'goed' && s.id !== 'vanaf').map(s => s.id));
 
 function makeIcon(sid) {
   const s = gS(sid);
@@ -352,7 +352,10 @@ function makePopup(item) {
 
 // Filters
 function buildFilters() {
-  $('sfl').innerHTML = STAT.map(s => `<label class="sf"><input type="checkbox" checked value="${s.id}" onchange="toggleF('${s.id}',this.checked)"><span class="ck">✓</span><span class="sw" style="background:${s.c}"></span><span>${s.i} ${s.l}</span></label>`).join('');
+  $('sfl').innerHTML = STAT.map(s => {
+    const checked = activeFilters.has(s.id) ? 'checked' : '';
+    return `<label class="sf"><input type="checkbox" ${checked} value="${s.id}" onchange="toggleF('${s.id}',this.checked)"><span class="ck">✓</span><span class="sw" style="background:${s.c}"></span><span>${s.i} ${s.l}</span></label>`;
+  }).join('');
 }
 function toggleF(id, on) { if (on) activeFilters.add(id); else activeFilters.delete(id); apply(); }
 function apply() {
