@@ -328,7 +328,7 @@ const map = L.map('map', { center: [53.22, 6.56], zoom: 11, zoomControl: false }
 L.control.zoom({ position: 'topright' }).addTo(map);
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OSM', maxZoom: 19 }).addTo(map);
 let mLayer = L.layerGroup().addTo(map), allData = [], gpsMarker = null;
-let activeFilters = new Set(STAT.filter(s => s.id !== 'goed' && s.id !== 'vanaf').map(s => s.id));
+let activeFilters = new Set(['todo']);
 
 function makeIcon(sid) {
   const s = gS(sid);
@@ -365,9 +365,14 @@ function apply() {
   updateStats(f); updateList(f);
 }
 function updateStats(data) {
-  const c = {}; STAT.forEach(s => c[s.id] = 0); data.forEach(d => c[d.status]++);
-  const done = c.goed + c.vanaf, tot = data.length, pct = tot ? Math.round(done/tot*100) : 0;
+  // Voortgangsbalk altijd op basis van ALLE data (niet gefilterd)
+  const ca = {}; STAT.forEach(s => ca[s.id] = 0); allData.forEach(d => ca[d.status]++);
+  const done = (ca.goed||0) + (ca.vanaf||0) + (ca.begonnen||0), tot = allData.length;
+  const pct = tot ? Math.round(done/tot*100) : 0;
   $('dc').textContent = done; $('tc').textContent = tot; $('pct').textContent = pct+'%'; $('bf').style.width = pct+'%';
+
+  // Stats badges op basis van gefilterde data
+  const c = {}; STAT.forEach(s => c[s.id] = 0); data.forEach(d => c[d.status]++);
   $('stsd').innerHTML = STAT.map(s => `<div class="sta"><div class="dot" style="background:${s.c}"></div>${s.i} ${c[s.id]}</div>`).join('');
 }
 function updateList(data) {
@@ -561,6 +566,9 @@ function startGPS() {
       lastPos = { lat: latitude, lng: longitude };
     }
 
+    // Skip onnauwkeurige GPS readings
+    if (accuracy > 100) return;
+
     // Auto-icoon met richting
     const rot = heading && !isNaN(heading) ? `transform:rotate(${heading}deg)` : '';
     const icon = L.divIcon({ className: '',
@@ -571,7 +579,7 @@ function startGPS() {
 
     // Auto-centreren op de auto
     if (followGPS) map.setView([latitude, longitude], map.getZoom(), { animate: true });
-  }, () => { $('gt').textContent = 'GPS N/A'; }, { enableHighAccuracy: true, maximumAge: 3000 });
+  }, () => { $('gt').textContent = 'GPS N/A'; }, { enableHighAccuracy: true, maximumAge: 0, timeout: 10000 });
 }
 
 // Stop auto-centreren als gebruiker kaart versleept, hervat via 📍
