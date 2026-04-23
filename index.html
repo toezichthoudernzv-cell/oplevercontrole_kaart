@@ -331,32 +331,55 @@ const map = L.map('map', { center: [53.22, 6.56], zoom: 11, zoomControl: false }
 L.control.zoom({ position: 'topright' }).addTo(map);
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OSM', maxZoom: 19 }).addTo(map);
 
-// Noorderzijlvest GEO lagen via esri-leaflet
-const nzBeheergebied = L.esri.dynamicMapLayer({
-  url: 'https://arcgis.noorderzijlvest.nl/server/rest/services/Referentie/BegrenzingNoorderzijlvest/MapServer',
+// Noorderzijlvest GEO lagen
+// Beheergebied via PDOK WMS (publiek, CORS-vrij)
+const nzBeheergebied = L.tileLayer.wms('https://service.pdok.nl/hwh/waterschapsgrenzenimso/wms/v1_0?', {
+  layers: 'Waterschapsgebied',
+  format: 'image/png',
+  transparent: true,
   opacity: 0.4,
-  attribution: '© Noorderzijlvest'
+  version: '1.3.0',
+  attribution: '© PDOK/Waterschappen'
 }).addTo(map);
 
-const nzWatergangen = L.esri.dynamicMapLayer({
-  url: 'https://arcgis.noorderzijlvest.nl/server/rest/services/Watergangen/Watergangen/MapServer',
+// NZ watergangen via ArcGIS WMS (WMS werkt vaak zonder CORS-blokkade)
+const nzWatergangen = L.tileLayer.wms('https://arcgis.noorderzijlvest.nl/server/services/Watergangen/Watergangen/MapServer/WMSServer?', {
+  layers: '0,1,2,3',
+  format: 'image/png',
+  transparent: true,
   opacity: 0.5,
+  version: '1.1.1',
   attribution: '© Noorderzijlvest'
 });
 
-const nzKunstwerken = L.esri.dynamicMapLayer({
-  url: 'https://arcgis.noorderzijlvest.nl/server/rest/services/Kunstwerken/Kunstwerken/MapServer',
+// NZ kunstwerken via ArcGIS WMS
+const nzKunstwerken = L.tileLayer.wms('https://arcgis.noorderzijlvest.nl/server/services/Kunstwerken/Kunstwerken/MapServer/WMSServer?', {
+  layers: '0,1,2,3',
+  format: 'image/png',
+  transparent: true,
   opacity: 0.6,
+  version: '1.1.1',
   attribution: '© Noorderzijlvest'
 });
 
-async function loadNZGebied() { /* lagen laden automatisch via esri-leaflet */ }
+// NZ keringen via ArcGIS WMS
+const nzKeringen = L.tileLayer.wms('https://arcgis.noorderzijlvest.nl/server/services/Keringen/Keringen/MapServer/WMSServer?', {
+  layers: '0,1,2,3,4,5,6',
+  format: 'image/png',
+  transparent: true,
+  opacity: 0.5,
+  version: '1.1.1',
+  attribution: '© Noorderzijlvest'
+});
+
+async function loadNZGebied() { /* lagen laden automatisch via WMS */ }
 
 // Laag-selector
 const overlays = {
   '🗺️ Beheergebied': nzBeheergebied,
   '🌊 Watergangen': nzWatergangen,
   '⚙️ Kunstwerken': nzKunstwerken,
+  '🛡️ Keringen': nzKeringen,
 };
 L.control.layers(null, overlays, { position: 'topright', collapsed: true }).addTo(map);
 
