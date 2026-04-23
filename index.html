@@ -330,28 +330,77 @@ const map = L.map('map', { center: [53.22, 6.56], zoom: 11, zoomControl: false }
 L.control.zoom({ position: 'topright' }).addTo(map);
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OSM', maxZoom: 19 }).addTo(map);
 
-// Noorderzijlvest beheergebied (gebiedsgrens)
-const nzBegrenzing = L.tileLayer.wms('https://arcgis.noorderzijlvest.nl/server/services/Referentie/BegrenzingNoorderzijlvest/MapServer/WMSServer', {
-  layers: '0',
-  format: 'image/png',
-  transparent: true,
-  opacity: 0.4,
-  attribution: '© Noorderzijlvest'
-}).addTo(map);
+// Noorderzijlvest beheergebied - probeer GeoJSON van ArcGIS, fallback naar handgetekende grens
+const nzGebied = L.layerGroup().addTo(map);
 
-// Noorderzijlvest watergangen (optioneel, kan aan/uit)
-const nzWatergangen = L.tileLayer.wms('https://arcgis.noorderzijlvest.nl/server/services/Watergangen/Watergangen/MapServer/WMSServer', {
-  layers: '0,1,2,3',
-  format: 'image/png',
-  transparent: true,
-  opacity: 0.5,
-  attribution: '© Noorderzijlvest'
-});
+// Laad gebiedsgrens van ArcGIS server
+async function loadNZGebied() {
+  try {
+    const url = 'https://arcgis.noorderzijlvest.nl/server/rest/services/Referentie/BegrenzingNoorderzijlvest/MapServer/0/query?where=1%3D1&outFields=*&f=geojson&outSR=4326';
+    const resp = await fetch(url);
+    if (resp.ok) {
+      const geojson = await resp.json();
+      L.geoJSON(geojson, {
+        style: { color: '#1a5276', weight: 3, fillColor: '#2980b9', fillOpacity: 0.08, dashArray: '8,4' }
+      }).addTo(nzGebied);
+      console.log('✅ NZ gebiedsgrens geladen van ArcGIS');
+      return;
+    }
+  } catch(e) { console.warn('ArcGIS niet bereikbaar, gebruik fallback:', e); }
+
+  // Fallback: handgetekende grens van het beheergebied
+  const nzGrens = [
+    [53.465, 5.85],  // Lauwersmeer west
+    [53.42, 5.83],   // Lauwersmeer zuid
+    [53.40, 6.05],   // Zoutkamp
+    [53.47, 6.15],   // Noordkust
+    [53.49, 6.30],   // Usquert
+    [53.48, 6.55],   // Uithuizen
+    [53.45, 6.75],   // Uithuizermeeden
+    [53.43, 6.85],   // Delfzijl noord
+    [53.35, 6.93],   // Delfzijl oost
+    [53.30, 6.90],   // Appingedam
+    [53.25, 6.88],   // Loppersum
+    [53.22, 6.80],   // Ten Post
+    [53.20, 6.70],   // Ten Boer
+    [53.19, 6.62],   // Groningen oost
+    [53.18, 6.58],   // Groningen centrum
+    [53.17, 6.53],   // Groningen zuid
+    [53.15, 6.52],   // Haren
+    [53.12, 6.55],   // Noord-Willemskanaal
+    [53.08, 6.50],   // Noordlaren
+    [53.05, 6.45],   // Zuidlaren
+    [53.02, 6.40],   // Vries
+    [52.98, 6.38],   // Assen noord
+    [52.95, 6.35],   // Assen
+    [52.92, 6.30],   // Smilde oost
+    [52.92, 6.20],   // Smilde
+    [52.93, 6.10],   // Diever
+    [52.95, 6.00],   // Drenthe west
+    [53.00, 5.95],   // Marum zuid
+    [53.05, 5.90],   // Friese grens
+    [53.10, 5.88],   // Surhuisterveen
+    [53.15, 5.85],   // Buitenpost
+    [53.20, 5.82],   // Kollum
+    [53.28, 5.80],   // Dokkumer Ee
+    [53.35, 5.82],   // Lauwersmeer oost
+    [53.40, 5.83],   // Lauwersmeer
+    [53.465, 5.85],  // Sluiting
+  ];
+
+  L.polygon(nzGrens, {
+    color: '#1a5276',
+    weight: 3,
+    fillColor: '#2980b9',
+    fillOpacity: 0.06,
+    dashArray: '8,4'
+  }).addTo(nzGebied).bindPopup('<strong>Beheergebied Noorderzijlvest</strong><br>Waterschap Noorderzijlvest');
+  console.log('📍 NZ gebiedsgrens (fallback) geladen');
+}
 
 // Laag-selector
 const overlays = {
-  '🗺️ Beheergebied NZ': nzBegrenzing,
-  '🌊 Watergangen NZ': nzWatergangen,
+  '🗺️ Beheergebied NZ': nzGebied,
 };
 L.control.layers(null, overlays, { position: 'topright', collapsed: true }).addTo(map);
 
@@ -890,6 +939,7 @@ if (ritActive) {
 map.on('click', () => { $('fp').classList.remove('open'); });
 $('mdl').addEventListener('click', e => { if (e.target === e.currentTarget) closeM(); });
 startGPS();
+loadNZGebied();
 loadData();
 </script>
 </body>
