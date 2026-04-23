@@ -6,6 +6,7 @@
 <title>Oplevercontrole Kaart - Noorderzijlvest</title>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://unpkg.com/esri-leaflet@3.0.12/dist/esri-leaflet.js"></script>
 <style>
 :root{--nz:#1a5276;--nzl:#2980b9;--nzd:#0e2f44}
 *{margin:0;padding:0;box-sizing:border-box}
@@ -330,57 +331,30 @@ const map = L.map('map', { center: [53.22, 6.56], zoom: 11, zoomControl: false }
 L.control.zoom({ position: 'topright' }).addTo(map);
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OSM', maxZoom: 19 }).addTo(map);
 
-// Noorderzijlvest GEO lagen
-const nzGebied = L.layerGroup().addTo(map);
-const nzWatergangen = L.layerGroup();
-const nzKunstwerken = L.layerGroup();
+// Noorderzijlvest GEO lagen via esri-leaflet
+const nzBeheergebied = L.esri.dynamicMapLayer({
+  url: 'https://arcgis.noorderzijlvest.nl/server/rest/services/Referentie/BegrenzingNoorderzijlvest/MapServer',
+  opacity: 0.4,
+  attribution: '© Noorderzijlvest'
+}).addTo(map);
 
-async function loadNZGebied() {
-  // Beheergebied grens
-  try {
-    const url = 'https://arcgis.noorderzijlvest.nl/server/rest/services/Referentie/BegrenzingNoorderzijlvest/MapServer/0/query?where=1%3D1&outFields=*&f=geojson&outSR=4326';
-    const resp = await fetch(url);
-    if (resp.ok) {
-      const geojson = await resp.json();
-      L.geoJSON(geojson, {
-        style: { color: '#1a5276', weight: 2, fillColor: '#2980b9', fillOpacity: 0.04, dashArray: '6,3' }
-      }).addTo(nzGebied);
-      console.log('✅ NZ gebiedsgrens geladen');
-    }
-  } catch(e) { console.warn('Gebiedsgrens niet beschikbaar:', e); }
+const nzWatergangen = L.esri.dynamicMapLayer({
+  url: 'https://arcgis.noorderzijlvest.nl/server/rest/services/Watergangen/Watergangen/MapServer',
+  opacity: 0.5,
+  attribution: '© Noorderzijlvest'
+});
 
-  // Watergangen
-  try {
-    const url = 'https://arcgis.noorderzijlvest.nl/server/rest/services/Watergangen/Watergangen/MapServer/0/query?where=1%3D1&outFields=NAAM&f=geojson&outSR=4326&resultRecordCount=2000';
-    const resp = await fetch(url);
-    if (resp.ok) {
-      const geojson = await resp.json();
-      L.geoJSON(geojson, {
-        style: { color: '#3498db', weight: 1.5, opacity: 0.6 },
-        onEachFeature: (f, layer) => { if (f.properties?.NAAM) layer.bindPopup(`<strong>${f.properties.NAAM}</strong>`); }
-      }).addTo(nzWatergangen);
-      console.log('✅ NZ watergangen geladen');
-    }
-  } catch(e) { console.warn('Watergangen niet beschikbaar:', e); }
+const nzKunstwerken = L.esri.dynamicMapLayer({
+  url: 'https://arcgis.noorderzijlvest.nl/server/rest/services/Kunstwerken/Kunstwerken/MapServer',
+  opacity: 0.6,
+  attribution: '© Noorderzijlvest'
+});
 
-  // Kunstwerken (stuwen, gemalen, duikers)
-  try {
-    const url = 'https://arcgis.noorderzijlvest.nl/server/rest/services/Kunstwerken/Kunstwerken/MapServer/0/query?where=1%3D1&outFields=NAAM,TYPE&f=geojson&outSR=4326&resultRecordCount=2000';
-    const resp = await fetch(url);
-    if (resp.ok) {
-      const geojson = await resp.json();
-      L.geoJSON(geojson, {
-        pointToLayer: (f, latlng) => L.circleMarker(latlng, { radius: 4, color: '#e74c3c', fillColor: '#e74c3c', fillOpacity: 0.6, weight: 1 }),
-        onEachFeature: (f, layer) => { const p = f.properties; layer.bindPopup(`<strong>${p?.NAAM||'Kunstwerk'}</strong><br>${p?.TYPE||''}`); }
-      }).addTo(nzKunstwerken);
-      console.log('✅ NZ kunstwerken geladen');
-    }
-  } catch(e) { console.warn('Kunstwerken niet beschikbaar:', e); }
-}
+async function loadNZGebied() { /* lagen laden automatisch via esri-leaflet */ }
 
 // Laag-selector
 const overlays = {
-  '🗺️ Beheergebied': nzGebied,
+  '🗺️ Beheergebied': nzBeheergebied,
   '🌊 Watergangen': nzWatergangen,
   '⚙️ Kunstwerken': nzKunstwerken,
 };
