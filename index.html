@@ -40,12 +40,13 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;overflow
 #controle-alert{display:none;position:fixed;top:145px;left:10px;right:10px;z-index:1060;background:#27ae60;color:#fff;border-radius:12px;padding:10px 16px;text-align:center;font-size:13px;font-weight:600;box-shadow:0 4px 15px rgba(39,174,96,.4);animation:fadeIn .3s}
 
 /* Proximity alert - links op kaart */
-#prox-alert{display:none;position:fixed;top:150px;left:10px;width:260px;z-index:1060;background:#fff;border-radius:14px;padding:14px;box-shadow:0 6px 24px rgba(0,0,0,.25);animation:slideIn .3s;border-left:5px solid #e67e22}
+#prox-alert{display:none;position:fixed;top:150px;left:10px;width:280px;z-index:1060;background:#fff;border-radius:14px;padding:14px;box-shadow:0 6px 24px rgba(0,0,0,.25);animation:slideIn .3s;border-left:5px solid #e67e22}
 @keyframes slideIn{from{opacity:0;transform:translateX(-30px)}to{opacity:1;transform:translateX(0)}}
 #prox-inner{display:flex;gap:10px;align-items:flex-start}
 #prox-icon{font-size:28px;flex-shrink:0}
-#prox-title{font-size:13px;font-weight:700;color:#2c3e50;line-height:1.3;margin-bottom:4px}
-#prox-detail{font-size:11px;color:#7f8c8d;line-height:1.3}
+#prox-status{display:inline-block;padding:3px 8px;border-radius:12px;font-size:10px;font-weight:700;text-transform:uppercase;margin-bottom:6px}
+#prox-title{font-size:13px;font-weight:700;color:#2c3e50;line-height:1.3;margin-bottom:6px}
+#prox-detail{font-size:11px;color:#7f8c8d;line-height:1.5}
 #prox-close{position:absolute;top:8px;right:10px;background:none;border:none;font-size:18px;color:#95a5a6;cursor:pointer}
 @keyframes fadeIn{from{opacity:0;transform:translateY(-10px)}to{opacity:1;transform:translateY(0)}}
 
@@ -182,16 +183,17 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;overflow
 
 <div id="controle-alert">🔍 Controle bezig... <span id="controle-timer">0:00</span></div>
 
-<!-- Proximity alert -->
+<!-- Proximity alert - uitgebreid met alle gegevens -->
 <div id="prox-alert">
+  <button id="prox-close" onclick="closeProx()">✕</button>
   <div id="prox-inner">
     <div id="prox-icon">📍</div>
     <div id="prox-text">
+      <div id="prox-status"></div>
       <div id="prox-title"></div>
       <div id="prox-detail"></div>
     </div>
   </div>
-  <button id="prox-close" onclick="closeProx()">✕</button>
 </div>
 
 <div id="map"></div>
@@ -514,7 +516,6 @@ function endControle() {
   if (controleTimer) { clearInterval(controleTimer); controleTimer = null; }
 }
 
-let followGPS = true;
 let lastAlertTime = 0;
 let alertedItems = new Set();
 const PROX_DIST = 0.3; // 300 meter
@@ -529,16 +530,26 @@ function checkProximity(lat, lng) {
     alertedItems.add(closest.nr);
     const s = gS(closest.status);
     $('prox-icon').textContent = s.i;
+    $('prox-status').textContent = s.l;
+    $('prox-status').style.cssText = `background:${s.c}20;color:${s.c}`;
     $('prox-title').textContent = closest.zaakonderwerp;
-    $('prox-detail').innerHTML = `${closest.adres||'-'}<br>📏 <strong>${Math.round(minDist*1000)}m</strong> · ${s.l}`;
+    const details = [
+      `📏 <strong>${Math.round(minDist*1000)}m</strong>`,
+      closest.adres ? `📍 ${closest.adres}` : '',
+      closest.verzn ? `Vergunning: ${closest.verzn}` : '',
+      closest.oplzn ? `Oplever: ${closest.oplzn}` : '',
+      closest.datum_aanvraag ? `📅 Aangevraagd: ${closest.datum_aanvraag}` : '',
+      closest.datum_controle ? `🔍 Gecontroleerd: ${closest.datum_controle}` : '',
+      closest.notitie ? `💬 ${closest.notitie}` : '',
+    ].filter(Boolean).join('<br>');
+    $('prox-detail').innerHTML = details;
     $('prox-alert').style.display = 'block';
     $('prox-alert').style.borderLeftColor = s.c;
-    followGPS = false;
+    // Zoom in naar het controlepunt
     map.setView([closest.lat, closest.lng], 17, { animate: true });
-    if (closest._m) closest._m.openPopup();
   }
 }
-function closeProx() { $('prox-alert').style.display = 'none'; followGPS = true; }
+function closeProx() { $('prox-alert').style.display = 'none'; }
 
 function startGPS() {
   if (!navigator.geolocation) return;
@@ -546,6 +557,9 @@ function startGPS() {
     const { latitude, longitude, accuracy, heading, speed } = pos.coords;
     $('gdd').classList.add('on');
     $('gt').textContent = `GPS ±${Math.round(accuracy)}m`;
+
+    // Skip zeer onnauwkeurige metingen
+    if (accuracy > 100) return;
 
     if (ritActive && !ritPaused && accuracy < 50) {
       if (lastPos) {
@@ -566,9 +580,6 @@ function startGPS() {
       lastPos = { lat: latitude, lng: longitude };
     }
 
-    // Skip onnauwkeurige GPS readings
-    if (accuracy > 100) return;
-
     // Auto-icoon met richting
     const rot = heading && !isNaN(heading) ? `transform:rotate(${heading}deg)` : '';
     const icon = L.divIcon({ className: '',
@@ -577,16 +588,12 @@ function startGPS() {
     if (!gpsMarker) gpsMarker = L.marker([latitude, longitude], { icon, zIndexOffset: 1000 }).addTo(map);
     else { gpsMarker.setLatLng([latitude, longitude]); gpsMarker.setIcon(icon); }
 
-    // Auto-centreren op de auto
-    if (followGPS) map.setView([latitude, longitude], map.getZoom(), { animate: true });
+    // ALTIJD centreren op de auto - ook bij inzoomen
+    map.setView([latitude, longitude], map.getZoom(), { animate: true });
   }, () => { $('gt').textContent = 'GPS N/A'; }, { enableHighAccuracy: true, maximumAge: 0, timeout: 10000 });
 }
 
-// Stop auto-centreren als gebruiker kaart versleept, hervat via 📍
-map.on('dragstart', () => { followGPS = false; });
-
 function goGPS() {
-  followGPS = true;
   if (gpsMarker) map.setView(gpsMarker.getLatLng(), 15, { animate: true });
   else navigator.geolocation?.getCurrentPosition(p => map.setView([p.coords.latitude, p.coords.longitude], 15));
 }
@@ -807,6 +814,8 @@ let wakeLock = null;
 
 async function requestWakeLock() {
   try {
+    // Release oude lock eerst
+    if (wakeLock) { try { await wakeLock.release(); } catch(e) {} wakeLock = null; }
     if ('wakeLock' in navigator) {
       wakeLock = await navigator.wakeLock.request('screen');
       $('wl-badge').textContent = '☀️ Scherm aan';
@@ -816,18 +825,28 @@ async function requestWakeLock() {
         $('wl-badge').textContent = '🌙 Scherm uit';
         $('wl-badge').style.background = 'rgba(231,76,60,.2)';
         $('wl-badge').style.color = '#e74c3c';
+        // Auto-retry als rit nog actief is
+        if (ritActive && !ritPaused) {
+          setTimeout(() => requestWakeLock(), 1000);
+        }
       });
     }
   } catch(e) { console.warn('Wake Lock niet beschikbaar:', e); }
 }
 
 async function releaseWakeLock() {
-  if (wakeLock) { await wakeLock.release(); wakeLock = null; }
+  if (wakeLock) { try { await wakeLock.release(); } catch(e) {} wakeLock = null; }
+  $('wl-badge').textContent = '🌙 Scherm uit';
+  $('wl-badge').style.background = 'rgba(231,76,60,.2)';
+  $('wl-badge').style.color = '#e74c3c';
 }
 
-// Hervat wake lock als app weer op voorgrond komt
+// Hervat wake lock als app weer op voorgrond komt of focus krijgt
 document.addEventListener('visibilitychange', () => {
   if (document.visibilityState === 'visible' && ritActive && !ritPaused) requestWakeLock();
+});
+window.addEventListener('focus', () => {
+  if (ritActive && !ritPaused) requestWakeLock();
 });
 
 // ═══════════════════════════════════════════
