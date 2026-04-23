@@ -330,77 +330,59 @@ const map = L.map('map', { center: [53.22, 6.56], zoom: 11, zoomControl: false }
 L.control.zoom({ position: 'topright' }).addTo(map);
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OSM', maxZoom: 19 }).addTo(map);
 
-// Noorderzijlvest beheergebied - probeer GeoJSON van ArcGIS, fallback naar handgetekende grens
+// Noorderzijlvest GEO lagen
 const nzGebied = L.layerGroup().addTo(map);
+const nzWatergangen = L.layerGroup();
+const nzKunstwerken = L.layerGroup();
 
-// Laad gebiedsgrens van ArcGIS server
 async function loadNZGebied() {
+  // Beheergebied grens
   try {
     const url = 'https://arcgis.noorderzijlvest.nl/server/rest/services/Referentie/BegrenzingNoorderzijlvest/MapServer/0/query?where=1%3D1&outFields=*&f=geojson&outSR=4326';
     const resp = await fetch(url);
     if (resp.ok) {
       const geojson = await resp.json();
       L.geoJSON(geojson, {
-        style: { color: '#1a5276', weight: 3, fillColor: '#2980b9', fillOpacity: 0.08, dashArray: '8,4' }
+        style: { color: '#1a5276', weight: 2, fillColor: '#2980b9', fillOpacity: 0.04, dashArray: '6,3' }
       }).addTo(nzGebied);
-      console.log('✅ NZ gebiedsgrens geladen van ArcGIS');
-      return;
+      console.log('✅ NZ gebiedsgrens geladen');
     }
-  } catch(e) { console.warn('ArcGIS niet bereikbaar, gebruik fallback:', e); }
+  } catch(e) { console.warn('Gebiedsgrens niet beschikbaar:', e); }
 
-  // Fallback: handgetekende grens van het beheergebied
-  const nzGrens = [
-    [53.465, 5.85],  // Lauwersmeer west
-    [53.42, 5.83],   // Lauwersmeer zuid
-    [53.40, 6.05],   // Zoutkamp
-    [53.47, 6.15],   // Noordkust
-    [53.49, 6.30],   // Usquert
-    [53.48, 6.55],   // Uithuizen
-    [53.45, 6.75],   // Uithuizermeeden
-    [53.43, 6.85],   // Delfzijl noord
-    [53.35, 6.93],   // Delfzijl oost
-    [53.30, 6.90],   // Appingedam
-    [53.25, 6.88],   // Loppersum
-    [53.22, 6.80],   // Ten Post
-    [53.20, 6.70],   // Ten Boer
-    [53.19, 6.62],   // Groningen oost
-    [53.18, 6.58],   // Groningen centrum
-    [53.17, 6.53],   // Groningen zuid
-    [53.15, 6.52],   // Haren
-    [53.12, 6.55],   // Noord-Willemskanaal
-    [53.08, 6.50],   // Noordlaren
-    [53.05, 6.45],   // Zuidlaren
-    [53.02, 6.40],   // Vries
-    [52.98, 6.38],   // Assen noord
-    [52.95, 6.35],   // Assen
-    [52.92, 6.30],   // Smilde oost
-    [52.92, 6.20],   // Smilde
-    [52.93, 6.10],   // Diever
-    [52.95, 6.00],   // Drenthe west
-    [53.00, 5.95],   // Marum zuid
-    [53.05, 5.90],   // Friese grens
-    [53.10, 5.88],   // Surhuisterveen
-    [53.15, 5.85],   // Buitenpost
-    [53.20, 5.82],   // Kollum
-    [53.28, 5.80],   // Dokkumer Ee
-    [53.35, 5.82],   // Lauwersmeer oost
-    [53.40, 5.83],   // Lauwersmeer
-    [53.465, 5.85],  // Sluiting
-  ];
+  // Watergangen
+  try {
+    const url = 'https://arcgis.noorderzijlvest.nl/server/rest/services/Watergangen/Watergangen/MapServer/0/query?where=1%3D1&outFields=NAAM&f=geojson&outSR=4326&resultRecordCount=2000';
+    const resp = await fetch(url);
+    if (resp.ok) {
+      const geojson = await resp.json();
+      L.geoJSON(geojson, {
+        style: { color: '#3498db', weight: 1.5, opacity: 0.6 },
+        onEachFeature: (f, layer) => { if (f.properties?.NAAM) layer.bindPopup(`<strong>${f.properties.NAAM}</strong>`); }
+      }).addTo(nzWatergangen);
+      console.log('✅ NZ watergangen geladen');
+    }
+  } catch(e) { console.warn('Watergangen niet beschikbaar:', e); }
 
-  L.polygon(nzGrens, {
-    color: '#1a5276',
-    weight: 3,
-    fillColor: '#2980b9',
-    fillOpacity: 0.06,
-    dashArray: '8,4'
-  }).addTo(nzGebied).bindPopup('<strong>Beheergebied Noorderzijlvest</strong><br>Waterschap Noorderzijlvest');
-  console.log('📍 NZ gebiedsgrens (fallback) geladen');
+  // Kunstwerken (stuwen, gemalen, duikers)
+  try {
+    const url = 'https://arcgis.noorderzijlvest.nl/server/rest/services/Kunstwerken/Kunstwerken/MapServer/0/query?where=1%3D1&outFields=NAAM,TYPE&f=geojson&outSR=4326&resultRecordCount=2000';
+    const resp = await fetch(url);
+    if (resp.ok) {
+      const geojson = await resp.json();
+      L.geoJSON(geojson, {
+        pointToLayer: (f, latlng) => L.circleMarker(latlng, { radius: 4, color: '#e74c3c', fillColor: '#e74c3c', fillOpacity: 0.6, weight: 1 }),
+        onEachFeature: (f, layer) => { const p = f.properties; layer.bindPopup(`<strong>${p?.NAAM||'Kunstwerk'}</strong><br>${p?.TYPE||''}`); }
+      }).addTo(nzKunstwerken);
+      console.log('✅ NZ kunstwerken geladen');
+    }
+  } catch(e) { console.warn('Kunstwerken niet beschikbaar:', e); }
 }
 
 // Laag-selector
 const overlays = {
-  '🗺️ Beheergebied NZ': nzGebied,
+  '🗺️ Beheergebied': nzGebied,
+  '🌊 Watergangen': nzWatergangen,
+  '⚙️ Kunstwerken': nzKunstwerken,
 };
 L.control.layers(null, overlays, { position: 'topright', collapsed: true }).addTo(map);
 
