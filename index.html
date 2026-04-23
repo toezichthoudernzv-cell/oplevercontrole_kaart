@@ -329,6 +329,32 @@ const $ = id => document.getElementById(id);
 const map = L.map('map', { center: [53.22, 6.56], zoom: 11, zoomControl: false });
 L.control.zoom({ position: 'topright' }).addTo(map);
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OSM', maxZoom: 19 }).addTo(map);
+
+// Noorderzijlvest beheergebied (gebiedsgrens)
+const nzBegrenzing = L.tileLayer.wms('https://arcgis.noorderzijlvest.nl/server/services/Referentie/BegrenzingNoorderzijlvest/MapServer/WMSServer', {
+  layers: '0',
+  format: 'image/png',
+  transparent: true,
+  opacity: 0.4,
+  attribution: '© Noorderzijlvest'
+}).addTo(map);
+
+// Noorderzijlvest watergangen (optioneel, kan aan/uit)
+const nzWatergangen = L.tileLayer.wms('https://arcgis.noorderzijlvest.nl/server/services/Watergangen/Watergangen/MapServer/WMSServer', {
+  layers: '0,1,2,3',
+  format: 'image/png',
+  transparent: true,
+  opacity: 0.5,
+  attribution: '© Noorderzijlvest'
+});
+
+// Laag-selector
+const overlays = {
+  '🗺️ Beheergebied NZ': nzBegrenzing,
+  '🌊 Watergangen NZ': nzWatergangen,
+};
+L.control.layers(null, overlays, { position: 'topright', collapsed: true }).addTo(map);
+
 let mLayer = L.layerGroup().addTo(map), allData = [], gpsMarker = null;
 let activeFilters = new Set(['todo']);
 
