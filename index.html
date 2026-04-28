@@ -744,12 +744,14 @@ function changeStatus(ns) {
     status: ns
   });
   localStorage.setItem('olc_daylog', JSON.stringify(dayLog));
-  writeToSheet(currentItem, 'status');
-  toast('✅ Status → ' + STATUSES[ns].label);
-  // Bij goedkeuring: brief_geo op Ja zetten en Geobeheer formulier openen
+  // Bij goedkeuring: brief_geo op Ja zetten
   if (ns === 'goed') {
     currentItem.brief_geo = 'Ja';
-    writeToSheet(currentItem, 'brief_geo');
+  }
+  writeToSheet(currentItem, 'status');
+  toast('✅ Status → ' + STATUSES[ns].label);
+  // Bij goedkeuring: Geobeheer formulier openen
+  if (ns === 'goed') {
     setTimeout(function(){ openGeobeheer(currentItem); }, 600);
   }
 }
