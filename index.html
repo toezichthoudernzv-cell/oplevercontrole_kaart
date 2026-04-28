@@ -13,164 +13,107 @@
 <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <style>
-:root {
-  --nz-blauw:#1a5276; --nz-blauw-l:#2980b9; --nz-donker:#0e2f44;
-  --st-todo:#e67e22; --st-bezig:#3498db; --st-goed:#27ae60;
-  --st-vanaf:#95a5a6; --st-overig:#8e44ad;
-}
+:root{--nz:#1a5276;--nzl:#2980b9;--nzd:#0e2f44}
 *{margin:0;padding:0;box-sizing:border-box}
 body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;overflow:hidden;height:100vh;width:100vw}
-
-/* Header */
-#hdr{position:fixed;top:0;left:0;right:0;z-index:1100;background:linear-gradient(135deg,var(--nz-donker),var(--nz-blauw));color:#fff;padding:8px 12px;display:flex;align-items:center;gap:10px;height:50px;box-shadow:0 2px 8px rgba(0,0,0,.3)}
-#hdr h1{font-size:15px;font-weight:700;white-space:nowrap;flex:1}
-#hdr button{background:rgba(255,255,255,.15);border:none;color:#fff;width:36px;height:36px;border-radius:8px;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center}
-#hdr button:active{background:rgba(255,255,255,.3)}
-
-/* Progress bar */
+#hdr{position:fixed;top:0;left:0;right:0;z-index:1100;background:linear-gradient(135deg,var(--nzd),var(--nz));color:#fff;padding:8px 12px;display:flex;align-items:center;gap:8px;height:50px;box-shadow:0 2px 8px rgba(0,0,0,.3)}
+#hdr h1{font-size:14px;font-weight:700;white-space:nowrap;flex:1}
+.hb{background:rgba(255,255,255,.15);border:none;color:#fff;width:36px;height:36px;border-radius:8px;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.hb:active{background:rgba(255,255,255,.3)}
 #pbar{position:fixed;top:50px;left:0;right:0;height:22px;background:#1a1a2e;z-index:1090;display:flex;align-items:center;padding:0 10px;font-size:11px;color:rgba(255,255,255,.7)}
-#pfill{height:100%;background:linear-gradient(90deg,var(--st-goed),#2ecc71);position:absolute;left:0;top:0;transition:width .5s;border-radius:0 4px 4px 0}
+#pfill{height:100%;background:linear-gradient(90deg,#27ae60,#2ecc71);position:absolute;left:0;top:0;transition:width .5s;border-radius:0 4px 4px 0}
 #ptxt{position:relative;z-index:1}
-
-/* Map */
 #map{position:fixed;top:72px;left:0;right:0;bottom:0}
-
-/* Loading overlay */
-#ldg{position:fixed;inset:0;background:var(--nz-donker);z-index:2000;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#fff;transition:opacity .5s}
+#ldg{position:fixed;inset:0;background:var(--nzd);z-index:2000;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#fff;transition:opacity .5s}
 #ldg.done{opacity:0;pointer-events:none}
-#ldg .spinner{width:40px;height:40px;border:3px solid rgba(255,255,255,.2);border-top-color:#fff;border-radius:50%;animation:spin 1s linear infinite;margin-bottom:16px}
+.spinner{width:40px;height:40px;border:3px solid rgba(255,255,255,.2);border-top-color:#fff;border-radius:50%;animation:spin 1s linear infinite;margin-bottom:16px}
 @keyframes spin{to{transform:rotate(360deg)}}
 #ldg p{font-size:13px;opacity:.7}
-
-/* Filter panel */
-#fp{position:fixed;top:72px;left:0;bottom:0;width:280px;background:#fff;z-index:1200;transform:translateX(-100%);transition:transform .3s;box-shadow:2px 0 12px rgba(0,0,0,.2);overflow-y:auto;padding:16px}
+#fp{position:fixed;top:72px;left:0;bottom:0;width:300px;background:#fff;z-index:1200;transform:translateX(-100%);transition:transform .3s;box-shadow:2px 0 12px rgba(0,0,0,.2);overflow-y:auto;padding:16px}
 #fp.open{transform:translateX(0)}
-#fp h3{font-size:14px;color:var(--nz-blauw);margin-bottom:12px}
-.fchk{display:flex;align-items:center;gap:8px;padding:6px 0;font-size:13px;cursor:pointer}
-.fchk input{width:18px;height:18px;accent-color:var(--nz-blauw)}
-.fdot{width:14px;height:14px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:9px;color:#fff}
-
-/* List panel */
-#lp{position:fixed;top:72px;right:0;bottom:0;width:320px;background:#fff;z-index:1200;transform:translateX(100%);transition:transform .3s;box-shadow:-2px 0 12px rgba(0,0,0,.2);overflow-y:auto}
+#fp h3{font-size:14px;color:var(--nz);margin-bottom:12px}
+.fchk{display:flex;align-items:center;gap:8px;padding:7px 0;font-size:13px;cursor:pointer}
+.fchk input{width:18px;height:18px;accent-color:var(--nz)}
+.fdot{width:22px;height:22px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:11px;color:#fff;flex-shrink:0}
+#lp{position:fixed;top:72px;right:0;bottom:0;width:340px;background:#fff;z-index:1200;transform:translateX(100%);transition:transform .3s;box-shadow:-2px 0 12px rgba(0,0,0,.2);overflow-y:auto}
 #lp.open{transform:translateX(0)}
-#lp h3{padding:14px 16px 10px;font-size:14px;color:var(--nz-blauw);border-bottom:1px solid #eee;position:sticky;top:0;background:#fff;z-index:1}
+#lp h3{padding:14px 16px 10px;font-size:14px;color:var(--nz);border-bottom:1px solid #eee;position:sticky;top:0;background:#fff;z-index:1}
 .li{padding:10px 16px;border-bottom:1px solid #f0f0f0;cursor:pointer;font-size:12px;display:flex;gap:8px;align-items:flex-start}
 .li:active{background:#f0f8ff}
 .li .ldot{flex-shrink:0;margin-top:2px}
 .li .ltxt{flex:1}
 .li .ltxt b{display:block;font-size:13px;margin-bottom:2px}
 .li .ltxt span{color:#666}
-
-/* Detail modal */
 #mdl{display:none;position:fixed;inset:0;z-index:1500;background:rgba(0,0,0,.5);align-items:flex-end;justify-content:center}
 #mdl.show{display:flex}
-#mc{background:#fff;width:100%;max-width:500px;max-height:75vh;border-radius:16px 16px 0 0;overflow-y:auto;padding:20px;animation:slideUp .3s}
-@keyframes slideUp{from{transform:translateY(100%)}}
-#mc h3{font-size:16px;color:var(--nz-donker);margin-bottom:12px}
+#mc{background:#fff;width:100%;max-width:500px;max-height:75vh;border-radius:16px 16px 0 0;overflow-y:auto;padding:20px;animation:su .3s}
+@keyframes su{from{transform:translateY(100%)}}
 .dr{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #f5f5f5;font-size:13px}
-.dr .dl{color:#888;min-width:100px}
+.dr .dl{color:#888;min-width:110px}
 .dr .dv{flex:1;text-align:right;font-weight:500}
-.sbtn{display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border-radius:8px;border:2px solid #eee;background:#fff;font-size:13px;cursor:pointer;margin:4px}
+.sbtn{display:inline-flex;align-items:center;gap:4px;padding:7px 12px;border-radius:8px;border:2px solid #eee;background:#fff;font-size:12px;cursor:pointer;margin:3px}
 .sbtn:active{background:#f0f0f0}
-.sbtn.act{border-color:var(--nz-blauw);background:#eaf2f8;font-weight:600}
-.navbtn{display:block;width:100%;padding:12px;background:var(--nz-blauw);color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;margin-top:14px;text-align:center}
-.navbtn:active{background:var(--nz-donker)}
-
-/* Report modal */
+.sbtn.act{border-color:var(--nz);background:#eaf2f8;font-weight:600}
+.navbtn{display:block;width:100%;padding:12px;background:var(--nz);color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;margin-top:14px;text-align:center}
+.navbtn:active{background:var(--nzd)}
 #rpt{display:none;position:fixed;inset:0;z-index:1600;background:rgba(0,0,0,.5);align-items:center;justify-content:center}
 #rpt.show{display:flex}
-#rpc{background:#fff;width:90%;max-width:500px;max-height:80vh;border-radius:16px;overflow-y:auto;padding:20px;animation:slideUp .3s}
-#rpc h3{font-size:16px;color:var(--nz-donker);margin-bottom:4px}
-#rpc .sub{font-size:12px;color:#888;margin-bottom:16px}
+#rpc{background:#fff;width:92%;max-width:500px;max-height:80vh;border-radius:16px;overflow-y:auto;padding:20px;animation:su .3s}
 .rrow{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #f5f5f5;font-size:13px}
-.rrow b{color:var(--nz-blauw)}
+.rrow b{color:var(--nz)}
 .rpdf{display:block;width:100%;padding:12px;background:#e74c3c;color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;margin-top:14px;text-align:center}
 .rpdf:active{background:#c0392b}
-
-/* Toast */
-#toast{position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:#333;color:#fff;padding:10px 20px;border-radius:20px;font-size:13px;z-index:2000;opacity:0;transition:opacity .3s;pointer-events:none}
-#toast.show{opacity:1}
-
-/* Marker cluster overrides */
-.marker-cluster-small{background-color:rgba(26,82,118,.3)}
-.marker-cluster-small div{background-color:var(--nz-blauw);color:#fff;font-weight:700;font-size:13px}
-.marker-cluster-medium{background-color:rgba(41,128,185,.3)}
-.marker-cluster-medium div{background-color:var(--nz-blauw-l);color:#fff;font-weight:700;font-size:13px}
-.marker-cluster-large{background-color:rgba(230,126,34,.3)}
-.marker-cluster-large div{background-color:var(--st-todo);color:#fff;font-weight:700;font-size:14px}
-
-/* Refresh btn */
-#rbtn{position:fixed;bottom:20px;right:20px;z-index:1100;width:48px;height:48px;border-radius:50%;background:var(--nz-blauw);color:#fff;border:none;font-size:20px;box-shadow:0 4px 12px rgba(0,0,0,.3);cursor:pointer;display:flex;align-items:center;justify-content:center}
-#rbtn:active{background:var(--nz-donker)}
-
-/* GPS car */
-.car-icon{transition:transform .3s}
-
-/* Notitie textarea */
-.ntxt{width:100%;padding:8px;border:1px solid #ddd;border-radius:8px;font-size:13px;font-family:inherit;resize:vertical;min-height:60px;margin-top:8px}
-
-/* Script URL config */
 #cfgp{display:none;position:fixed;inset:0;z-index:1700;background:rgba(0,0,0,.5);align-items:center;justify-content:center}
 #cfgp.show{display:flex}
-#cfgc{background:#fff;width:90%;max-width:420px;border-radius:16px;padding:20px;animation:slideUp .3s}
-#cfgc h3{font-size:15px;color:var(--nz-donker);margin-bottom:12px}
-#cfgc input{width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;font-size:13px;margin-bottom:10px}
-#cfgc label{font-size:12px;color:#666;display:block;margin-bottom:4px}
-
-/* Proximity alert */
+#cfgc{background:#fff;width:92%;max-width:440px;border-radius:16px;padding:20px;animation:su .3s;max-height:85vh;overflow-y:auto}
+#cfgc h3{font-size:15px;color:var(--nzd);margin-bottom:14px}
+#cfgc label{font-size:12px;color:#666;display:block;margin-bottom:4px;margin-top:10px}
+#cfgc input{width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;font-size:13px}
+.cbtn{width:100%;padding:11px;border:none;border-radius:8px;font-size:14px;cursor:pointer;margin-top:8px;font-weight:600}
+#toast{position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:#333;color:#fff;padding:10px 20px;border-radius:20px;font-size:13px;z-index:2000;opacity:0;transition:opacity .3s;pointer-events:none}
+#toast.show{opacity:1}
+.marker-cluster-small{background-color:rgba(26,82,118,.3)}
+.marker-cluster-small div{background-color:var(--nz);color:#fff;font-weight:700;font-size:13px}
+.marker-cluster-medium{background-color:rgba(41,128,185,.3)}
+.marker-cluster-medium div{background-color:var(--nzl);color:#fff;font-weight:700}
+.marker-cluster-large{background-color:rgba(230,126,34,.3)}
+.marker-cluster-large div{background-color:#e67e22;color:#fff;font-weight:700;font-size:14px}
+#rbtn{position:fixed;bottom:20px;right:20px;z-index:1100;width:48px;height:48px;border-radius:50%;background:var(--nz);color:#fff;border:none;font-size:20px;box-shadow:0 4px 12px rgba(0,0,0,.3);cursor:pointer;display:flex;align-items:center;justify-content:center}
+#rbtn:active{background:var(--nzd)}
+.ntxt{width:100%;padding:8px;border:1px solid #ddd;border-radius:8px;font-size:13px;font-family:inherit;resize:vertical;min-height:60px;margin-top:8px}
 #prox{position:fixed;top:72px;left:0;right:0;z-index:1095;background:#e74c3c;color:#fff;padding:10px 16px;font-size:13px;font-weight:600;display:none;text-align:center;cursor:pointer;animation:pulse 2s infinite}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.7}}
-
-@media(max-width:600px){
-  #lp{width:100%}
-  #fp{width:100%}
-}
+@media(max-width:600px){#lp{width:100%}#fp{width:100%}}
 </style>
 </head>
 <body>
-
-<!-- Header -->
 <div id="hdr">
   <h1>📋 Oplevercontrole Kaart</h1>
-  <button onclick="togglePanel('fp')" title="Filters">⚙️</button>
-  <button onclick="togglePanel('lp')" title="Lijst">📋</button>
-  <button onclick="showReport()" title="Dagrapport">📊</button>
-  <button onclick="showConfig()" title="Instellingen">🔧</button>
+  <button class="hb" onclick="togglePanel('fp')" title="Filters">⚙️</button>
+  <button class="hb" onclick="togglePanel('lp')" title="Lijst">📋</button>
+  <button class="hb" onclick="showReport()" title="Dagrapport">📊</button>
+  <button class="hb" onclick="showConfig()" title="Instellingen">🔧</button>
 </div>
-
-<!-- Progress bar -->
 <div id="pbar"><div id="pfill" style="width:0"></div><span id="ptxt">Laden...</span></div>
-
-<!-- Proximity alert -->
 <div id="prox" onclick="flyToProx()"></div>
-
-<!-- Loading -->
 <div id="ldg"><div class="spinner"></div><p id="ldgtxt">Data laden...</p></div>
-
-<!-- Map -->
 <div id="map"></div>
 
-<!-- Filter panel -->
 <div id="fp">
   <h3>Filters</h3>
   <div id="filters"></div>
   <hr style="margin:16px 0;border:none;border-top:1px solid #eee">
-  <input type="text" id="srch" placeholder="Zoek op onderwerp..." style="width:100%;padding:8px;border:1px solid #ddd;border-radius:8px;font-size:13px" oninput="apply()">
+  <input type="text" id="srch" placeholder="Zoek op onderwerp of adres..." style="width:100%;padding:8px;border:1px solid #ddd;border-radius:8px;font-size:13px" oninput="apply()">
 </div>
 
-<!-- List panel -->
 <div id="lp">
   <h3>Alle controles <span id="lcnt" style="font-weight:400;color:#888"></span></h3>
   <div id="llist"></div>
 </div>
 
-<!-- Detail modal -->
 <div id="mdl"><div id="mc"></div></div>
-
-<!-- Report modal -->
 <div id="rpt"><div id="rpc"></div></div>
 
-<!-- Config modal -->
 <div id="cfgp">
   <div id="cfgc">
     <h3>🔧 Instellingen</h3>
@@ -178,17 +121,17 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;overflow
     <input type="text" id="scriptUrl" placeholder="https://script.google.com/macros/s/.../exec">
     <label>Google Sheets CSV URL</label>
     <input type="text" id="csvUrl" value="">
-    <div style="display:flex;gap:8px">
-      <button onclick="saveConfig()" style="flex:1;padding:10px;background:var(--nz-blauw);color:#fff;border:none;border-radius:8px;font-size:14px;cursor:pointer">Opslaan</button>
-      <button onclick="$('cfgp').classList.remove('show')" style="flex:1;padding:10px;background:#eee;border:none;border-radius:8px;font-size:14px;cursor:pointer">Sluiten</button>
-    </div>
+    <button onclick="saveConfig()" class="cbtn" style="background:var(--nz);color:#fff">💾 Opslaan & herladen</button>
+    <hr style="margin:16px 0;border:none;border-top:1px solid #eee">
+    <h3 style="margin-top:0">🔄 Onderhoud</h3>
+    <button onclick="loadData()" class="cbtn" style="background:#27ae60;color:#fff">🔄 Data vernieuwen</button>
+    <button onclick="clearCache()" class="cbtn" style="background:#e74c3c;color:#fff">🗑️ Geocode cache wissen</button>
+    <button onclick="clearDaylog()" class="cbtn" style="background:#e67e22;color:#fff">📋 Daglog wissen</button>
+    <button onclick="$('cfgp').classList.remove('show')" class="cbtn" style="background:#eee;color:#333">Sluiten</button>
   </div>
 </div>
 
-<!-- Refresh -->
 <button id="rbtn" onclick="loadData()" title="Vernieuwen">🔄</button>
-
-<!-- Toast -->
 <div id="toast"></div>
 
 <script>
@@ -200,125 +143,129 @@ let config = JSON.parse(localStorage.getItem('olc_config') || '{}');
 if (!config.csvUrl) config.csvUrl = DEFAULT_CSV;
 
 const STATUSES = {
-  todo:   { label:'Nog te controleren', color:'#e67e22', sym:'⏳' },
-  bezig:  { label:'Niet begonnen (bezig)', color:'#3498db', sym:'🔨' },
-  begonnen: { label:'Zijn begonnen', color:'#2196F3', sym:'🏗️' },
-  goed:   { label:'Goedgekeurd',        color:'#27ae60', sym:'✅' },
-  vervallen: { label:'Vervallen',       color:'#95a5a6', sym:'🚫' },
-  vanaf:  { label:'Ziet er vanaf',      color:'#607d8b', sym:'👋' },
-  overig: { label:'Overige',            color:'#8e44ad', sym:'📌' },
+  todo:      { label:'Nog te controleren',    color:'#e67e22', sym:'⏳' },
+  bezig:     { label:'Niet begonnen (bezig)', color:'#3498db', sym:'🔨' },
+  begonnen:  { label:'Zijn begonnen',         color:'#2196F3', sym:'🏗️' },
+  goed:      { label:'Goedgekeurd',           color:'#27ae60', sym:'✅' },
+  vervallen: { label:'Vervallen',             color:'#95a5a6', sym:'🚫' },
+  vanaf:     { label:'Ziet er vanaf',         color:'#607d8b', sym:'👋' },
+  overig:    { label:'Overige',               color:'#8e44ad', sym:'📌' },
 };
+
+// Standaard: goedgekeurd, vervallen en vanaf UIT
+const DEFAULT_OFF = ['goed','vervallen','vanaf'];
 
 function mapStatus(s) {
   if (!s) return 'todo';
-  const n = s.toLowerCase().replace(/[^a-zà-ÿ]/g,'');
+  var n = s.toLowerCase().replace(/[^a-zà-ÿ]/g, '');
   if (n.includes('goedgekeurd') || n === 'goed' || n === 'ja') return 'goed';
   if (n.includes('zietervanaf') || (n.includes('ziet') && n.includes('vanaf'))) return 'vanaf';
   if (n.includes('vervallen')) return 'vervallen';
   if (n.includes('zijnbegonnen')) return 'begonnen';
   if (n.includes('nietbegonnen') || n.includes('bezig')) return 'bezig';
+  if (n.includes('nogte') || n.includes('nogtecontroleren')) return 'todo';
   if (n.includes('overig')) return 'overig';
   return 'todo';
 }
 
-// Parse Dutch comma-decimal numbers
+// Parse Dutch comma-decimal: "53,222772" -> 53.222772
 function parseNL(v) {
-  if (!v) return null;
-  const s = String(v).trim().replace(',', '.');
-  const n = parseFloat(s);
+  if (!v && v !== 0) return null;
+  var s = String(v).trim();
+  // Als er een komma in zit maar geen punt → Nederlandse notatie
+  if (s.indexOf(',') !== -1 && s.indexOf('.') === -1) {
+    s = s.replace(',', '.');
+  }
+  // Als er zowel punt als komma → 1.234,56 formaat
+  else if (s.indexOf('.') !== -1 && s.indexOf(',') !== -1) {
+    s = s.replace('.', '').replace(',', '.');
+  }
+  var n = parseFloat(s);
   return isNaN(n) ? null : n;
 }
 
 // ═══════════════════════════════════════════
 // HELPERS
 // ═══════════════════════════════════════════
-const $ = id => document.getElementById(id);
-function toast(msg) { const t=$('toast'); t.textContent=msg; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),2500); }
+var $ = function(id) { return document.getElementById(id); };
+function toast(msg) { var t=$('toast'); t.textContent=msg; t.classList.add('show'); setTimeout(function(){t.classList.remove('show')},2500); }
+function clearCache() {
+  localStorage.removeItem('olc_geocache');
+  gc = {};
+  toast('🗑️ Geocode cache gewist');
+}
+function clearDaylog() {
+  dayLog.length = 0;
+  localStorage.removeItem('olc_daylog');
+  toast('📋 Daglog gewist');
+}
 
 // ═══════════════════════════════════════════
 // MAP
 // ═══════════════════════════════════════════
-const map = L.map('map', { zoomControl: false, tap: true, tapTolerance: 15 }).setView([53.25, 6.55], 11);
+var map = L.map('map', { zoomControl: false, tap: true, tapTolerance: 15 }).setView([53.25, 6.55], 11);
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
   attribution: '© OSM', maxZoom: 19
 }).addTo(map);
 L.control.zoom({ position: 'bottomleft' }).addTo(map);
 
-// Marker cluster group
-const clusterGroup = L.markerClusterGroup({
+var clusterGroup = L.markerClusterGroup({
   maxClusterRadius: 50,
   spiderfyOnMaxZoom: true,
   showCoverageOnHover: false,
   zoomToBoundsOnClick: true,
   disableClusteringAtZoom: 16,
   iconCreateFunction: function(cluster) {
-    const cnt = cluster.getChildCount();
-    let cls = 'marker-cluster-small';
-    if (cnt > 50) cls = 'marker-cluster-large';
-    else if (cnt > 20) cls = 'marker-cluster-medium';
+    var cnt = cluster.getChildCount();
+    var cls = cnt > 50 ? 'marker-cluster-large' : cnt > 20 ? 'marker-cluster-medium' : 'marker-cluster-small';
     return L.divIcon({ html: '<div>'+cnt+'</div>', className: 'marker-cluster '+cls, iconSize: L.point(40,40) });
   }
 });
 map.addLayer(clusterGroup);
 
 // ═══════════════════════════════════════════
-// GPS TRACKING
+// GPS
 // ═══════════════════════════════════════════
-let myPos = null, carMarker = null, heading = 0, gpsTrail = [], tripStarted = false;
-let tripKm = 0, tripStart = null, lastTripPos = null, tripMovingMs = 0, lastMoveTime = null;
-const dayLog = JSON.parse(localStorage.getItem('olc_daylog') || '[]');
+var myPos = null, carMarker = null, heading = 0;
+var tripKm = 0, tripStart = null, lastTripPos = null, tripStarted = false;
+var dayLog = JSON.parse(localStorage.getItem('olc_daylog') || '[]');
 
-const carSvg = `<svg viewBox="0 0 30 50" xmlns="http://www.w3.org/2000/svg">
-<rect x="5" y="8" width="20" height="34" rx="6" fill="#1a5276" stroke="#fff" stroke-width="1.5"/>
-<rect x="8" y="10" width="14" height="8" rx="2" fill="#85c1e9"/>
-<rect x="8" y="32" width="14" height="6" rx="2" fill="#85c1e9"/>
-<circle cx="8" cy="12" r="2.5" fill="#222"/><circle cx="22" cy="12" r="2.5" fill="#222"/>
-<circle cx="8" cy="40" r="2.5" fill="#222"/><circle cx="22" cy="40" r="2.5" fill="#222"/>
-<text x="15" y="27" text-anchor="middle" font-size="5" fill="#fff" font-weight="bold">NZV</text>
-</svg>`;
+var carSvg = '<svg viewBox="0 0 30 50" xmlns="http://www.w3.org/2000/svg">'
++'<rect x="5" y="8" width="20" height="34" rx="6" fill="#1a5276" stroke="#fff" stroke-width="1.5"/>'
++'<rect x="8" y="10" width="14" height="8" rx="2" fill="#85c1e9"/>'
++'<rect x="8" y="32" width="14" height="6" rx="2" fill="#85c1e9"/>'
++'<circle cx="8" cy="12" r="2.5" fill="#222"/><circle cx="22" cy="12" r="2.5" fill="#222"/>'
++'<circle cx="8" cy="40" r="2.5" fill="#222"/><circle cx="22" cy="40" r="2.5" fill="#222"/>'
++'<text x="15" y="27" text-anchor="middle" font-size="5" fill="#fff" font-weight="bold">NZV</text>'
++'</svg>';
 
 function startGPS() {
   if (!navigator.geolocation) return;
-  navigator.geolocation.watchPosition(pos => {
-    const { latitude: lat, longitude: lng, heading: h } = pos.coords;
+  navigator.geolocation.watchPosition(function(pos) {
+    var lat = pos.coords.latitude, lng = pos.coords.longitude, h = pos.coords.heading;
     myPos = [lat, lng];
     if (h && !isNaN(h)) heading = h;
-
-    if (!carMarker) {
-      carMarker = L.marker(myPos, {
-        icon: L.divIcon({
-          className: 'car-icon',
-          html: `<div style="transform:rotate(${heading}deg);width:30px;height:50px">${carSvg}</div>`,
-          iconSize: [30, 50], iconAnchor: [15, 25]
-        }),
-        zIndex: 9999
-      }).addTo(map);
-    } else {
-      carMarker.setLatLng(myPos);
-      carMarker.setIcon(L.divIcon({
-        className: 'car-icon',
-        html: `<div style="transform:rotate(${heading}deg);width:30px;height:50px">${carSvg}</div>`,
-        iconSize: [30, 50], iconAnchor: [15, 25]
-      }));
-    }
-
-    // Trip tracking
+    var ico = L.divIcon({
+      className: 'car-icon',
+      html: '<div style="transform:rotate('+heading+'deg);width:30px;height:50px">'+carSvg+'</div>',
+      iconSize: [30, 50], iconAnchor: [15, 25]
+    });
+    if (!carMarker) { carMarker = L.marker(myPos, { icon: ico, zIndexOffset: 9999 }).addTo(map); }
+    else { carMarker.setLatLng(myPos); carMarker.setIcon(ico); }
+    // Trip
     if (tripStarted && lastTripPos) {
-      const d = map.distance(myPos, lastTripPos);
-      if (d > 5) { tripKm += d / 1000; lastMoveTime = Date.now(); }
+      var d = map.distance(myPos, lastTripPos);
+      if (d > 5) tripKm += d / 1000;
     }
     lastTripPos = myPos;
-    if (!tripStarted) { tripStarted = true; tripStart = Date.now(); lastMoveTime = Date.now(); }
-
-    // Proximity check
+    if (!tripStarted) { tripStarted = true; tripStart = Date.now(); }
     checkProximity();
   }, null, { enableHighAccuracy: true, maximumAge: 3000 });
-
   // WakeLock
   if ('wakeLock' in navigator) {
-    navigator.wakeLock.request('screen').catch(()=>{});
-    document.addEventListener('visibilitychange', () => {
-      if (document.visibilityState === 'visible') navigator.wakeLock.request('screen').catch(()=>{});
+    navigator.wakeLock.request('screen').catch(function(){});
+    document.addEventListener('visibilitychange', function() {
+      if (document.visibilityState === 'visible') navigator.wakeLock.request('screen').catch(function(){});
     });
   }
 }
@@ -326,81 +273,105 @@ function startGPS() {
 // ═══════════════════════════════════════════
 // PROXIMITY
 // ═══════════════════════════════════════════
-let proxItem = null;
+var proxItem = null;
 function checkProximity() {
   if (!myPos || allData.length === 0) return;
-  let closest = null, minDist = Infinity;
-  allData.forEach(d => {
-    if (!d.lat || !d.lng || d.status === 'goed' || d.status === 'vanaf') return;
-    const dist = map.distance(myPos, [d.lat, d.lng]);
+  var closest = null, minDist = Infinity;
+  allData.forEach(function(d) {
+    if (!d.lat || !d.lng || d.status === 'goed' || d.status === 'vervallen' || d.status === 'vanaf') return;
+    var dist = map.distance(myPos, [d.lat, d.lng]);
     if (dist < 300 && dist < minDist) { closest = d; minDist = dist; }
   });
-  const el = $('prox');
+  var el = $('prox');
   if (closest) {
     proxItem = closest;
-    el.textContent = `📍 ${Math.round(minDist)}m — ${closest.zaakonderwerp.substring(0,50)}`;
+    el.textContent = '📍 ' + Math.round(minDist) + 'm — ' + closest.zaakonderwerp.substring(0,50);
     el.style.display = 'block';
-  } else {
-    proxItem = null;
-    el.style.display = 'none';
-  }
+  } else { proxItem = null; el.style.display = 'none'; }
 }
 function flyToProx() { if (proxItem) { map.flyTo([proxItem.lat, proxItem.lng], 17); openDetail(proxItem); } }
 
 // ═══════════════════════════════════════════
-// GEOCODING (Nominatim + cache)
+// GEOCODING
 // ═══════════════════════════════════════════
-const gc = JSON.parse(localStorage.getItem('olc_geocache') || '{}');
-async function geocode(addr) {
-  const key = addr.toLowerCase().trim();
-  if (gc[key]) return gc[key];
-  try {
-    const r = await fetch(`https://nominatim.openstreetmap.org/search?format=json&countrycodes=nl&limit=1&q=${encodeURIComponent(addr)}`);
-    const j = await r.json();
-    if (j.length > 0) {
-      const res = { lat: parseFloat(j[0].lat), lng: parseFloat(j[0].lon) };
-      gc[key] = res;
-      localStorage.setItem('olc_geocache', JSON.stringify(gc));
-      return res;
-    }
-  } catch(e) { console.warn('Geocode error:', e); }
-  return null;
+var gc = JSON.parse(localStorage.getItem('olc_geocache') || '{}');
+function geocode(addr) {
+  var key = addr.toLowerCase().trim();
+  if (gc[key]) return Promise.resolve(gc[key]);
+  return fetch('https://nominatim.openstreetmap.org/search?format=json&countrycodes=nl&limit=1&q='+encodeURIComponent(addr))
+    .then(function(r){return r.json()})
+    .then(function(j){
+      if (j.length > 0) {
+        var res = { lat: parseFloat(j[0].lat), lng: parseFloat(j[0].lon) };
+        gc[key] = res;
+        localStorage.setItem('olc_geocache', JSON.stringify(gc));
+        return res;
+      }
+      return null;
+    }).catch(function(){ return null; });
 }
 
 // ═══════════════════════════════════════════
-// DATA
+// CSV PARSER — auto-detect separator
 // ═══════════════════════════════════════════
-let allData = [], filters = {};
-Object.keys(STATUSES).forEach(k => filters[k] = true);
+var allData = [], filters = {};
+
+function initFilters() {
+  // Laad opgeslagen filter-voorkeuren of gebruik defaults
+  var saved = localStorage.getItem('olc_filters');
+  if (saved) {
+    try { filters = JSON.parse(saved); } catch(e) { filters = {}; }
+  }
+  Object.keys(STATUSES).forEach(function(k) {
+    if (filters[k] === undefined) {
+      // Standaard: gecontroleerd/vervallen/vanaf UIT
+      filters[k] = DEFAULT_OFF.indexOf(k) === -1;
+    }
+  });
+}
+initFilters();
+
+function saveFilters() {
+  localStorage.setItem('olc_filters', JSON.stringify(filters));
+}
+
+function detectSeparator(text) {
+  // Tel komma's en puntkomma's in eerste regel
+  var firstLine = text.split('\n')[0];
+  var commas = (firstLine.match(/,/g) || []).length;
+  var semis = (firstLine.match(/;/g) || []).length;
+  // Als er meer puntkomma's zijn → Nederlandse CSV met ; separator
+  return semis > commas ? ';' : ',';
+}
 
 function parseCSV(text) {
-  const lines = text.split('\n');
+  var sep = detectSeparator(text);
+  console.log('CSV separator gedetecteerd:', sep === ';' ? 'puntkomma (NL)' : 'komma (EN)');
+  var lines = text.split('\n');
   if (lines.length < 2) return [];
-  // Parse header
-  const hdr = parseCSVLine(lines[0]);
-  const rows = [];
-  for (let i = 1; i < lines.length; i++) {
+  var hdr = parseCSVLine(lines[0], sep);
+  var rows = [];
+  for (var i = 1; i < lines.length; i++) {
     if (!lines[i].trim()) continue;
-    const vals = parseCSVLine(lines[i]);
-    const obj = {};
-    hdr.forEach((h, idx) => { obj[h.trim()] = (vals[idx] || '').trim(); });
+    var vals = parseCSVLine(lines[i], sep);
+    var obj = {};
+    hdr.forEach(function(h, idx) { obj[h.trim()] = (vals[idx] || '').trim(); });
     rows.push(obj);
   }
   return rows;
 }
 
-function parseCSVLine(line) {
-  const result = [];
-  let current = '', inQuotes = false;
-  for (let i = 0; i < line.length; i++) {
-    const c = line[i];
+function parseCSVLine(line, sep) {
+  var result = [], current = '', inQuotes = false;
+  for (var i = 0; i < line.length; i++) {
+    var c = line[i];
     if (inQuotes) {
       if (c === '"' && line[i+1] === '"') { current += '"'; i++; }
       else if (c === '"') inQuotes = false;
       else current += c;
     } else {
       if (c === '"') inQuotes = true;
-      else if (c === ',') { result.push(current); current = ''; }
+      else if (c === sep) { result.push(current); current = ''; }
       else current += c;
     }
   }
@@ -408,138 +379,159 @@ function parseCSVLine(line) {
   return result;
 }
 
-function extractAddress(zaakonderwerp) {
-  // Try to extract address from "nabij X te Y" or "X te Y" patterns
-  const m = zaakonderwerp.match(/nabij\s+(.+?)\s+te\s+(\w+)/i) ||
-            zaakonderwerp.match(/(\S+\s+\d+\S*)\s+te\s+(\w+)/i) ||
-            zaakonderwerp.match(/te\s+(\w+)/i);
-  if (m && m.length >= 3) return `${m[1]}, ${m[2]}, Groningen`;
-  if (m && m.length >= 2) return `${m[1]}, Groningen`;
+function extractAddress(z) {
+  var m = z.match(/nabij\s+(.+?)\s+te\s+(\w+)/i) ||
+          z.match(/(\S+\s+\d+\S*)\s+te\s+(\w+)/i) ||
+          z.match(/te\s+(\w+)/i);
+  if (m && m.length >= 3) return m[1] + ', ' + m[2] + ', Groningen';
+  if (m && m.length >= 2) return m[1] + ', Groningen';
   return null;
 }
 
-async function loadData() {
-  const prg = $('ldgtxt');
+function getCol(r, names) {
+  for (var i = 0; i < names.length; i++) {
+    if (r[names[i]] !== undefined && r[names[i]] !== '') return r[names[i]];
+  }
+  return '';
+}
+
+function loadData() {
+  var prg = $('ldgtxt');
   $('ldg').classList.remove('done');
   prg.textContent = 'Data ophalen uit Google Sheets...';
+  var csvUrl = config.csvUrl || DEFAULT_CSV;
 
-  try {
-    const csvUrl = config.csvUrl || DEFAULT_CSV;
-    const resp = await fetch(csvUrl);
-    if (!resp.ok) throw new Error('CSV laden mislukt: ' + resp.status);
-    const text = await resp.text();
-    const rows = parseCSV(text);
-    prg.textContent = `${rows.length} rijen gevonden, verwerken...`;
+  fetch(csvUrl)
+    .then(function(resp) {
+      if (!resp.ok) throw new Error('HTTP ' + resp.status);
+      return resp.text();
+    })
+    .then(function(text) {
+      var rows = parseCSV(text);
+      prg.textContent = rows.length + ' rijen gevonden, verwerken...';
+      allData = [];
+      var queue = [];
 
-    allData = [];
-    let geocodeCount = 0;
-    for (let i = 0; i < rows.length; i++) {
-      const r = rows[i];
-      const zaakonderwerp = r.Zaakonderwerp || r.zaakonderwerp || '';
-      if (!zaakonderwerp && !r.Adres && !r.adres) continue;
+      for (var i = 0; i < rows.length; i++) {
+        var r = rows[i];
+        var zaak = getCol(r, ['Zaakonderwerp','zaakonderwerp']);
+        var adres = getCol(r, ['Adres','adres']);
+        if (!zaak && !adres) continue;
 
-      const item = {
-        nr: r.Nummer || r.nummer || r.Aantal || (i+1),
-        vzn: r.Vergunning_ZN || r.vergunning_zn || '',
-        ozn: r.Oplever_ZN || r.oplever_zn || '',
-        zaakonderwerp: zaakonderwerp,
-        adres: r.Adres || r.adres || '',
-        lat: parseNL(r.Lat || r.lat),
-        lng: parseNL(r.Lng || r.lng),
-        status: mapStatus(r.Status || r.status || r.Gecontroleerd || r.Actie || ''),
-        datum_aanvraag: r.Datum_aanvraag || r.datum_aanvraag || '',
-        datum_controle: r.Datum_controle || r.datum_controle || '',
-        controleur: r.Controleur || r.controleur || '',
-        notitie: r.Notitie || r.notitie || '',
-        _row: i + 2, // Sheet row (1-indexed header + 1)
-      };
+        var item = {
+          nr: getCol(r, ['Nummer','nummer','Aantal']) || (i+1),
+          vzn: getCol(r, ['Vergunning_ZN','vergunning_zn','Vergunning ZN']),
+          ozn: getCol(r, ['Oplever_ZN','oplever_zn','Oplever ZN']),
+          zaakonderwerp: zaak,
+          adres: adres,
+          lat: parseNL(getCol(r, ['Lat','lat','Latitude'])),
+          lng: parseNL(getCol(r, ['Lng','lng','Lon','lon','Longitude'])),
+          status: mapStatus(getCol(r, ['Status','status','Gecontroleerd','Actie'])),
+          datum_aanvraag: getCol(r, ['Datum_aanvraag','datum_aanvraag','Datum aanvraag']),
+          datum_controle: getCol(r, ['Datum_controle','datum_controle','Datum controle']),
+          controleur: getCol(r, ['Controleur','controleur']),
+          notitie: getCol(r, ['Notitie','notitie','Opmerkingen']),
+          _row: i + 2
+        };
 
-      // Extract address from zaakonderwerp if no explicit address
-      if (!item.adres && zaakonderwerp) {
-        item.adres = extractAddress(zaakonderwerp) || '';
-      }
-
-      // Geocode if needed
-      if ((!item.lat || !item.lng) && item.adres) {
-        prg.textContent = `Geocoderen ${i+1}/${rows.length}: ${item.adres.substring(0,30)}...`;
-        const geo = await geocode(item.adres);
-        if (geo) { item.lat = geo.lat; item.lng = geo.lng; }
-        geocodeCount++;
-        if (geocodeCount % 1 === 0 && !gc[item.adres.toLowerCase().trim()]) {
-          await new Promise(r => setTimeout(r, 1100));
+        if (!item.adres && zaak) item.adres = extractAddress(zaak) || '';
+        if (item.lat && item.lng) {
+          allData.push(item);
+        } else if (item.adres) {
+          queue.push(item);
+        } else {
+          allData.push(item);
         }
       }
 
+      // Geocode items without coordinates
+      return geocodeQueue(queue, prg, rows.length);
+    })
+    .then(function() {
+      var geocoded = allData.filter(function(d){return d.lat && d.lng}).length;
+      $('ldgtxt').textContent = allData.length + ' controles, ' + geocoded + ' op kaart';
+      toast('✅ ' + allData.length + ' controles geladen');
+      apply();
+      buildFilters();
+      var coords = allData.filter(function(d){return d.lat && d.lng}).map(function(d){return [d.lat, d.lng]});
+      if (coords.length > 0) map.fitBounds(L.latLngBounds(coords).pad(0.1));
+      $('ldg').classList.add('done');
+    })
+    .catch(function(e) {
+      console.error('Laden mislukt:', e);
+      $('ldgtxt').textContent = 'Fout bij laden! Check Sheet-publicatie.';
+      toast('❌ Laden mislukt: ' + e.message);
+      setTimeout(function(){ $('ldg').classList.add('done'); }, 3000);
+    });
+}
+
+function geocodeQueue(queue, prg, total) {
+  var i = 0;
+  function next() {
+    if (i >= queue.length) return Promise.resolve();
+    var item = queue[i];
+    prg.textContent = 'Geocoderen ' + (i+1) + '/' + queue.length + ': ' + item.adres.substring(0,30) + '...';
+    return geocode(item.adres).then(function(geo) {
+      if (geo) { item.lat = geo.lat; item.lng = geo.lng; }
       allData.push(item);
-    }
-
-    const geocoded = allData.filter(d => d.lat && d.lng).length;
-    prg.textContent = `${allData.length} controles, ${geocoded} op kaart`;
-    toast(`✅ ${allData.length} controles geladen`);
-
-  } catch(e) {
-    console.error('Laden mislukt:', e);
-    prg.textContent = 'Fout bij laden! Check Sheet-publicatie.';
-    toast('❌ Laden mislukt');
-    await new Promise(r => setTimeout(r, 3000));
+      i++;
+      // Rate limit alleen als niet gecached
+      if (!gc[item.adres.toLowerCase().trim()]) {
+        return new Promise(function(r){ setTimeout(r, 1100); }).then(next);
+      }
+      return next();
+    });
   }
-
-  apply();
-
-  const coords = allData.filter(d => d.lat && d.lng).map(d => [d.lat, d.lng]);
-  if (coords.length > 0) map.fitBounds(L.latLngBounds(coords).pad(0.1));
-
-  $('ldg').classList.add('done');
+  return next();
 }
 
 // ═══════════════════════════════════════════
 // RENDER
 // ═══════════════════════════════════════════
 function makeIcon(status) {
-  const s = STATUSES[status] || STATUSES.todo;
+  var s = STATUSES[status] || STATUSES.todo;
   return L.divIcon({
     className: '',
-    html: `<div style="width:28px;height:28px;border-radius:50%;background:${s.color};border:2px solid #fff;display:flex;align-items:center;justify-content:center;font-size:14px;box-shadow:0 2px 6px rgba(0,0,0,.3)">${s.sym}</div>`,
+    html: '<div style="width:28px;height:28px;border-radius:50%;background:'+s.color+';border:2px solid #fff;display:flex;align-items:center;justify-content:center;font-size:14px;box-shadow:0 2px 6px rgba(0,0,0,.3)">'+s.sym+'</div>',
     iconSize: [28, 28], iconAnchor: [14, 14]
   });
 }
 
 function apply() {
   clusterGroup.clearLayers();
-
-  const search = ($('srch')?.value || '').toLowerCase();
-  const visible = allData.filter(d => {
+  var search = ($('srch') ? $('srch').value : '').toLowerCase();
+  var visible = allData.filter(function(d) {
     if (!d.lat || !d.lng) return false;
     if (!filters[d.status]) return false;
-    if (search && !d.zaakonderwerp.toLowerCase().includes(search) && !d.adres.toLowerCase().includes(search)) return false;
+    if (search && d.zaakonderwerp.toLowerCase().indexOf(search) === -1 && d.adres.toLowerCase().indexOf(search) === -1) return false;
     return true;
   });
 
-  visible.forEach(d => {
-    const m = L.marker([d.lat, d.lng], { icon: makeIcon(d.status) });
-    m.on('click', () => openDetail(d));
+  visible.forEach(function(d) {
+    var m = L.marker([d.lat, d.lng], { icon: makeIcon(d.status) });
+    m.on('click', function(){ openDetail(d); });
     d._m = m;
     clusterGroup.addLayer(m);
   });
 
-  // Update progress
-  const total = allData.length;
-  const done = allData.filter(d => d.status === 'goed' || d.status === 'vervallen' || d.status === 'vanaf').length;
-  const pct = total > 0 ? Math.round(done / total * 100) : 0;
+  // Progress
+  var total = allData.length;
+  var done = allData.filter(function(d){ return d.status==='goed'||d.status==='vervallen'||d.status==='vanaf'; }).length;
+  var pct = total > 0 ? Math.round(done / total * 100) : 0;
   $('pfill').style.width = pct + '%';
-  $('ptxt').textContent = `${done} / ${total} afgehandeld (${pct}%)`;
+  $('ptxt').textContent = done + ' / ' + total + ' afgehandeld (' + pct + '%)';
 
-  // Update list
-  const list = $('llist');
+  // List
+  var list = $('llist');
   list.innerHTML = '';
-  $('lcnt').textContent = `(${visible.length})`;
-  visible.forEach(d => {
-    const s = STATUSES[d.status] || STATUSES.todo;
-    const div = document.createElement('div');
+  $('lcnt').textContent = '(' + visible.length + ')';
+  visible.forEach(function(d) {
+    var s = STATUSES[d.status] || STATUSES.todo;
+    var div = document.createElement('div');
     div.className = 'li';
-    div.innerHTML = `<div class="ldot" style="width:20px;height:20px;border-radius:50%;background:${s.color};display:flex;align-items:center;justify-content:center;font-size:11px">${s.sym}</div>
-      <div class="ltxt"><b>${d.zaakonderwerp.substring(0,60)}</b><span>${d.adres || 'Geen adres'}</span></div>`;
-    div.onclick = () => { map.flyTo([d.lat, d.lng], 17); openDetail(d); $('lp').classList.remove('open'); };
+    div.innerHTML = '<div class="ldot" style="width:20px;height:20px;border-radius:50%;background:'+s.color+';display:flex;align-items:center;justify-content:center;font-size:11px">'+s.sym+'</div>'
+      +'<div class="ltxt"><b>'+d.zaakonderwerp.substring(0,60)+'</b><span>'+(d.adres||'Geen adres')+'</span></div>';
+    div.onclick = (function(dd){ return function(){ map.flyTo([dd.lat, dd.lng], 17); openDetail(dd); $('lp').classList.remove('open'); }; })(d);
     list.appendChild(div);
   });
 }
@@ -548,268 +540,173 @@ function apply() {
 // FILTERS
 // ═══════════════════════════════════════════
 function buildFilters() {
-  const el = $('filters');
+  var el = $('filters');
   el.innerHTML = '';
-  Object.entries(STATUSES).forEach(([k, v]) => {
-    const cnt = allData.filter(d => d.status === k).length;
-    const lbl = document.createElement('label');
+  Object.keys(STATUSES).forEach(function(k) {
+    var v = STATUSES[k];
+    var cnt = allData.filter(function(d){ return d.status === k; }).length;
+    var lbl = document.createElement('label');
     lbl.className = 'fchk';
-    lbl.innerHTML = `<input type="checkbox" ${filters[k]?'checked':''} onchange="filters['${k}']=this.checked;apply()">
-      <div class="fdot" style="background:${v.color}">${v.sym}</div> ${v.label} <span style="color:#aaa;margin-left:auto">${cnt}</span>`;
+    lbl.innerHTML = '<input type="checkbox" '+(filters[k]?'checked':'')+' data-st="'+k+'">'
+      +'<div class="fdot" style="background:'+v.color+'">'+v.sym+'</div> '+v.label+' <span style="color:#aaa;margin-left:auto">'+cnt+'</span>';
+    lbl.querySelector('input').addEventListener('change', function(e) {
+      filters[e.target.getAttribute('data-st')] = e.target.checked;
+      saveFilters();
+      apply();
+    });
     el.appendChild(lbl);
   });
 }
 
 // ═══════════════════════════════════════════
-// DETAIL MODAL
+// DETAIL
 // ═══════════════════════════════════════════
-let currentItem = null;
-
+var currentItem = null;
 function openDetail(d) {
   currentItem = d;
-  const s = STATUSES[d.status] || STATUSES.todo;
-  const mc = $('mc');
-  mc.innerHTML = `
-    <h3 style="display:flex;align-items:center;gap:8px">
-      <span style="font-size:20px">${s.sym}</span>
-      <span style="flex:1;font-size:14px">${d.zaakonderwerp}</span>
-    </h3>
-    <div class="dr"><span class="dl">Vergunning ZN</span><span class="dv">${d.vzn || '-'}</span></div>
-    <div class="dr"><span class="dl">Oplever ZN</span><span class="dv">${d.ozn || '-'}</span></div>
-    <div class="dr"><span class="dl">Adres</span><span class="dv">${d.adres || '-'}</span></div>
-    <div class="dr"><span class="dl">Datum aanvraag</span><span class="dv">${d.datum_aanvraag || '-'}</span></div>
-    <div class="dr"><span class="dl">Datum controle</span><span class="dv">${d.datum_controle || '-'}</span></div>
-    <div class="dr"><span class="dl">Controleur</span><span class="dv">${d.controleur || '-'}</span></div>
-    <div class="dr"><span class="dl">Status</span><span class="dv" style="color:${s.color};font-weight:700">${s.label}</span></div>
-    <div style="margin-top:14px">
-      <b style="font-size:13px;color:var(--nz-blauw)">Status wijzigen:</b><br>
-      <div id="stbtns" style="margin-top:6px;display:flex;flex-wrap:wrap">
-        ${Object.entries(STATUSES).map(([k,v]) =>
-          `<button class="sbtn ${d.status===k?'act':''}" onclick="changeStatus('${k}')">${v.sym} ${v.label}</button>`
-        ).join('')}
-      </div>
-    </div>
-    <div style="margin-top:10px">
-      <b style="font-size:13px;color:var(--nz-blauw)">Notitie:</b>
-      <textarea class="ntxt" id="ntxt" placeholder="Opmerkingen...">${d.notitie || ''}</textarea>
-      <button onclick="saveNote()" style="margin-top:6px;padding:6px 16px;background:var(--nz-blauw);color:#fff;border:none;border-radius:6px;font-size:13px;cursor:pointer">💾 Notitie opslaan</button>
-    </div>
-    <button class="navbtn" onclick="window.open('https://maps.google.com/?daddr=${d.lat},${d.lng}','_blank')">🧭 Navigeer hierheen</button>
-    <button onclick="closeModal()" style="display:block;width:100%;padding:10px;margin-top:8px;background:#eee;border:none;border-radius:10px;font-size:14px;cursor:pointer">Sluiten</button>
-  `;
+  var s = STATUSES[d.status] || STATUSES.todo;
+  var btns = '';
+  Object.keys(STATUSES).forEach(function(k) {
+    var v = STATUSES[k];
+    btns += '<button class="sbtn '+(d.status===k?'act':'')+'" onclick="changeStatus(\''+k+'\')">'+v.sym+' '+v.label+'</button>';
+  });
+  $('mc').innerHTML = '<h3 style="display:flex;align-items:center;gap:8px"><span style="font-size:20px">'+s.sym+'</span><span style="flex:1;font-size:14px">'+d.zaakonderwerp+'</span></h3>'
+    +'<div class="dr"><span class="dl">Vergunning ZN</span><span class="dv">'+(d.vzn||'-')+'</span></div>'
+    +'<div class="dr"><span class="dl">Oplever ZN</span><span class="dv">'+(d.ozn||'-')+'</span></div>'
+    +'<div class="dr"><span class="dl">Adres</span><span class="dv">'+(d.adres||'-')+'</span></div>'
+    +'<div class="dr"><span class="dl">Datum aanvraag</span><span class="dv">'+(d.datum_aanvraag||'-')+'</span></div>'
+    +'<div class="dr"><span class="dl">Datum controle</span><span class="dv">'+(d.datum_controle||'-')+'</span></div>'
+    +'<div class="dr"><span class="dl">Controleur</span><span class="dv">'+(d.controleur||'-')+'</span></div>'
+    +'<div class="dr"><span class="dl">Status</span><span class="dv" style="color:'+s.color+';font-weight:700">'+s.label+'</span></div>'
+    +'<div style="margin-top:14px"><b style="font-size:13px;color:var(--nz)">Status wijzigen:</b><br><div style="margin-top:6px;display:flex;flex-wrap:wrap">'+btns+'</div></div>'
+    +'<div style="margin-top:10px"><b style="font-size:13px;color:var(--nz)">Notitie:</b>'
+    +'<textarea class="ntxt" id="ntxt" placeholder="Opmerkingen...">'+(d.notitie||'')+'</textarea>'
+    +'<button onclick="saveNote()" style="margin-top:6px;padding:6px 16px;background:var(--nz);color:#fff;border:none;border-radius:6px;font-size:13px;cursor:pointer">💾 Notitie opslaan</button></div>'
+    +'<button class="navbtn" onclick="window.open(\'https://maps.google.com/?daddr='+d.lat+','+d.lng+'\',\'_blank\')">🧭 Navigeer hierheen</button>'
+    +'<button onclick="closeModal()" style="display:block;width:100%;padding:10px;margin-top:8px;background:#eee;border:none;border-radius:10px;font-size:14px;cursor:pointer">Sluiten</button>';
   $('mdl').classList.add('show');
 }
-
 function closeModal() { $('mdl').classList.remove('show'); }
 
-async function changeStatus(newStatus) {
+function changeStatus(ns) {
   if (!currentItem) return;
-  const old = currentItem.status;
-  currentItem.status = newStatus;
+  var old = currentItem.status;
+  currentItem.status = ns;
   currentItem.datum_controle = new Date().toLocaleDateString('nl-NL');
-  
-  // Update UI
   openDetail(currentItem);
   apply();
   buildFilters();
-
-  // Log to day log
   dayLog.push({
-    time: new Date().toLocaleTimeString('nl-NL', {hour:'2-digit',minute:'2-digit'}),
+    time: new Date().toLocaleTimeString('nl-NL',{hour:'2-digit',minute:'2-digit'}),
     zaak: currentItem.zaakonderwerp.substring(0,50),
-    from: STATUSES[old]?.label || old,
-    to: STATUSES[newStatus]?.label || newStatus,
+    from: (STATUSES[old]||{}).label || old,
+    to: (STATUSES[ns]||{}).label || ns,
     lat: currentItem.lat, lng: currentItem.lng
   });
   localStorage.setItem('olc_daylog', JSON.stringify(dayLog));
-
-  // Write back to Google Sheets via Apps Script
-  await writeToSheet(currentItem, 'status');
-  toast(`✅ Status → ${STATUSES[newStatus].label}`);
+  writeToSheet(currentItem, 'status');
+  toast('✅ Status → ' + STATUSES[ns].label);
 }
 
-async function saveNote() {
+function saveNote() {
   if (!currentItem) return;
   currentItem.notitie = $('ntxt').value;
-  await writeToSheet(currentItem, 'notitie');
+  writeToSheet(currentItem, 'notitie');
   toast('💾 Notitie opgeslagen');
 }
 
 // ═══════════════════════════════════════════
-// APPS SCRIPT — TERUGSCHRIJVEN
+// APPS SCRIPT
 // ═══════════════════════════════════════════
-async function writeToSheet(item, field) {
-  const url = config.scriptUrl;
-  if (!url) {
-    toast('⚠️ Geen Apps Script URL ingesteld');
-    return;
-  }
-  try {
-    const payload = {
-      action: 'update',
-      row: item._row,
-      nr: item.nr,
-      vzn: item.vzn,
-      ozn: item.ozn,
-      status: Object.entries(STATUSES).find(([k]) => k === item.status)?.[1]?.label || '',
-      notitie: item.notitie || '',
-      datum_controle: item.datum_controle || '',
-      controleur: 'Remko Meijer',
-      field: field
-    };
-    const resp = await fetch(url, {
-      method: 'POST',
-      mode: 'no-cors',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
-    });
-    console.log('Sheet update verstuurd');
-  } catch(e) {
-    console.error('Sheet update mislukt:', e);
-    toast('⚠️ Terugschrijven mislukt');
-  }
+function writeToSheet(item, field) {
+  var url = config.scriptUrl;
+  if (!url) { console.log('Geen Apps Script URL'); return; }
+  var payload = {
+    action: 'update', row: item._row, nr: item.nr,
+    vzn: item.vzn, ozn: item.ozn,
+    status: (STATUSES[item.status]||{}).label || '',
+    notitie: item.notitie || '',
+    datum_controle: item.datum_controle || '',
+    controleur: 'Remko Meijer', field: field
+  };
+  fetch(url, {
+    method: 'POST', mode: 'no-cors',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload)
+  }).catch(function(e) { console.error('Sheet update mislukt:', e); });
 }
 
 // ═══════════════════════════════════════════
 // DAGRAPPORT
 // ═══════════════════════════════════════════
 function showReport() {
-  const rpc = $('rpc');
-  const now = new Date();
-  const datum = now.toLocaleDateString('nl-NL', { weekday:'long', year:'numeric', month:'long', day:'numeric' });
-  const elapsed = tripStart ? Math.round((Date.now() - tripStart) / 60000) : 0;
+  var now = new Date();
+  var datum = now.toLocaleDateString('nl-NL', { weekday:'long', year:'numeric', month:'long', day:'numeric' });
+  var elapsed = tripStart ? Math.round((Date.now() - tripStart) / 60000) : 0;
+  var sc = {};
+  Object.keys(STATUSES).forEach(function(k){ sc[k] = allData.filter(function(d){return d.status===k}).length; });
+  var logHtml = dayLog.length === 0 ? '<p style="color:#aaa;font-size:12px">Nog geen wijzigingen vandaag</p>' :
+    dayLog.map(function(l){return '<div style="padding:4px 0;border-bottom:1px solid #f5f5f5;font-size:12px"><b>'+l.time+'</b> '+l.zaak+'<br><span style="color:#888">'+l.from+' → '+l.to+'</span></div>';}).join('');
+  var statRows = Object.keys(STATUSES).map(function(k){var v=STATUSES[k]; return '<div class="rrow"><span>'+v.sym+' '+v.label+'</span><b style="color:'+v.color+'">'+sc[k]+'</b></div>';}).join('');
 
-  // Count status changes today
-  const statusCounts = {};
-  Object.keys(STATUSES).forEach(k => { statusCounts[k] = allData.filter(d => d.status === k).length; });
-
-  rpc.innerHTML = `
-    <h3>📊 Dagrapport</h3>
-    <div class="sub">${datum}</div>
-    <div class="rrow"><span>Totaal controles</span><b>${allData.length}</b></div>
-    <div class="rrow"><span>${STATUSES.goed.sym} ${STATUSES.goed.label}</span><b style="color:${STATUSES.goed.color}">${statusCounts.goed}</b></div>
-    <div class="rrow"><span>${STATUSES.bezig.sym} ${STATUSES.bezig.label}</span><b style="color:${STATUSES.bezig.color}">${statusCounts.bezig}</b></div>
-    <div class="rrow"><span>${STATUSES.todo.sym} ${STATUSES.todo.label}</span><b style="color:${STATUSES.todo.color}">${statusCounts.todo}</b></div>
-    <div class="rrow"><span>${STATUSES.vanaf.sym} ${STATUSES.vanaf.label}</span><b style="color:${STATUSES.vanaf.color}">${statusCounts.vanaf}</b></div>
-    <div class="rrow"><span>${STATUSES.overig.sym} ${STATUSES.overig.label}</span><b style="color:${STATUSES.overig.color}">${statusCounts.overig}</b></div>
-    <hr style="margin:12px 0;border:none;border-top:1px solid #eee">
-    <div class="rrow"><span>🚗 Gereden</span><b>${tripKm.toFixed(1)} km</b></div>
-    <div class="rrow"><span>⏱️ Rijtijd</span><b>${elapsed} min</b></div>
-    <hr style="margin:12px 0;border:none;border-top:1px solid #eee">
-    <b style="font-size:13px;color:var(--nz-blauw)">Vandaag gewijzigd (${dayLog.length}):</b>
-    <div style="max-height:200px;overflow-y:auto;margin-top:8px">
-      ${dayLog.length === 0 ? '<p style="color:#aaa;font-size:12px">Nog geen wijzigingen vandaag</p>' :
-        dayLog.map(l => `<div style="padding:4px 0;border-bottom:1px solid #f5f5f5;font-size:12px">
-          <b>${l.time}</b> ${l.zaak}<br><span style="color:#888">${l.from} → ${l.to}</span>
-        </div>`).join('')}
-    </div>
-    <button class="rpdf" onclick="downloadPDF()">📄 Download PDF Rapport</button>
-    <button onclick="if(confirm('Daglog wissen?')){dayLog.length=0;localStorage.removeItem('olc_daylog');showReport();}" style="display:block;width:100%;padding:10px;margin-top:8px;background:#fee;color:#e74c3c;border:none;border-radius:10px;font-size:13px;cursor:pointer">🗑️ Daglog wissen</button>
-    <button onclick="$('rpt').classList.remove('show')" style="display:block;width:100%;padding:10px;margin-top:8px;background:#eee;border:none;border-radius:10px;font-size:14px;cursor:pointer">Sluiten</button>
-  `;
+  $('rpc').innerHTML = '<h3>📊 Dagrapport</h3><div style="font-size:12px;color:#888;margin-bottom:16px">'+datum+'</div>'
+    +'<div class="rrow"><span>Totaal controles</span><b>'+allData.length+'</b></div>'
+    +statRows
+    +'<hr style="margin:12px 0;border:none;border-top:1px solid #eee">'
+    +'<div class="rrow"><span>🚗 Gereden</span><b>'+tripKm.toFixed(1)+' km</b></div>'
+    +'<div class="rrow"><span>⏱️ Rijtijd</span><b>'+elapsed+' min</b></div>'
+    +'<hr style="margin:12px 0;border:none;border-top:1px solid #eee">'
+    +'<b style="font-size:13px;color:var(--nz)">Vandaag gewijzigd ('+dayLog.length+'):</b>'
+    +'<div style="max-height:200px;overflow-y:auto;margin-top:8px">'+logHtml+'</div>'
+    +'<button class="rpdf" onclick="downloadPDF()">📄 Download PDF Rapport</button>'
+    +'<button onclick="$(' + "'rpt'" + ').classList.remove(' + "'show'" + ')" class="cbtn" style="background:#eee;color:#333;margin-top:8px">Sluiten</button>';
   $('rpt').classList.add('show');
 }
 
 // ═══════════════════════════════════════════
-// PDF RAPPORT
+// PDF
 // ═══════════════════════════════════════════
 function downloadPDF() {
-  const { jsPDF } = window.jspdf;
-  const doc = new jsPDF('p', 'mm', 'a4');
-  const now = new Date();
-  const datum = now.toLocaleDateString('nl-NL', { weekday:'long', year:'numeric', month:'long', day:'numeric' });
-  let y = 20;
-
-  // Header
-  doc.setFillColor(26, 82, 118);
-  doc.rect(0, 0, 210, 35, 'F');
-  doc.setTextColor(255, 255, 255);
-  doc.setFontSize(18);
-  doc.text('Dagrapport Oplevercontroles', 14, 15);
-  doc.setFontSize(10);
-  doc.text('Waterschap Noorderzijlvest', 14, 22);
-  doc.text(datum, 14, 28);
-  doc.text('Controleur: Remko Meijer', 196, 22, { align: 'right' });
-  y = 42;
-
-  // Summary
-  doc.setTextColor(26, 82, 118);
-  doc.setFontSize(14);
-  doc.text('Samenvatting', 14, y);
-  y += 8;
-
-  doc.setTextColor(60, 60, 60);
-  doc.setFontSize(10);
-  const statusCounts = {};
-  Object.keys(STATUSES).forEach(k => { statusCounts[k] = allData.filter(d => d.status === k).length; });
-
-  const summary = [
-    ['Totaal controles', allData.length],
-    ['Goedgekeurd ✅', statusCounts.goed],
-    ['Niet begonnen 🔨', statusCounts.bezig],
-    ['Nog te controleren ⏳', statusCounts.todo],
-    ['Ziet er vanaf 🚫', statusCounts.vanaf],
-    ['Overige 📌', statusCounts.overig],
-    ['Gereden', tripKm.toFixed(1) + ' km'],
-  ];
-
-  summary.forEach(([label, val]) => {
-    doc.text(label, 14, y);
-    doc.text(String(val), 120, y);
-    y += 6;
-  });
-
-  // Day log
-  y += 6;
-  doc.setTextColor(26, 82, 118);
-  doc.setFontSize(14);
-  doc.text('Wijzigingen vandaag', 14, y);
-  y += 8;
-
-  doc.setFontSize(9);
-  doc.setTextColor(100, 100, 100);
-
-  if (dayLog.length === 0) {
-    doc.text('Geen wijzigingen vandaag', 14, y);
-  } else {
-    // Table header
-    doc.setFillColor(240, 240, 240);
-    doc.rect(14, y - 4, 182, 7, 'F');
-    doc.setTextColor(60, 60, 60);
-    doc.setFontSize(9);
-    doc.text('Tijd', 16, y);
-    doc.text('Zaak', 36, y);
-    doc.text('Van → Naar', 130, y);
-    y += 8;
-
-    dayLog.forEach(l => {
-      if (y > 270) { doc.addPage(); y = 20; }
-      doc.setTextColor(60, 60, 60);
-      doc.text(l.time, 16, y);
-      doc.text(doc.splitTextToSize(l.zaak, 90)[0], 36, y);
-      doc.setTextColor(100, 100, 100);
-      doc.text(`${l.from} → ${l.to}`, 130, y);
-      y += 6;
+  var jsPDF = window.jspdf.jsPDF;
+  var doc = new jsPDF('p','mm','a4');
+  var now = new Date();
+  var datum = now.toLocaleDateString('nl-NL',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+  var y = 20;
+  doc.setFillColor(26,82,118); doc.rect(0,0,210,35,'F');
+  doc.setTextColor(255,255,255); doc.setFontSize(18);
+  doc.text('Dagrapport Oplevercontroles',14,15);
+  doc.setFontSize(10); doc.text('Waterschap Noorderzijlvest',14,22);
+  doc.text(datum,14,28); doc.text('Controleur: Remko Meijer',196,22,{align:'right'});
+  y=42;
+  doc.setTextColor(26,82,118); doc.setFontSize(14); doc.text('Samenvatting',14,y); y+=8;
+  doc.setTextColor(60,60,60); doc.setFontSize(10);
+  var sc={}; Object.keys(STATUSES).forEach(function(k){sc[k]=allData.filter(function(d){return d.status===k}).length;});
+  var sum=[['Totaal',allData.length]];
+  Object.keys(STATUSES).forEach(function(k){sum.push([STATUSES[k].sym+' '+STATUSES[k].label, sc[k]]);});
+  sum.push(['Gereden', tripKm.toFixed(1)+' km']);
+  sum.forEach(function(r){doc.text(r[0],14,y);doc.text(String(r[1]),120,y);y+=6;});
+  y+=6; doc.setTextColor(26,82,118); doc.setFontSize(14); doc.text('Wijzigingen vandaag',14,y); y+=8;
+  doc.setFontSize(9); doc.setTextColor(100,100,100);
+  if(dayLog.length===0){doc.text('Geen wijzigingen',14,y);}
+  else{
+    doc.setFillColor(240,240,240);doc.rect(14,y-4,182,7,'F');
+    doc.setTextColor(60,60,60);doc.text('Tijd',16,y);doc.text('Zaak',36,y);doc.text('Van → Naar',130,y);y+=8;
+    dayLog.forEach(function(l){
+      if(y>270){doc.addPage();y=20;}
+      doc.setTextColor(60,60,60);doc.text(l.time,16,y);
+      doc.text(doc.splitTextToSize(l.zaak,90)[0],36,y);
+      doc.setTextColor(100,100,100);doc.text(l.from+' → '+l.to,130,y);y+=6;
     });
   }
-
-  // Footer
-  doc.setFontSize(7);
-  doc.setTextColor(150, 150, 150);
-  doc.text('Waterschap Noorderzijlvest — Oplevercontrole Dagrapport', 14, 290);
-  doc.text(now.toLocaleString('nl-NL'), 196, 290, { align: 'right' });
-
-  // Download
-  const filename = `dagrapport_oplevercontrole_${now.toISOString().split('T')[0]}.pdf`;
-  const pdfBlob = doc.output('blob');
-  const url = URL.createObjectURL(pdfBlob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = filename;
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  setTimeout(() => URL.revokeObjectURL(url), 3000);
+  doc.setFontSize(7);doc.setTextColor(150,150,150);
+  doc.text('Waterschap Noorderzijlvest — Oplevercontrole Dagrapport',14,290);
+  doc.text(now.toLocaleString('nl-NL'),196,290,{align:'right'});
+  var blob=doc.output('blob');
+  var url=URL.createObjectURL(blob);
+  var a=document.createElement('a');
+  a.href=url;a.download='dagrapport_oplevercontrole_'+now.toISOString().split('T')[0]+'.pdf';
+  document.body.appendChild(a);a.click();document.body.removeChild(a);
+  setTimeout(function(){URL.revokeObjectURL(url)},3000);
   toast('📄 PDF gedownload');
 }
 
@@ -826,17 +723,13 @@ function saveConfig() {
   config.csvUrl = $('csvUrl').value.trim() || DEFAULT_CSV;
   localStorage.setItem('olc_config', JSON.stringify(config));
   $('cfgp').classList.remove('show');
-  toast('✅ Instellingen opgeslagen');
+  toast('✅ Opgeslagen, data wordt herladen...');
   loadData();
 }
 
-// ═══════════════════════════════════════════
-// PANELS
-// ═══════════════════════════════════════════
 function togglePanel(id) {
-  const el = $(id);
-  const wasOpen = el.classList.contains('open');
-  // Close all panels
+  var el = $(id);
+  var wasOpen = el.classList.contains('open');
   $('fp').classList.remove('open');
   $('lp').classList.remove('open');
   if (!wasOpen) el.classList.add('open');
@@ -845,9 +738,13 @@ function togglePanel(id) {
 // ═══════════════════════════════════════════
 // INIT
 // ═══════════════════════════════════════════
-map.on('click', () => { $('fp').classList.remove('open'); $('lp').classList.remove('open'); });
-$('mdl').addEventListener('click', e => { if (e.target === e.currentTarget) closeModal(); });
-$('rpt').addEventListener('click', e => { if (e.target === e.currentTarget) $('rpt').classList.remove('show'); });
+map.on('click', function(){ $('fp').classList.remove('open'); $('lp').classList.remove('open'); });
+$('mdl').addEventListener('click', function(e){ if(e.target===e.currentTarget) closeModal(); });
+$('rpt').addEventListener('click', function(e){ if(e.target===e.currentTarget) $('rpt').classList.remove('show'); });
+$('cfgp').addEventListener('click', function(e){ if(e.target===e.currentTarget) $('cfgp').classList.remove('show'); });
+
+// Laad opgeslagen Apps Script URL
+if (config.scriptUrl) $('scriptUrl').value = config.scriptUrl;
 
 startGPS();
 loadData();
