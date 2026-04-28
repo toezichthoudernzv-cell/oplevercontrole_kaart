@@ -705,6 +705,12 @@ function openDetail(d) {
     btns += '<button class="sbtn '+(d.status===k?'act':'')+'" onclick="changeStatus(\''+k+'\')">'+v.sym+' '+v.label+'</button>';
   });
   var briefGeoCheck = d.brief_geo && (d.brief_geo.toLowerCase() === 'ja' || d.brief_geo === '1' || d.brief_geo.toLowerCase() === 'true');
+  var geoBtn = '';
+  if (d.status === 'goed' && !briefGeoCheck) {
+    geoBtn = '<button onclick="openGeobeheer(currentItem)" style="display:block;width:100%;padding:12px;background:#27ae60;color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;margin-top:10px">📮 Melding Geobeheer versturen</button>';
+  } else if (d.status === 'goed' && briefGeoCheck) {
+    geoBtn = '<div style="display:flex;align-items:center;gap:6px;margin-top:10px;padding:10px;background:#eafaf1;border-radius:10px;font-size:13px;color:#27ae60;font-weight:600">✅ Brief verzonden naar Geobeheer</div>';
+  }
   $('mc').innerHTML = '<h3 style="display:flex;align-items:center;gap:8px"><span style="font-size:20px">'+s.sym+'</span><span style="flex:1;font-size:14px">'+d.zaakonderwerp+'</span></h3>'
     +'<div class="dr"><span class="dl">Vergunning ZN</span><span class="dv">'+(d.vzn||'-')+'</span></div>'
     +'<div class="dr"><span class="dl">Oplever ZN</span><span class="dv">'+(d.ozn||'-')+'</span></div>'
@@ -715,6 +721,7 @@ function openDetail(d) {
     +'<div class="dr"><span class="dl">Status</span><span class="dv" style="color:'+s.color+';font-weight:700">'+s.label+'</span></div>'
     +'<div class="dr"><span class="dl">Brief verzonden GEO</span><span class="dv">'+(briefGeoCheck ? '<span style="color:#27ae60;font-size:16px">✅</span> Ja' : '<span style="color:#e67e22;font-size:16px">⬜</span> Nee')+'</span></div>'
     +'<div style="margin-top:14px"><b style="font-size:13px;color:var(--nz)">Status wijzigen:</b><br><div style="margin-top:6px;display:flex;flex-wrap:wrap">'+btns+'</div></div>'
+    +geoBtn
     +'<div style="margin-top:10px"><b style="font-size:13px;color:var(--nz)">Notitie:</b>'
     +'<textarea class="ntxt" id="ntxt" placeholder="Opmerkingen...">'+(d.notitie||'')+'</textarea>'
     +'<button onclick="saveNote()" style="margin-top:6px;padding:6px 16px;background:var(--nz);color:#fff;border:none;border-radius:6px;font-size:13px;cursor:pointer">💾 Notitie opslaan</button></div>'
@@ -744,10 +751,6 @@ function changeStatus(ns) {
     status: ns
   });
   localStorage.setItem('olc_daylog', JSON.stringify(dayLog));
-  // Bij goedkeuring: brief_geo op Ja zetten
-  if (ns === 'goed') {
-    currentItem.brief_geo = 'Ja';
-  }
   writeToSheet(currentItem, 'status');
   toast('✅ Status → ' + STATUSES[ns].label);
   // Bij goedkeuring: Geobeheer formulier openen
@@ -996,13 +999,18 @@ function gSendMail() {
   if(!type){toast('⚠️ Selecteer een objecttype');return;}
   var r = gBuildBody();
   window.location.href = 'mailto:geo-gegevensbeheer@noorderzijlvest.nl?subject='+encodeURIComponent(r.subject)+'&body='+encodeURIComponent(r.body);
-  toast('📧 Mail wordt geopend...');
+  // Brief verzonden GEO op Ja zetten
+  if (geoItem) {
+    geoItem.brief_geo = 'Ja';
+    writeToSheet(geoItem, 'brief_geo');
+  }
+  toast('📧 Mail geopend — Brief verzonden GEO = Ja');
   $('geo').classList.remove('show');
 }
 
 function gSkip() {
   $('geo').classList.remove('show');
-  toast('📋 Geobeheer melding overgeslagen');
+  toast('📋 Overgeslagen — je kunt later via de popup alsnog versturen');
 }
 
 function openGeoWeb() {
