@@ -201,9 +201,11 @@ if (!config.csvUrl) config.csvUrl = DEFAULT_CSV;
 
 const STATUSES = {
   todo:   { label:'Nog te controleren', color:'#e67e22', sym:'⏳' },
-  bezig:  { label:'Niet begonnen',      color:'#3498db', sym:'🔨' },
+  bezig:  { label:'Niet begonnen (bezig)', color:'#3498db', sym:'🔨' },
+  begonnen: { label:'Zijn begonnen', color:'#2196F3', sym:'🏗️' },
   goed:   { label:'Goedgekeurd',        color:'#27ae60', sym:'✅' },
-  vanaf:  { label:'Ziet er vanaf',       color:'#95a5a6', sym:'🚫' },
+  vervallen: { label:'Vervallen',       color:'#95a5a6', sym:'🚫' },
+  vanaf:  { label:'Ziet er vanaf',      color:'#607d8b', sym:'👋' },
   overig: { label:'Overige',            color:'#8e44ad', sym:'📌' },
 };
 
@@ -211,10 +213,20 @@ function mapStatus(s) {
   if (!s) return 'todo';
   const n = s.toLowerCase().replace(/[^a-zà-ÿ]/g,'');
   if (n.includes('goedgekeurd') || n === 'goed' || n === 'ja') return 'goed';
-  if (n.includes('nietbegonnen') || n.includes('zijnbegonnen') || n.includes('bezig')) return 'bezig';
-  if (n.includes('zietervanaf') || n.includes('vanaf')) return 'vanaf';
+  if (n.includes('zietervanaf') || (n.includes('ziet') && n.includes('vanaf'))) return 'vanaf';
+  if (n.includes('vervallen')) return 'vervallen';
+  if (n.includes('zijnbegonnen')) return 'begonnen';
+  if (n.includes('nietbegonnen') || n.includes('bezig')) return 'bezig';
   if (n.includes('overig')) return 'overig';
   return 'todo';
+}
+
+// Parse Dutch comma-decimal numbers
+function parseNL(v) {
+  if (!v) return null;
+  const s = String(v).trim().replace(',', '.');
+  const n = parseFloat(s);
+  return isNaN(n) ? null : n;
 }
 
 // ═══════════════════════════════════════════
@@ -432,8 +444,8 @@ async function loadData() {
         ozn: r.Oplever_ZN || r.oplever_zn || '',
         zaakonderwerp: zaakonderwerp,
         adres: r.Adres || r.adres || '',
-        lat: parseFloat(r.Lat || r.lat) || null,
-        lng: parseFloat(r.Lng || r.lng) || null,
+        lat: parseNL(r.Lat || r.lat),
+        lng: parseNL(r.Lng || r.lng),
         status: mapStatus(r.Status || r.status || r.Gecontroleerd || r.Actie || ''),
         datum_aanvraag: r.Datum_aanvraag || r.datum_aanvraag || '',
         datum_controle: r.Datum_controle || r.datum_controle || '',
@@ -512,7 +524,7 @@ function apply() {
 
   // Update progress
   const total = allData.length;
-  const done = allData.filter(d => d.status === 'goed' || d.status === 'vanaf').length;
+  const done = allData.filter(d => d.status === 'goed' || d.status === 'vervallen' || d.status === 'vanaf').length;
   const pct = total > 0 ? Math.round(done / total * 100) : 0;
   $('pfill').style.width = pct + '%';
   $('ptxt').textContent = `${done} / ${total} afgehandeld (${pct}%)`;
