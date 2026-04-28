@@ -601,7 +601,10 @@ function changeStatus(ns) {
     zaak: currentItem.zaakonderwerp.substring(0,50),
     from: (STATUSES[old]||{}).label || old,
     to: (STATUSES[ns]||{}).label || ns,
-    lat: currentItem.lat, lng: currentItem.lng
+    lat: currentItem.lat, lng: currentItem.lng,
+    vzn: currentItem.vzn || '',
+    ozn: currentItem.ozn || '',
+    status: ns
   });
   localStorage.setItem('olc_daylog', JSON.stringify(dayLog));
   writeToSheet(currentItem, 'status');
@@ -649,6 +652,14 @@ function showReport() {
     dayLog.map(function(l){return '<div style="padding:4px 0;border-bottom:1px solid #f5f5f5;font-size:12px"><b>'+l.time+'</b> '+l.zaak+'<br><span style="color:#888">'+l.from+' → '+l.to+'</span></div>';}).join('');
   var statRows = Object.keys(STATUSES).map(function(k){var v=STATUSES[k]; return '<div class="rrow"><span>'+v.sym+' '+v.label+'</span><b style="color:'+v.color+'">'+sc[k]+'</b></div>';}).join('');
 
+  // Vandaag goedgekeurd
+  var goedVandaag = dayLog.filter(function(l){ return l.status === 'goed'; });
+  var goedHtml = goedVandaag.length === 0 ? '<p style="color:#aaa;font-size:12px">Geen controles goedgekeurd vandaag</p>' :
+    goedVandaag.map(function(l){return '<div style="padding:6px 0;border-bottom:1px solid #f0f0f0;font-size:12px">'
+      +'<b style="color:#27ae60">✅ '+l.time+'</b> '+l.zaak
+      +'<br><span style="color:#555">Vergunning ZN: <b>'+(l.vzn||'-')+'</b> | Oplever ZN: <b>'+(l.ozn||'-')+'</b></span>'
+      +'</div>';}).join('');
+
   $('rpc').innerHTML = '<h3>📊 Dagrapport</h3><div style="font-size:12px;color:#888;margin-bottom:16px">'+datum+'</div>'
     +'<div class="rrow"><span>Totaal controles</span><b>'+allData.length+'</b></div>'
     +statRows
@@ -656,7 +667,10 @@ function showReport() {
     +'<div class="rrow"><span>🚗 Gereden</span><b>'+tripKm.toFixed(1)+' km</b></div>'
     +'<div class="rrow"><span>⏱️ Rijtijd</span><b>'+elapsed+' min</b></div>'
     +'<hr style="margin:12px 0;border:none;border-top:1px solid #eee">'
-    +'<b style="font-size:13px;color:var(--nz)">Vandaag gewijzigd ('+dayLog.length+'):</b>'
+    +'<b style="font-size:13px;color:#27ae60">✅ Vandaag goedgekeurd ('+goedVandaag.length+'):</b>'
+    +'<div style="max-height:180px;overflow-y:auto;margin-top:8px">'+goedHtml+'</div>'
+    +'<hr style="margin:12px 0;border:none;border-top:1px solid #eee">'
+    +'<b style="font-size:13px;color:var(--nz)">Alle wijzigingen vandaag ('+dayLog.length+'):</b>'
     +'<div style="max-height:200px;overflow-y:auto;margin-top:8px">'+logHtml+'</div>'
     +'<button class="rpdf" onclick="downloadPDF()">📄 Download PDF Rapport</button>'
     +'<button onclick="$(' + "'rpt'" + ').classList.remove(' + "'show'" + ')" class="cbtn" style="background:#eee;color:#333;margin-top:8px">Sluiten</button>';
@@ -685,7 +699,24 @@ function downloadPDF() {
   Object.keys(STATUSES).forEach(function(k){sum.push([STATUSES[k].sym+' '+STATUSES[k].label, sc[k]]);});
   sum.push(['Gereden', tripKm.toFixed(1)+' km']);
   sum.forEach(function(r){doc.text(r[0],14,y);doc.text(String(r[1]),120,y);y+=6;});
-  y+=6; doc.setTextColor(26,82,118); doc.setFontSize(14); doc.text('Wijzigingen vandaag',14,y); y+=8;
+
+  // Goedgekeurde controles vandaag
+  var goedPdf = dayLog.filter(function(l){ return l.status === 'goed'; });
+  y+=6; doc.setTextColor(39,174,96); doc.setFontSize(14); doc.text('Goedgekeurd vandaag ('+goedPdf.length+')',14,y); y+=8;
+  doc.setFontSize(9);
+  if(goedPdf.length===0){doc.setTextColor(150,150,150);doc.text('Geen controles goedgekeurd vandaag',14,y);y+=6;}
+  else{
+    doc.setFillColor(234,250,241);doc.rect(14,y-4,182,7,'F');
+    doc.setTextColor(39,174,96);doc.text('Tijd',16,y);doc.text('Zaak',36,y);doc.text('Verg. ZN',130,y);doc.text('Opl. ZN',165,y);y+=8;
+    goedPdf.forEach(function(l){
+      if(y>270){doc.addPage();y=20;}
+      doc.setTextColor(60,60,60);doc.text(l.time,16,y);
+      doc.text(doc.splitTextToSize(l.zaak,90)[0],36,y);
+      doc.setTextColor(100,100,100);doc.text(l.vzn||'-',130,y);doc.text(l.ozn||'-',165,y);y+=6;
+    });
+  }
+
+  y+=6; doc.setTextColor(26,82,118); doc.setFontSize(14); doc.text('Alle wijzigingen vandaag',14,y); y+=8;
   doc.setFontSize(9); doc.setTextColor(100,100,100);
   if(dayLog.length===0){doc.text('Geen wijzigingen',14,y);}
   else{
