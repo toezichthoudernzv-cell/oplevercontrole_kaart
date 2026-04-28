@@ -84,6 +84,22 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;overflow
 #prox{position:fixed;top:72px;left:0;right:0;z-index:1095;background:#e74c3c;color:#fff;padding:10px 16px;font-size:13px;font-weight:600;display:none;text-align:center;cursor:pointer;animation:pulse 2s infinite}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.7}}
 @media(max-width:600px){#lp{width:100%}#fp{width:100%}}
+/* Geobeheer modal */
+#geo{display:none;position:fixed;inset:0;z-index:1800;background:rgba(0,0,0,.5);overflow-y:auto;-webkit-overflow-scrolling:touch}
+#geo.show{display:block}
+#geoc{background:#fff;width:94%;max-width:480px;margin:20px auto;border-radius:16px;padding:18px;color:#333;animation:su .3s}
+#geoc h3{font-size:14px;color:var(--nzd);margin-bottom:10px;display:flex;align-items:center;gap:6px}
+#geoc .gcard{background:#f8f9fb;border-radius:10px;padding:14px;margin-bottom:12px}
+#geoc .gcard h4{font-size:12px;color:var(--nz);text-transform:uppercase;letter-spacing:.4px;margin-bottom:8px}
+#geoc label{display:block;font-size:11px;font-weight:600;color:#666;margin-bottom:3px;margin-top:8px}
+#geoc select,#geoc input[type=text],#geoc input[type=number],#geoc textarea{width:100%;padding:9px;border:1.5px solid #dde;border-radius:7px;font-size:13px;font-family:inherit;background:#fff;-webkit-appearance:none}
+#geoc select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23888' fill='none' stroke-width='1.5'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center;padding-right:28px}
+#geoc textarea{resize:vertical;min-height:50px}
+#geoc .grow{display:flex;gap:8px}
+#geoc .grow>*{flex:1}
+.gcond{display:none}.gcond.show{display:block}
+#geoc .gprev{background:#f0f2f5;border:1px solid #e0e3e8;border-radius:8px;padding:12px;font-size:12px;line-height:1.7;white-space:pre-wrap;font-family:Menlo,monospace;color:#444;max-height:200px;overflow-y:auto;margin-top:8px}
+.gbtn{display:block;width:100%;padding:12px;border:none;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;margin-top:8px;text-align:center}
 </style>
 </head>
 <body>
@@ -128,6 +144,110 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;overflow
     <button onclick="clearCache()" class="cbtn" style="background:#e74c3c;color:#fff">🗑️ Geocode cache wissen</button>
     <button onclick="clearDaylog()" class="cbtn" style="background:#e67e22;color:#fff">📋 Daglog wissen</button>
     <button onclick="$('cfgp').classList.remove('show')" class="cbtn" style="background:#eee;color:#333">Sluiten</button>
+  </div>
+</div>
+
+<!-- Geobeheer modal -->
+<div id="geo">
+  <div id="geoc">
+    <h3>📮 Melding Geobeheer</h3>
+    <div class="gcard">
+      <h4>📋 Zaakgegevens</h4>
+      <label>Zaaknummer (Oplever ZN)</label>
+      <input type="text" id="g-zn" readonly style="background:#eaf2f8;font-weight:700">
+      <label>Omschrijving</label>
+      <input type="text" id="g-omschr" readonly style="background:#eaf2f8">
+    </div>
+    <div class="gcard">
+      <h4>🔧 Object</h4>
+      <label>Type object</label>
+      <select id="g-type" onchange="gShowCond()">
+        <option value="">Selecteer type...</option>
+        <option value="Duiker">Duiker</option>
+        <option value="Dam">Dam</option>
+        <option value="Watergang graven">Watergang graven</option>
+        <option value="Watergang dempen">Watergang dempen</option>
+        <option value="Watergang verbreden">Watergang verbreden</option>
+        <option value="Steiger">Steiger</option>
+        <option value="Beschoeiing">Beschoeiing</option>
+        <option value="Brug">Brug</option>
+        <option value="Uitstroomvoorziening">Uitstroomvoorziening</option>
+        <option value="Overig">Overig</option>
+      </select>
+      <!-- Duiker -->
+      <div class="gcond" id="gc-duiker">
+        <label>Actie</label>
+        <select id="g-d-actie"><option>Plaatsen</option><option>Verwijderen</option><option>Plaatsen en verwijderen</option><option>Vervangen</option></select>
+        <div class="grow">
+          <div><label>Materiaal</label><select id="g-d-mat"><option value="">Kies...</option><option>PVC</option><option>Beton</option><option>PE</option><option>Staal</option><option>Gietijzer</option><option>HDPE</option><option>PP</option></select></div>
+          <div><label>Diameter (mm)</label><input type="number" id="g-d-dia" placeholder="500"></div>
+        </div>
+        <label>Lengte (m)</label>
+        <input type="number" id="g-d-len" placeholder="8" step="0.1">
+      </div>
+      <!-- Dam -->
+      <div class="gcond" id="gc-dam">
+        <label>Actie</label>
+        <select id="g-dam-actie"><option>Aanleggen</option><option>Verwijderen</option><option>Verbreden</option><option>Vervangen</option></select>
+        <label>Materiaal</label>
+        <select id="g-dam-mat"><option value="">Kies...</option><option>Grond</option><option>Klei</option><option>Beton</option><option>Overig</option></select>
+      </div>
+      <!-- Watergang -->
+      <div class="gcond" id="gc-wg">
+        <div class="grow"><div><label>Lengte (m)</label><input type="number" id="g-wg-len" placeholder="50" step="0.1"></div><div><label>Breedte (m)</label><input type="number" id="g-wg-br" placeholder="3" step="0.1"></div></div>
+      </div>
+      <!-- Steiger -->
+      <div class="gcond" id="gc-steiger">
+        <label>Actie</label><select id="g-st-actie"><option>Realiseren</option><option>Verwijderen</option><option>Vervangen</option></select>
+        <label>Type</label><select id="g-st-type"><option>Vast</option><option>Drijvend</option></select>
+        <div class="grow"><div><label>Lengte (m)</label><input type="number" id="g-st-len" placeholder="6" step="0.1"></div><div><label>Breedte (m)</label><input type="number" id="g-st-br" placeholder="2" step="0.1"></div></div>
+      </div>
+      <!-- Beschoeiing -->
+      <div class="gcond" id="gc-besch">
+        <label>Actie</label><select id="g-be-actie"><option>Aanbrengen</option><option>Verwijderen</option><option>Vervangen</option></select>
+        <label>Materiaal</label><select id="g-be-mat"><option value="">Kies...</option><option>Hout</option><option>Kunststof</option><option>Staal (damwand)</option><option>Beton</option><option>Natuurvriendelijk</option></select>
+        <label>Lengte (m)</label><input type="number" id="g-be-len" placeholder="25" step="0.1">
+      </div>
+      <!-- Brug -->
+      <div class="gcond" id="gc-brug">
+        <label>Actie</label><select id="g-br-actie"><option>Aanleggen</option><option>Verwijderen</option><option>Vervangen</option></select>
+        <div class="grow"><div><label>Overspanning (m)</label><input type="number" id="g-br-over" placeholder="5" step="0.1"></div><div><label>Breedte (m)</label><input type="number" id="g-br-br" placeholder="3" step="0.1"></div></div>
+      </div>
+      <!-- Uitstroomvoorziening -->
+      <div class="gcond" id="gc-uitstr">
+        <label>Actie</label><select id="g-ui-actie"><option>Realiseren</option><option>Verwijderen</option><option>Aanpassen</option></select>
+        <label>Type</label><select id="g-ui-type"><option value="">Kies...</option><option>Duiker</option><option>Overstort</option><option>Klep</option><option>Overig</option></select>
+      </div>
+      <!-- Overig -->
+      <div class="gcond" id="gc-overig">
+        <label>Omschrijving</label><textarea id="g-ov-txt" placeholder="Beschrijf het object..."></textarea>
+      </div>
+      <label style="margin-top:10px">Extra opmerkingen (optioneel)</label>
+      <textarea id="g-extra" placeholder="Aanvullende informatie..."></textarea>
+    </div>
+    <div class="gcard">
+      <h4>📍 RD-Coördinaten</h4>
+      <p style="font-size:11px;color:#888;margin-bottom:8px">Uit de kaart overgenomen, of handmatig invullen vanuit GeoWeb</p>
+      <div class="grow">
+        <div><label>X (RD)</label><input type="text" id="g-rdx" placeholder="218497,38"></div>
+        <div><label>Y (RD)</label><input type="text" id="g-rdy" placeholder="578592,61"></div>
+      </div>
+      <button class="gbtn" onclick="openGeoWeb()" style="background:#27ae60;color:#fff;margin-top:8px;font-size:13px;padding:10px">🗺️ Open GeoWeb (schermafbeelding)</button>
+    </div>
+    <div class="gcard">
+      <h4>👷 Onderhoudsplichtige</h4>
+      <label>Type onderhoud</label>
+      <select id="g-oh-type"><option value="">Selecteer...</option><option>Gewoon onderhoud</option><option>Buitengewoon onderhoud</option></select>
+      <label>Onderhoudsplichtige</label>
+      <select id="g-oh-wie"><option value="">Selecteer...</option><option>Vergunninghouder</option><option>Gemeente</option><option>Waterschap</option><option>Provincie</option><option>Rijkswaterstaat</option><option>Particulier</option><option>Overig</option></select>
+    </div>
+    <div class="gcard">
+      <h4>👁️ Voorbeeld mail</h4>
+      <div class="gprev" id="g-prev">Vul het formulier in...</div>
+    </div>
+    <button class="gbtn" onclick="gSendMail()" style="background:#27ae60;color:#fff">📧 Verstuur naar Geobeheer</button>
+    <button class="gbtn" onclick="gSkip()" style="background:#eee;color:#666">Overslaan — later versturen</button>
+    <button class="gbtn" onclick="$('geo').classList.remove('show')" style="background:#fff;color:#999;border:1px solid #ddd">Sluiten</button>
   </div>
 </div>
 
@@ -208,6 +328,19 @@ L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
   attribution: '© OSM', maxZoom: 19
 }).addTo(map);
 L.control.zoom({ position: 'bottomleft' }).addTo(map);
+
+// Noordpijl
+var NorthArrow = L.Control.extend({
+  options: { position: 'topright' },
+  onAdd: function() {
+    var div = L.DomUtil.create('div','');
+    div.style.cssText = 'width:44px;height:44px;background:#fff;border-radius:50%;box-shadow:0 2px 8px rgba(0,0,0,.25);display:flex;align-items:center;justify-content:center;margin-top:4px';
+    div.innerHTML = '<svg width="28" height="28" viewBox="0 0 28 28"><polygon points="14,2 18,16 14,13 10,16" fill="#e74c3c"/><polygon points="14,26 10,16 14,13 18,16" fill="#666"/><text x="14" y="9" text-anchor="middle" font-size="6" font-weight="bold" fill="#fff">N</text></svg>';
+    div.title = 'Noord';
+    return div;
+  }
+});
+new NorthArrow().addTo(map);
 
 var clusterGroup = L.markerClusterGroup({
   maxClusterRadius: 50,
@@ -431,6 +564,7 @@ function loadData() {
           datum_controle: getCol(r, ['Datum_controle','datum_controle','Datum controle']),
           controleur: getCol(r, ['Controleur','controleur']),
           notitie: getCol(r, ['Notitie','notitie','Opmerkingen']),
+          brief_geo: getCol(r, ['Brief verzonden GEO','brief_verzonden_geo','Brief_verzonden_GEO','Brief GEO']),
           _row: i + 2
         };
 
@@ -570,6 +704,7 @@ function openDetail(d) {
     var v = STATUSES[k];
     btns += '<button class="sbtn '+(d.status===k?'act':'')+'" onclick="changeStatus(\''+k+'\')">'+v.sym+' '+v.label+'</button>';
   });
+  var briefGeoCheck = d.brief_geo && (d.brief_geo.toLowerCase() === 'ja' || d.brief_geo === '1' || d.brief_geo.toLowerCase() === 'true');
   $('mc').innerHTML = '<h3 style="display:flex;align-items:center;gap:8px"><span style="font-size:20px">'+s.sym+'</span><span style="flex:1;font-size:14px">'+d.zaakonderwerp+'</span></h3>'
     +'<div class="dr"><span class="dl">Vergunning ZN</span><span class="dv">'+(d.vzn||'-')+'</span></div>'
     +'<div class="dr"><span class="dl">Oplever ZN</span><span class="dv">'+(d.ozn||'-')+'</span></div>'
@@ -578,6 +713,7 @@ function openDetail(d) {
     +'<div class="dr"><span class="dl">Datum controle</span><span class="dv">'+(d.datum_controle||'-')+'</span></div>'
     +'<div class="dr"><span class="dl">Controleur</span><span class="dv">'+(d.controleur||'-')+'</span></div>'
     +'<div class="dr"><span class="dl">Status</span><span class="dv" style="color:'+s.color+';font-weight:700">'+s.label+'</span></div>'
+    +'<div class="dr"><span class="dl">Brief verzonden GEO</span><span class="dv">'+(briefGeoCheck ? '<span style="color:#27ae60;font-size:16px">✅</span> Ja' : '<span style="color:#e67e22;font-size:16px">⬜</span> Nee')+'</span></div>'
     +'<div style="margin-top:14px"><b style="font-size:13px;color:var(--nz)">Status wijzigen:</b><br><div style="margin-top:6px;display:flex;flex-wrap:wrap">'+btns+'</div></div>'
     +'<div style="margin-top:10px"><b style="font-size:13px;color:var(--nz)">Notitie:</b>'
     +'<textarea class="ntxt" id="ntxt" placeholder="Opmerkingen...">'+(d.notitie||'')+'</textarea>'
@@ -593,6 +729,7 @@ function changeStatus(ns) {
   var old = currentItem.status;
   currentItem.status = ns;
   currentItem.datum_controle = new Date().toLocaleDateString('nl-NL');
+  currentItem.controleur = 'Remko Meijer';
   openDetail(currentItem);
   apply();
   buildFilters();
@@ -609,6 +746,12 @@ function changeStatus(ns) {
   localStorage.setItem('olc_daylog', JSON.stringify(dayLog));
   writeToSheet(currentItem, 'status');
   toast('✅ Status → ' + STATUSES[ns].label);
+  // Bij goedkeuring: brief_geo op Ja zetten en Geobeheer formulier openen
+  if (ns === 'goed') {
+    currentItem.brief_geo = 'Ja';
+    writeToSheet(currentItem, 'brief_geo');
+    setTimeout(function(){ openGeobeheer(currentItem); }, 600);
+  }
 }
 
 function saveNote() {
@@ -630,7 +773,9 @@ function writeToSheet(item, field) {
     status: (STATUSES[item.status]||{}).label || '',
     notitie: item.notitie || '',
     datum_controle: item.datum_controle || '',
-    controleur: 'Remko Meijer', field: field
+    controleur: 'Remko Meijer',
+    brief_geo: item.brief_geo || '',
+    field: field
   };
   fetch(url, {
     method: 'POST', mode: 'no-cors',
@@ -742,6 +887,128 @@ function downloadPDF() {
 }
 
 // ═══════════════════════════════════════════
+// GEOBEHEER FORMULIER
+// ═══════════════════════════════════════════
+var geoItem = null;
+
+function wgs84toRD(lat, lng) {
+  var dLat = 0.36 * (lat - 52.15517440);
+  var dLng = 0.36 * (lng - 5.38720621);
+  var X = 155029.13 + (-0.00738*dLat) + (190094.945*dLng) + (-11832.228*dLat*dLng) + (-114.221*dLng*dLng*dLng) + (-32.391*dLat*dLat*dLng);
+  var Y = 463099.98 + (309056.544*dLat) + (3638.893*dLng) + (73.077*dLat*dLng*dLng) + (-157.984*dLat*dLat*dLat) + (59.788*dLat*dLng) + (0.433*dLng*dLng*dLng) + (-6.439*dLat*dLat*dLng);
+  return { x: Math.round(X*100)/100, y: Math.round(Y*100)/100 };
+}
+
+function fmtRD(v) { return String(v).replace('.',','); }
+
+function openGeobeheer(item) {
+  geoItem = item;
+  closeModal();
+  $('g-zn').value = item.ozn || item.vzn || '';
+  $('g-omschr').value = item.zaakonderwerp || '';
+  if (item.lat && item.lng) {
+    var rd = wgs84toRD(item.lat, item.lng);
+    $('g-rdx').value = fmtRD(rd.x);
+    $('g-rdy').value = fmtRD(rd.y);
+  } else {
+    $('g-rdx').value = '';
+    $('g-rdy').value = '';
+  }
+  $('g-type').selectedIndex = 0;
+  $('g-oh-type').selectedIndex = 0;
+  $('g-oh-wie').selectedIndex = 0;
+  $('g-extra').value = '';
+  document.querySelectorAll('.gcond').forEach(function(el){el.classList.remove('show')});
+  gUpdatePreview();
+  $('geo').classList.add('show');
+}
+
+function gShowCond() {
+  document.querySelectorAll('.gcond').forEach(function(el){el.classList.remove('show')});
+  var type = $('g-type').value;
+  var gm = {'Duiker':'gc-duiker','Dam':'gc-dam','Watergang graven':'gc-wg','Watergang dempen':'gc-wg','Watergang verbreden':'gc-wg','Steiger':'gc-steiger','Beschoeiing':'gc-besch','Brug':'gc-brug','Uitstroomvoorziening':'gc-uitstr','Overig':'gc-overig'};
+  if (gm[type]) $(gm[type]).classList.add('show');
+  gUpdatePreview();
+}
+
+function gBuildBody() {
+  var zn = $('g-zn').value;
+  var type = $('g-type').value;
+  var ohType = $('g-oh-type').value;
+  var ohWie = $('g-oh-wie').value;
+  var extra = $('g-extra').value.trim();
+  var rdx = $('g-rdx').value.trim() || '(niet ingevuld)';
+  var rdy = $('g-rdy').value.trim() || '(niet ingevuld)';
+  var det = '';
+  switch(type) {
+    case 'Duiker':
+      det='Duiker '+$('g-d-actie').value.toLowerCase();
+      if($('g-d-mat').value) det+='\nMateriaal: '+$('g-d-mat').value;
+      if($('g-d-dia').value) det+=', diameter '+$('g-d-dia').value+' mm';
+      if($('g-d-len').value) det+='\nLengte: '+$('g-d-len').value+' m';
+      break;
+    case 'Dam':
+      det='Dam '+$('g-dam-actie').value.toLowerCase();
+      if($('g-dam-mat').value) det+='\nMateriaal: '+$('g-dam-mat').value;
+      break;
+    case 'Watergang graven': case 'Watergang dempen': case 'Watergang verbreden':
+      det=type;
+      if($('g-wg-len').value) det+='\nLengte: '+$('g-wg-len').value+' m';
+      if($('g-wg-br').value) det+=', breedte: '+$('g-wg-br').value+' m';
+      break;
+    case 'Steiger':
+      det=$('g-st-type').value+'e steiger '+$('g-st-actie').value.toLowerCase();
+      if($('g-st-len').value) det+='\nLengte: '+$('g-st-len').value+' m';
+      if($('g-st-br').value) det+=', breedte: '+$('g-st-br').value+' m';
+      break;
+    case 'Beschoeiing':
+      det='Beschoeiing '+$('g-be-actie').value.toLowerCase();
+      if($('g-be-mat').value) det+='\nMateriaal: '+$('g-be-mat').value;
+      if($('g-be-len').value) det+='\nLengte: '+$('g-be-len').value+' m';
+      break;
+    case 'Brug':
+      det='Brug '+$('g-br-actie').value.toLowerCase();
+      if($('g-br-over').value) det+='\nOverspanning: '+$('g-br-over').value+' m';
+      if($('g-br-br').value) det+=', breedte: '+$('g-br-br').value+' m';
+      break;
+    case 'Uitstroomvoorziening':
+      det='Uitstroomvoorziening '+$('g-ui-actie').value.toLowerCase();
+      if($('g-ui-type').value) det+='\nType: '+$('g-ui-type').value;
+      break;
+    case 'Overig':
+      det=$('g-ov-txt').value.trim()||'Overig'; break;
+    default: det='(niet ingevuld)';
+  }
+  var body='Zaaknummer:\n'+(zn||'?')+'\n\nObject:\n'+det+'\n\nRD-coördinaten:\nX: '+rdx+'\nY: '+rdy+'\n\nOnderhoudsplichtige: ('+(ohType||'niet ingevuld')+')\n'+(ohWie||'(niet ingevuld)')+'\n';
+  if(extra) body+='\nExtra opmerkingen:\n'+extra+'\n';
+  body+='\nVergeet niet een schermafbeelding vanuit GeoWEB mee te sturen als bijlage!!!!';
+  return {body:body, subject:'Oplevercontrole '+(type||'object')+' — ZN '+(zn||'?')};
+}
+
+function gUpdatePreview() {
+  $('g-prev').textContent = gBuildBody().body;
+}
+
+function gSendMail() {
+  var type = $('g-type').value;
+  if(!type){toast('⚠️ Selecteer een objecttype');return;}
+  var r = gBuildBody();
+  window.location.href = 'mailto:geo-gegevensbeheer@noorderzijlvest.nl?subject='+encodeURIComponent(r.subject)+'&body='+encodeURIComponent(r.body);
+  toast('📧 Mail wordt geopend...');
+  $('geo').classList.remove('show');
+}
+
+function gSkip() {
+  $('geo').classList.remove('show');
+  toast('📋 Geobeheer melding overgeslagen');
+}
+
+function openGeoWeb() {
+  window.open('https://geo.noorderzijlvest.nl/Geoweb/index.html?viewer=Waterschapskaart.Waterschapskaart','_blank');
+  toast('🗺️ GeoWeb geopend — maak een schermafbeelding');
+}
+
+// ═══════════════════════════════════════════
 // CONFIG
 // ═══════════════════════════════════════════
 function showConfig() {
@@ -773,6 +1040,9 @@ map.on('click', function(){ $('fp').classList.remove('open'); $('lp').classList.
 $('mdl').addEventListener('click', function(e){ if(e.target===e.currentTarget) closeModal(); });
 $('rpt').addEventListener('click', function(e){ if(e.target===e.currentTarget) $('rpt').classList.remove('show'); });
 $('cfgp').addEventListener('click', function(e){ if(e.target===e.currentTarget) $('cfgp').classList.remove('show'); });
+$('geo').addEventListener('click', function(e){ if(e.target===e.currentTarget) $('geo').classList.remove('show'); });
+$('geo').addEventListener('input', function(){gUpdatePreview()});
+$('geo').addEventListener('change', function(){gUpdatePreview()});
 
 // Laad opgeslagen Apps Script URL
 if (config.scriptUrl) $('scriptUrl').value = config.scriptUrl;
