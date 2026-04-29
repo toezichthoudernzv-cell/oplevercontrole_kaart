@@ -438,8 +438,17 @@ function saveNote(){if(!currentItem)return;currentItem.notitie=$('ntxt').value;w
 // ═══════════════════════════════════════════
 function writeToSheet(item,field){
   var url=config.scriptUrl;if(!url)return;
-  var payload={action:'update',row:item._row,nr:item.nr,vzn:item.vzn,ozn:item.ozn,status:(STATUSES[item.status]||{}).label||'',notitie:item.notitie||'',datum_controle:item.datum_controle||'',controleur:'Remko Meijer',brief_geo:item.brief_geo||'',field:field};
-  fetch(url,{method:'POST',mode:'no-cors',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)}).catch(function(e){console.error('Sheet update mislukt:',e)});
+  var p='?action=update&row='+item._row
+    +'&nr='+encodeURIComponent(item.nr||'')
+    +'&vzn='+encodeURIComponent(item.vzn||'')
+    +'&ozn='+encodeURIComponent(item.ozn||'')
+    +'&status='+encodeURIComponent((STATUSES[item.status]||{}).label||'')
+    +'&notitie='+encodeURIComponent(item.notitie||'')
+    +'&datum_controle='+encodeURIComponent(item.datum_controle||'')
+    +'&controleur='+encodeURIComponent('Remko Meijer')
+    +'&brief_geo='+encodeURIComponent(item.brief_geo||'')
+    +'&field='+encodeURIComponent(field);
+  fetch(url+p,{method:'GET',mode:'no-cors'}).then(function(){console.log('Sheet update verstuurd')}).catch(function(e){console.error('Sheet update mislukt:',e)});
 }
 
 // ═══════════════════════════════════════════
