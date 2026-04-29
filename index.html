@@ -70,7 +70,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;overflow
 #cfgc label{font-size:12px;color:#666;display:block;margin-bottom:4px;margin-top:10px}
 #cfgc input{width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;font-size:13px}
 .cbtn{width:100%;padding:11px;border:none;border-radius:8px;font-size:14px;cursor:pointer;margin-top:8px;font-weight:600}
-#toast{position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:#333;color:#fff;padding:10px 20px;border-radius:20px;font-size:13px;z-index:2000;opacity:0;transition:opacity .3s;pointer-events:none}
+#toast{position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:#333;color:#fff;padding:10px 20px;border-radius:20px;font-size:13px;z-index:2000;opacity:0;transition:opacity .3s;pointer-events:none;max-width:90%;text-align:center}
 #toast.show{opacity:1}
 .marker-cluster-small{background-color:rgba(26,82,118,.3)}
 .marker-cluster-small div{background-color:var(--nz);color:#fff;font-weight:700;font-size:13px}
@@ -78,12 +78,16 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;overflow
 .marker-cluster-medium div{background-color:var(--nzl);color:#fff;font-weight:700}
 .marker-cluster-large{background-color:rgba(230,126,34,.3)}
 .marker-cluster-large div{background-color:#e67e22;color:#fff;font-weight:700;font-size:14px}
-#rbtn{position:fixed;bottom:20px;right:20px;z-index:1100;width:48px;height:48px;border-radius:50%;background:var(--nz);color:#fff;border:none;font-size:20px;box-shadow:0 4px 12px rgba(0,0,0,.3);cursor:pointer;display:flex;align-items:center;justify-content:center}
-#rbtn:active{background:var(--nzd)}
 .ntxt{width:100%;padding:8px;border:1px solid #ddd;border-radius:8px;font-size:13px;font-family:inherit;resize:vertical;min-height:60px;margin-top:8px}
 #prox{position:fixed;top:72px;left:0;right:0;z-index:1095;background:#e74c3c;color:#fff;padding:10px 16px;font-size:13px;font-weight:600;display:none;text-align:center;cursor:pointer;animation:pulse 2s infinite}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.7}}
-@media(max-width:600px){#lp{width:100%}#fp{width:100%}}
+/* Trip buttons */
+#tripbar{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);z-index:1100;display:flex;gap:8px;align-items:center}
+#tripbar button{width:48px;height:48px;border-radius:50%;border:none;color:#fff;font-size:20px;box-shadow:0 4px 12px rgba(0,0,0,.3);cursor:pointer;display:flex;align-items:center;justify-content:center}
+#tripbar button:active{transform:scale(.9)}
+#tripinfo{background:rgba(0,0,0,.7);color:#fff;padding:6px 14px;border-radius:20px;font-size:12px;font-weight:600;white-space:nowrap}
+/* Follow button */
+#followbtn{position:fixed;bottom:76px;right:20px;z-index:1100;width:40px;height:40px;border-radius:50%;background:#fff;border:none;font-size:18px;box-shadow:0 2px 8px rgba(0,0,0,.2);cursor:pointer;display:flex;align-items:center;justify-content:center}
 /* Geobeheer modal */
 #geo{display:none;position:fixed;inset:0;z-index:1800;background:rgba(0,0,0,.5);overflow-y:auto;-webkit-overflow-scrolling:touch}
 #geo.show{display:block}
@@ -100,6 +104,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;overflow
 .gcond{display:none}.gcond.show{display:block}
 #geoc .gprev{background:#f0f2f5;border:1px solid #e0e3e8;border-radius:8px;padding:12px;font-size:12px;line-height:1.7;white-space:pre-wrap;font-family:Menlo,monospace;color:#444;max-height:200px;overflow-y:auto;margin-top:8px}
 .gbtn{display:block;width:100%;padding:12px;border:none;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;margin-top:8px;text-align:center}
+@media(max-width:600px){#lp{width:100%}#fp{width:100%}}
 </style>
 </head>
 <body>
@@ -114,22 +119,18 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;overflow
 <div id="prox" onclick="flyToProx()"></div>
 <div id="ldg"><div class="spinner"></div><p id="ldgtxt">Data laden...</p></div>
 <div id="map"></div>
-
 <div id="fp">
   <h3>Filters</h3>
   <div id="filters"></div>
   <hr style="margin:16px 0;border:none;border-top:1px solid #eee">
   <input type="text" id="srch" placeholder="Zoek op onderwerp of adres..." style="width:100%;padding:8px;border:1px solid #ddd;border-radius:8px;font-size:13px" oninput="apply()">
 </div>
-
 <div id="lp">
   <h3>Alle controles <span id="lcnt" style="font-weight:400;color:#888"></span></h3>
   <div id="llist"></div>
 </div>
-
 <div id="mdl"><div id="mc"></div></div>
 <div id="rpt"><div id="rpc"></div></div>
-
 <div id="cfgp">
   <div id="cfgc">
     <h3>🔧 Instellingen</h3>
@@ -163,555 +164,248 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;overflow
       <label>Type object</label>
       <select id="g-type" onchange="gShowCond()">
         <option value="">Selecteer type...</option>
-        <option value="Duiker">Duiker</option>
-        <option value="Dam">Dam</option>
-        <option value="Watergang graven">Watergang graven</option>
-        <option value="Watergang dempen">Watergang dempen</option>
-        <option value="Watergang verbreden">Watergang verbreden</option>
-        <option value="Steiger">Steiger</option>
-        <option value="Beschoeiing">Beschoeiing</option>
-        <option value="Brug">Brug</option>
-        <option value="Uitstroomvoorziening">Uitstroomvoorziening</option>
-        <option value="Overig">Overig</option>
+        <option value="Duiker">Duiker</option><option value="Dam">Dam</option>
+        <option value="Watergang graven">Watergang graven</option><option value="Watergang dempen">Watergang dempen</option><option value="Watergang verbreden">Watergang verbreden</option>
+        <option value="Steiger">Steiger</option><option value="Beschoeiing">Beschoeiing</option>
+        <option value="Brug">Brug</option><option value="Uitstroomvoorziening">Uitstroomvoorziening</option><option value="Overig">Overig</option>
       </select>
-      <!-- Duiker -->
       <div class="gcond" id="gc-duiker">
         <label>Actie</label>
         <select id="g-d-actie"><option>Plaatsen</option><option>Verwijderen</option><option>Plaatsen en verwijderen</option><option>Vervangen</option></select>
-        <div class="grow">
-          <div><label>Materiaal</label><select id="g-d-mat"><option value="">Kies...</option><option>PVC</option><option>Beton</option><option>PE</option><option>Staal</option><option>Gietijzer</option><option>HDPE</option><option>PP</option></select></div>
-          <div><label>Diameter (mm)</label><input type="number" id="g-d-dia" placeholder="500"></div>
-        </div>
-        <label>Lengte (m)</label>
-        <input type="number" id="g-d-len" placeholder="8" step="0.1">
+        <div class="grow"><div><label>Materiaal</label><select id="g-d-mat"><option value="">Kies...</option><option>PVC</option><option>Beton</option><option>IJzer</option><option>Overig</option></select></div><div><label>Diameter (mm)</label><input type="number" id="g-d-dia" placeholder="500"></div></div>
+        <label>Lengte (m)</label><input type="number" id="g-d-len" placeholder="8" step="0.1">
       </div>
-      <!-- Dam -->
       <div class="gcond" id="gc-dam">
-        <label>Actie</label>
-        <select id="g-dam-actie"><option>Aanleggen</option><option>Verwijderen</option><option>Verbreden</option><option>Vervangen</option></select>
-        <label>Materiaal</label>
-        <select id="g-dam-mat"><option value="">Kies...</option><option>Grond</option><option>Klei</option><option>Beton</option><option>Overig</option></select>
+        <label>Actie</label><select id="g-dam-actie"><option>Aanleggen</option><option>Verwijderen</option><option>Verbreden</option><option>Vervangen</option></select>
+        <label>Materiaal</label><select id="g-dam-mat"><option value="">Kies...</option><option>Grond</option><option>Klei</option><option>Beton</option><option>Overig</option></select>
       </div>
-      <!-- Watergang -->
       <div class="gcond" id="gc-wg">
         <div class="grow"><div><label>Lengte (m)</label><input type="number" id="g-wg-len" placeholder="50" step="0.1"></div><div><label>Breedte (m)</label><input type="number" id="g-wg-br" placeholder="3" step="0.1"></div></div>
       </div>
-      <!-- Steiger -->
       <div class="gcond" id="gc-steiger">
         <label>Actie</label><select id="g-st-actie"><option>Realiseren</option><option>Verwijderen</option><option>Vervangen</option></select>
         <label>Type</label><select id="g-st-type"><option>Vast</option><option>Drijvend</option></select>
         <div class="grow"><div><label>Lengte (m)</label><input type="number" id="g-st-len" placeholder="6" step="0.1"></div><div><label>Breedte (m)</label><input type="number" id="g-st-br" placeholder="2" step="0.1"></div></div>
       </div>
-      <!-- Beschoeiing -->
       <div class="gcond" id="gc-besch">
         <label>Actie</label><select id="g-be-actie"><option>Aanbrengen</option><option>Verwijderen</option><option>Vervangen</option></select>
         <label>Materiaal</label><select id="g-be-mat"><option value="">Kies...</option><option>Hout</option><option>Kunststof</option><option>Staal (damwand)</option><option>Beton</option><option>Natuurvriendelijk</option></select>
         <label>Lengte (m)</label><input type="number" id="g-be-len" placeholder="25" step="0.1">
       </div>
-      <!-- Brug -->
       <div class="gcond" id="gc-brug">
         <label>Actie</label><select id="g-br-actie"><option>Aanleggen</option><option>Verwijderen</option><option>Vervangen</option></select>
         <div class="grow"><div><label>Overspanning (m)</label><input type="number" id="g-br-over" placeholder="5" step="0.1"></div><div><label>Breedte (m)</label><input type="number" id="g-br-br" placeholder="3" step="0.1"></div></div>
       </div>
-      <!-- Uitstroomvoorziening -->
       <div class="gcond" id="gc-uitstr">
         <label>Actie</label><select id="g-ui-actie"><option>Realiseren</option><option>Verwijderen</option><option>Aanpassen</option></select>
         <label>Type</label><select id="g-ui-type"><option value="">Kies...</option><option>Duiker</option><option>Overstort</option><option>Klep</option><option>Overig</option></select>
       </div>
-      <!-- Overig -->
-      <div class="gcond" id="gc-overig">
-        <label>Omschrijving</label><textarea id="g-ov-txt" placeholder="Beschrijf het object..."></textarea>
-      </div>
+      <div class="gcond" id="gc-overig"><label>Omschrijving</label><textarea id="g-ov-txt" placeholder="Beschrijf het object..."></textarea></div>
       <label style="margin-top:10px">Extra opmerkingen (optioneel)</label>
       <textarea id="g-extra" placeholder="Aanvullende informatie..."></textarea>
     </div>
     <div class="gcard">
       <h4>📍 RD-Coördinaten</h4>
-      <p style="font-size:11px;color:#888;margin-bottom:8px">Uit de kaart overgenomen, of handmatig invullen vanuit GeoWeb</p>
-      <div class="grow">
-        <div><label>X (RD)</label><input type="text" id="g-rdx" placeholder="218497,38"></div>
-        <div><label>Y (RD)</label><input type="text" id="g-rdy" placeholder="578592,61"></div>
-      </div>
+      <p style="font-size:11px;color:#888;margin-bottom:8px">Automatisch berekend uit GPS, of handmatig invullen vanuit GeoWeb</p>
+      <div class="grow"><div><label>X (RD)</label><input type="text" id="g-rdx" placeholder="218497,38"></div><div><label>Y (RD)</label><input type="text" id="g-rdy" placeholder="578592,61"></div></div>
       <button class="gbtn" onclick="openGeoWeb()" style="background:#27ae60;color:#fff;margin-top:8px;font-size:13px;padding:10px">🗺️ Open GeoWeb (schermafbeelding)</button>
     </div>
     <div class="gcard">
       <h4>👷 Onderhoudsplichtige</h4>
-      <label>Type onderhoud</label>
-      <select id="g-oh-type"><option value="">Selecteer...</option><option>Gewoon onderhoud</option><option>Buitengewoon onderhoud</option></select>
-      <label>Onderhoudsplichtige</label>
-      <select id="g-oh-wie"><option value="">Selecteer...</option><option>Vergunninghouder</option><option>Gemeente</option><option>Waterschap</option><option>Provincie</option><option>Rijkswaterstaat</option><option>Particulier</option><option>Overig</option></select>
+      <label>Type onderhoud</label><select id="g-oh-type"><option value="">Selecteer...</option><option>Gewoon onderhoud</option><option>Buitengewoon onderhoud</option></select>
+      <label>Onderhoudsplichtige</label><select id="g-oh-wie"><option value="">Selecteer...</option><option>Vergunninghouder</option><option>Gemeente</option><option>Waterschap</option><option>Provincie</option><option>Rijkswaterstaat</option><option>Particulier</option><option>Overig</option></select>
     </div>
-    <div class="gcard">
-      <h4>👁️ Voorbeeld mail</h4>
-      <div class="gprev" id="g-prev">Vul het formulier in...</div>
-    </div>
+    <div class="gcard"><h4>👁️ Voorbeeld mail</h4><div class="gprev" id="g-prev">Vul het formulier in...</div></div>
     <button class="gbtn" onclick="gSendMail()" style="background:#27ae60;color:#fff">📧 Verstuur naar Geobeheer</button>
     <button class="gbtn" onclick="gSkip()" style="background:#eee;color:#666">Overslaan — later versturen</button>
     <button class="gbtn" onclick="$('geo').classList.remove('show')" style="background:#fff;color:#999;border:1px solid #ddd">Sluiten</button>
   </div>
 </div>
 
-<button id="rbtn" onclick="loadData()" title="Vernieuwen">🔄</button>
+<!-- Trip controls -->
+<div id="tripbar">
+  <button id="tripbtn" onclick="toggleTrip()" style="background:#27ae60" title="Start rit">▶️</button>
+  <div id="tripinfo">0,0 km | 0 min</div>
+  <button onclick="loadData()" style="background:var(--nz)" title="Vernieuwen">🔄</button>
+</div>
+<button id="followbtn" onclick="toggleFollow()" title="Volg auto">🎯</button>
 <div id="toast"></div>
 
 <script>
 // ═══════════════════════════════════════════
-// CONFIG
+// CONFIG & STATUSES
 // ═══════════════════════════════════════════
-const DEFAULT_CSV = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vR_NrG6KU4uNBlnMdZ3K9Ibk5f6to8L-sc80B-SZ0XtWwYSQ2D12EaS1shEynPhLg/pub?gid=1328454275&single=true&output=csv';
-let config = JSON.parse(localStorage.getItem('olc_config') || '{}');
-if (!config.csvUrl) config.csvUrl = DEFAULT_CSV;
-
-const STATUSES = {
-  todo:      { label:'Nog te controleren',    color:'#e67e22', sym:'⏳' },
-  bezig:     { label:'Niet begonnen (bezig)', color:'#3498db', sym:'🔨' },
-  begonnen:  { label:'Zijn begonnen',         color:'#2196F3', sym:'🏗️' },
-  goed:      { label:'Goedgekeurd',           color:'#27ae60', sym:'✅' },
-  vervallen: { label:'Vervallen',             color:'#95a5a6', sym:'🚫' },
-  vanaf:     { label:'Ziet er vanaf',         color:'#607d8b', sym:'👋' },
-  overig:    { label:'Overige',               color:'#8e44ad', sym:'📌' },
+var DEFAULT_CSV='https://docs.google.com/spreadsheets/d/e/2PACX-1vR_NrG6KU4uNBlnMdZ3K9Ibk5f6to8L-sc80B-SZ0XtWwYSQ2D12EaS1shEynPhLg/pub?gid=1328454275&single=true&output=csv';
+var config=JSON.parse(localStorage.getItem('olc_config')||'{}');
+if(!config.csvUrl)config.csvUrl=DEFAULT_CSV;
+var STATUSES={
+  todo:{label:'Nog te controleren',color:'#e67e22',sym:'⏳'},
+  bezig:{label:'Niet begonnen (bezig)',color:'#3498db',sym:'🔨'},
+  begonnen:{label:'Zijn begonnen',color:'#2196F3',sym:'🏗️'},
+  goed:{label:'Goedgekeurd',color:'#27ae60',sym:'✅'},
+  vervallen:{label:'Vervallen',color:'#95a5a6',sym:'🚫'},
+  vanaf:{label:'Ziet er vanaf',color:'#607d8b',sym:'👋'},
+  overig:{label:'Overige',color:'#8e44ad',sym:'📌'}
 };
-
-// Standaard: goedgekeurd, vervallen en vanaf UIT
-const DEFAULT_OFF = ['goed','vervallen','vanaf'];
-
-function mapStatus(s) {
-  if (!s) return 'todo';
-  var n = s.toLowerCase().replace(/[^a-zà-ÿ]/g, '');
-  if (n.includes('goedgekeurd') || n === 'goed' || n === 'ja') return 'goed';
-  if (n.includes('zietervanaf') || (n.includes('ziet') && n.includes('vanaf'))) return 'vanaf';
-  if (n.includes('vervallen')) return 'vervallen';
-  if (n.includes('zijnbegonnen')) return 'begonnen';
-  if (n.includes('nietbegonnen') || n.includes('bezig')) return 'bezig';
-  if (n.includes('nogte') || n.includes('nogtecontroleren')) return 'todo';
-  if (n.includes('overig')) return 'overig';
-  return 'todo';
-}
-
-// Parse Dutch comma-decimal: "53,222772" -> 53.222772
-function parseNL(v) {
-  if (!v && v !== 0) return null;
-  var s = String(v).trim();
-  // Als er een komma in zit maar geen punt → Nederlandse notatie
-  if (s.indexOf(',') !== -1 && s.indexOf('.') === -1) {
-    s = s.replace(',', '.');
-  }
-  // Als er zowel punt als komma → 1.234,56 formaat
-  else if (s.indexOf('.') !== -1 && s.indexOf(',') !== -1) {
-    s = s.replace('.', '').replace(',', '.');
-  }
-  var n = parseFloat(s);
-  return isNaN(n) ? null : n;
-}
-
-// ═══════════════════════════════════════════
-// HELPERS
-// ═══════════════════════════════════════════
-var $ = function(id) { return document.getElementById(id); };
-function toast(msg) { var t=$('toast'); t.textContent=msg; t.classList.add('show'); setTimeout(function(){t.classList.remove('show')},2500); }
-function clearCache() {
-  localStorage.removeItem('olc_geocache');
-  gc = {};
-  toast('🗑️ Geocode cache gewist');
-}
-function clearDaylog() {
-  dayLog.length = 0;
-  localStorage.removeItem('olc_daylog');
-  toast('📋 Daglog gewist');
-}
+var DEFAULT_OFF=['goed','vervallen','vanaf'];
+function mapStatus(s){if(!s)return'todo';var n=s.toLowerCase().replace(/[^a-zà-ÿ]/g,'');if(n.includes('goedgekeurd')||n==='goed'||n==='ja')return'goed';if(n.includes('zietervanaf')||(n.includes('ziet')&&n.includes('vanaf')))return'vanaf';if(n.includes('vervallen'))return'vervallen';if(n.includes('zijnbegonnen'))return'begonnen';if(n.includes('nietbegonnen')||n.includes('bezig'))return'bezig';if(n.includes('nogte')||n.includes('nogtecontroleren'))return'todo';if(n.includes('overig'))return'overig';return'todo'}
+function parseNL(v){if(!v&&v!==0)return null;var s=String(v).trim();if(s.indexOf(',')!==-1&&s.indexOf('.')===-1)s=s.replace(',','.');else if(s.indexOf('.')!==-1&&s.indexOf(',')!==-1)s=s.replace('.','').replace(',','.');var n=parseFloat(s);return isNaN(n)?null:n}
+var $=function(id){return document.getElementById(id)};
+function toast(msg){var t=$('toast');t.textContent=msg;t.classList.add('show');setTimeout(function(){t.classList.remove('show')},2500)}
+function clearCache(){localStorage.removeItem('olc_geocache');gc={};toast('🗑️ Cache gewist')}
+function clearDaylog(){dayLog.length=0;localStorage.removeItem('olc_daylog');toast('📋 Daglog gewist')}
 
 // ═══════════════════════════════════════════
 // MAP
 // ═══════════════════════════════════════════
-var map = L.map('map', { zoomControl: false, tap: true, tapTolerance: 15 }).setView([53.25, 6.55], 11);
-L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-  attribution: '© OSM', maxZoom: 19
-}).addTo(map);
-L.control.zoom({ position: 'bottomleft' }).addTo(map);
-
+var map=L.map('map',{zoomControl:false,tap:true,tapTolerance:15}).setView([53.25,6.55],11);
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'© OSM',maxZoom:19}).addTo(map);
+L.control.zoom({position:'bottomleft'}).addTo(map);
 // Noordpijl
-var NorthArrow = L.Control.extend({
-  options: { position: 'topright' },
-  onAdd: function() {
-    var div = L.DomUtil.create('div','');
-    div.style.cssText = 'width:44px;height:44px;background:#fff;border-radius:50%;box-shadow:0 2px 8px rgba(0,0,0,.25);display:flex;align-items:center;justify-content:center;margin-top:4px';
-    div.innerHTML = '<svg width="28" height="28" viewBox="0 0 28 28"><polygon points="14,2 18,16 14,13 10,16" fill="#e74c3c"/><polygon points="14,26 10,16 14,13 18,16" fill="#666"/><text x="14" y="9" text-anchor="middle" font-size="6" font-weight="bold" fill="#fff">N</text></svg>';
-    div.title = 'Noord';
-    return div;
-  }
-});
+var NorthArrow=L.Control.extend({options:{position:'topright'},onAdd:function(){var d=L.DomUtil.create('div','');d.style.cssText='width:44px;height:44px;background:#fff;border-radius:50%;box-shadow:0 2px 8px rgba(0,0,0,.25);display:flex;align-items:center;justify-content:center;margin-top:4px';d.innerHTML='<svg width="28" height="28" viewBox="0 0 28 28"><polygon points="14,2 18,16 14,13 10,16" fill="#e74c3c"/><polygon points="14,26 10,16 14,13 18,16" fill="#666"/><text x="14" y="9" text-anchor="middle" font-size="6" font-weight="bold" fill="#fff">N</text></svg>';d.title='Noord';return d}});
 new NorthArrow().addTo(map);
-
-var clusterGroup = L.markerClusterGroup({
-  maxClusterRadius: 50,
-  spiderfyOnMaxZoom: true,
-  showCoverageOnHover: false,
-  zoomToBoundsOnClick: true,
-  disableClusteringAtZoom: 16,
-  iconCreateFunction: function(cluster) {
-    var cnt = cluster.getChildCount();
-    var cls = cnt > 50 ? 'marker-cluster-large' : cnt > 20 ? 'marker-cluster-medium' : 'marker-cluster-small';
-    return L.divIcon({ html: '<div>'+cnt+'</div>', className: 'marker-cluster '+cls, iconSize: L.point(40,40) });
-  }
-});
+var clusterGroup=L.markerClusterGroup({maxClusterRadius:50,spiderfyOnMaxZoom:true,showCoverageOnHover:false,zoomToBoundsOnClick:true,disableClusteringAtZoom:16,iconCreateFunction:function(c){var cnt=c.getChildCount();var cls=cnt>50?'marker-cluster-large':cnt>20?'marker-cluster-medium':'marker-cluster-small';return L.divIcon({html:'<div>'+cnt+'</div>',className:'marker-cluster '+cls,iconSize:L.point(40,40)})}});
 map.addLayer(clusterGroup);
 
 // ═══════════════════════════════════════════
-// GPS
+// GPS + TRIP
 // ═══════════════════════════════════════════
-var myPos = null, carMarker = null, heading = 0;
-var tripKm = 0, tripStart = null, lastTripPos = null, tripStarted = false;
-var dayLog = JSON.parse(localStorage.getItem('olc_daylog') || '[]');
+var myPos=null,carMarker=null,heading=0;
+var tripKm=0,tripStart=null,lastTripPos=null;
+var tripActive=false,tripPaused=false,followCar=true;
+var stillSince=null,autoCheckedItem=null;
+var dayLog=JSON.parse(localStorage.getItem('olc_daylog')||'[]');
+var carSvg='<svg viewBox="0 0 30 50" xmlns="http://www.w3.org/2000/svg"><rect x="5" y="8" width="20" height="34" rx="6" fill="#1a5276" stroke="#fff" stroke-width="1.5"/><rect x="8" y="10" width="14" height="8" rx="2" fill="#85c1e9"/><rect x="8" y="32" width="14" height="6" rx="2" fill="#85c1e9"/><circle cx="8" cy="12" r="2.5" fill="#222"/><circle cx="22" cy="12" r="2.5" fill="#222"/><circle cx="8" cy="40" r="2.5" fill="#222"/><circle cx="22" cy="40" r="2.5" fill="#222"/><text x="15" y="27" text-anchor="middle" font-size="5" fill="#fff" font-weight="bold">NZV</text></svg>';
 
-var carSvg = '<svg viewBox="0 0 30 50" xmlns="http://www.w3.org/2000/svg">'
-+'<rect x="5" y="8" width="20" height="34" rx="6" fill="#1a5276" stroke="#fff" stroke-width="1.5"/>'
-+'<rect x="8" y="10" width="14" height="8" rx="2" fill="#85c1e9"/>'
-+'<rect x="8" y="32" width="14" height="6" rx="2" fill="#85c1e9"/>'
-+'<circle cx="8" cy="12" r="2.5" fill="#222"/><circle cx="22" cy="12" r="2.5" fill="#222"/>'
-+'<circle cx="8" cy="40" r="2.5" fill="#222"/><circle cx="22" cy="40" r="2.5" fill="#222"/>'
-+'<text x="15" y="27" text-anchor="middle" font-size="5" fill="#fff" font-weight="bold">NZV</text>'
-+'</svg>';
+function toggleTrip(){
+  if(!tripActive){tripActive=true;tripPaused=false;tripStart=tripStart||Date.now();toast('🚗 Rit gestart');if(myPos)map.setView(myPos,15)}
+  else if(!tripPaused){tripPaused=true;toast('⏸️ Pauze')}
+  else{tripPaused=false;toast('▶️ Rit hervat')}
+  updateTripBtn();
+}
+function updateTripBtn(){
+  var b=$('tripbtn');
+  if(!tripActive){b.textContent='▶️';b.title='Start rit';b.style.background='#27ae60'}
+  else if(tripPaused){b.textContent='▶️';b.title='Hervat';b.style.background='#e67e22'}
+  else{b.textContent='⏸️';b.title='Pauze';b.style.background='#e74c3c'}
+}
+function toggleFollow(){followCar=!followCar;$('followbtn').textContent=followCar?'🎯':'📍';$('followbtn').style.background=followCar?'#fff':'#ddd';toast(followCar?'🎯 Auto volgen AAN':'📍 Auto volgen UIT');if(followCar&&myPos)map.setView(myPos,map.getZoom())}
+function updateTripInfo(){
+  var elapsed=tripStart?Math.round((Date.now()-tripStart)/60000):0;
+  $('tripinfo').textContent=tripKm.toFixed(1).replace('.',',')+' km | '+elapsed+' min'+(tripPaused?' ⏸️':'');
+}
+setInterval(updateTripInfo,5000);
 
-function startGPS() {
-  if (!navigator.geolocation) return;
-  navigator.geolocation.watchPosition(function(pos) {
-    var lat = pos.coords.latitude, lng = pos.coords.longitude, h = pos.coords.heading;
-    myPos = [lat, lng];
-    if (h && !isNaN(h)) heading = h;
-    var ico = L.divIcon({
-      className: 'car-icon',
-      html: '<div style="transform:rotate('+heading+'deg);width:30px;height:50px">'+carSvg+'</div>',
-      iconSize: [30, 50], iconAnchor: [15, 25]
-    });
-    if (!carMarker) { carMarker = L.marker(myPos, { icon: ico, zIndexOffset: 9999 }).addTo(map); }
-    else { carMarker.setLatLng(myPos); carMarker.setIcon(ico); }
-    // Trip
-    if (tripStarted && lastTripPos) {
-      var d = map.distance(myPos, lastTripPos);
-      if (d > 5) tripKm += d / 1000;
+function startGPS(){
+  if(!navigator.geolocation)return;
+  navigator.geolocation.watchPosition(function(pos){
+    var lat=pos.coords.latitude,lng=pos.coords.longitude,h=pos.coords.heading;
+    myPos=[lat,lng];
+    if(h&&!isNaN(h))heading=h;
+    var ico=L.divIcon({className:'car-icon',html:'<div style="transform:rotate('+heading+'deg);width:30px;height:50px">'+carSvg+'</div>',iconSize:[30,50],iconAnchor:[15,25]});
+    if(!carMarker){carMarker=L.marker(myPos,{icon:ico,zIndexOffset:9999}).addTo(map)}
+    else{carMarker.setLatLng(myPos);carMarker.setIcon(ico)}
+    // Auto-center
+    if(followCar&&tripActive&&!tripPaused)map.setView(myPos,map.getZoom(),{animate:true,duration:1});
+    // Trip km
+    if(tripActive&&lastTripPos){
+      var d=map.distance(myPos,lastTripPos);
+      if(d>5&&!tripPaused){tripKm+=d/1000;stillSince=null;autoCheckedItem=null}
+      // Auto-hervat pauze als je rijdt (>50m verplaatst)
+      if(tripPaused&&d>50){tripPaused=false;updateTripBtn();toast('▶️ Rit automatisch hervat')}
+      // Stilstand detectie
+      if(!tripPaused&&d<5){if(!stillSince)stillSince=Date.now()}
+      else if(!tripPaused){stillSince=null;autoCheckedItem=null}
     }
-    lastTripPos = myPos;
-    if (!tripStarted) { tripStarted = true; tripStart = Date.now(); }
+    lastTripPos=myPos;
+    if(!tripActive){/* GPS loopt, maar rit niet gestart */}
     checkProximity();
-  }, null, { enableHighAccuracy: true, maximumAge: 3000 });
-  // WakeLock
-  if ('wakeLock' in navigator) {
-    navigator.wakeLock.request('screen').catch(function(){});
-    document.addEventListener('visibilitychange', function() {
-      if (document.visibilityState === 'visible') navigator.wakeLock.request('screen').catch(function(){});
-    });
+    checkAutoCheckin();
+    updateTripInfo();
+  },null,{enableHighAccuracy:true,maximumAge:3000});
+  if('wakeLock' in navigator){navigator.wakeLock.request('screen').catch(function(){});document.addEventListener('visibilitychange',function(){if(document.visibilityState==='visible')navigator.wakeLock.request('screen').catch(function(){})})}
+}
+// Disable follow when user drags map
+map.on('dragstart',function(){if(followCar){followCar=false;$('followbtn').textContent='📍';$('followbtn').style.background='#ddd'}});
+
+// ═══════════════════════════════════════════
+// PROXIMITY + AUTO CHECKIN
+// ═══════════════════════════════════════════
+var proxItem=null,proxShown=false;
+function checkProximity(){
+  if(!myPos||allData.length===0)return;
+  var closest=null,minDist=Infinity;
+  allData.forEach(function(d){
+    if(!d.lat||!d.lng||d.status==='goed'||d.status==='vervallen'||d.status==='vanaf')return;
+    var dist=map.distance(myPos,[d.lat,d.lng]);
+    if(dist<300&&dist<minDist){closest=d;minDist=dist}
+  });
+  var el=$('prox');
+  if(closest){
+    proxItem=closest;
+    el.textContent='📍 '+Math.round(minDist)+'m — '+closest.zaakonderwerp.substring(0,50);
+    el.style.display='block';
+    // Auto-open popup als je binnen 80m komt
+    if(minDist<80&&!proxShown){proxShown=true;openDetail(closest);map.setView([closest.lat,closest.lng],17)}
+  }else{proxItem=null;el.style.display='none';proxShown=false}
+}
+function flyToProx(){if(proxItem){map.flyTo([proxItem.lat,proxItem.lng],17);openDetail(proxItem)}}
+
+// Auto checkin: >2 min stilstand binnen 80m van een controle
+function checkAutoCheckin(){
+  if(!myPos||!stillSince||!tripActive||tripPaused)return;
+  var elapsed=(Date.now()-stillSince)/1000;
+  if(elapsed<120)return; // Minder dan 2 minuten
+  // Zoek dichtstbijzijnde controle binnen 80m
+  var closest=null,minDist=Infinity;
+  allData.forEach(function(d){
+    if(!d.lat||!d.lng||d.status==='goed'||d.status==='vervallen'||d.status==='vanaf')return;
+    var dist=map.distance(myPos,[d.lat,d.lng]);
+    if(dist<80&&dist<minDist){closest=d;minDist=dist}
+  });
+  if(closest&&closest!==autoCheckedItem){
+    autoCheckedItem=closest;
+    toast('📍 2 min stilstand bij: '+closest.zaakonderwerp.substring(0,40));
+    openDetail(closest);
   }
 }
 
 // ═══════════════════════════════════════════
-// PROXIMITY
+// GEOCODING + CSV
 // ═══════════════════════════════════════════
-var proxItem = null;
-function checkProximity() {
-  if (!myPos || allData.length === 0) return;
-  var closest = null, minDist = Infinity;
-  allData.forEach(function(d) {
-    if (!d.lat || !d.lng || d.status === 'goed' || d.status === 'vervallen' || d.status === 'vanaf') return;
-    var dist = map.distance(myPos, [d.lat, d.lng]);
-    if (dist < 300 && dist < minDist) { closest = d; minDist = dist; }
-  });
-  var el = $('prox');
-  if (closest) {
-    proxItem = closest;
-    el.textContent = '📍 ' + Math.round(minDist) + 'm — ' + closest.zaakonderwerp.substring(0,50);
-    el.style.display = 'block';
-  } else { proxItem = null; el.style.display = 'none'; }
-}
-function flyToProx() { if (proxItem) { map.flyTo([proxItem.lat, proxItem.lng], 17); openDetail(proxItem); } }
-
-// ═══════════════════════════════════════════
-// GEOCODING
-// ═══════════════════════════════════════════
-var gc = JSON.parse(localStorage.getItem('olc_geocache') || '{}');
-function geocode(addr) {
-  var key = addr.toLowerCase().trim();
-  if (gc[key]) return Promise.resolve(gc[key]);
-  return fetch('https://nominatim.openstreetmap.org/search?format=json&countrycodes=nl&limit=1&q='+encodeURIComponent(addr))
-    .then(function(r){return r.json()})
-    .then(function(j){
-      if (j.length > 0) {
-        var res = { lat: parseFloat(j[0].lat), lng: parseFloat(j[0].lon) };
-        gc[key] = res;
-        localStorage.setItem('olc_geocache', JSON.stringify(gc));
-        return res;
-      }
-      return null;
-    }).catch(function(){ return null; });
-}
-
-// ═══════════════════════════════════════════
-// CSV PARSER — auto-detect separator
-// ═══════════════════════════════════════════
-var allData = [], filters = {};
-
-function initFilters() {
-  // Laad opgeslagen filter-voorkeuren of gebruik defaults
-  var saved = localStorage.getItem('olc_filters');
-  if (saved) {
-    try { filters = JSON.parse(saved); } catch(e) { filters = {}; }
-  }
-  Object.keys(STATUSES).forEach(function(k) {
-    if (filters[k] === undefined) {
-      // Standaard: gecontroleerd/vervallen/vanaf UIT
-      filters[k] = DEFAULT_OFF.indexOf(k) === -1;
-    }
-  });
-}
+var gc=JSON.parse(localStorage.getItem('olc_geocache')||'{}');
+function geocode(addr){var key=addr.toLowerCase().trim();if(gc[key])return Promise.resolve(gc[key]);return fetch('https://nominatim.openstreetmap.org/search?format=json&countrycodes=nl&limit=1&q='+encodeURIComponent(addr)).then(function(r){return r.json()}).then(function(j){if(j.length>0){var res={lat:parseFloat(j[0].lat),lng:parseFloat(j[0].lon)};gc[key]=res;localStorage.setItem('olc_geocache',JSON.stringify(gc));return res}return null}).catch(function(){return null})}
+var allData=[],filters={};
+function initFilters(){var saved=localStorage.getItem('olc_filters');if(saved){try{filters=JSON.parse(saved)}catch(e){filters={}}}Object.keys(STATUSES).forEach(function(k){if(filters[k]===undefined)filters[k]=DEFAULT_OFF.indexOf(k)===-1})}
 initFilters();
-
-function saveFilters() {
-  localStorage.setItem('olc_filters', JSON.stringify(filters));
-}
-
-function detectSeparator(text) {
-  // Tel komma's en puntkomma's in eerste regel
-  var firstLine = text.split('\n')[0];
-  var commas = (firstLine.match(/,/g) || []).length;
-  var semis = (firstLine.match(/;/g) || []).length;
-  // Als er meer puntkomma's zijn → Nederlandse CSV met ; separator
-  return semis > commas ? ';' : ',';
-}
-
-function parseCSV(text) {
-  var sep = detectSeparator(text);
-  console.log('CSV separator gedetecteerd:', sep === ';' ? 'puntkomma (NL)' : 'komma (EN)');
-  var lines = text.split('\n');
-  if (lines.length < 2) return [];
-  var hdr = parseCSVLine(lines[0], sep);
-  var rows = [];
-  for (var i = 1; i < lines.length; i++) {
-    if (!lines[i].trim()) continue;
-    var vals = parseCSVLine(lines[i], sep);
-    var obj = {};
-    hdr.forEach(function(h, idx) { obj[h.trim()] = (vals[idx] || '').trim(); });
-    rows.push(obj);
-  }
-  return rows;
-}
-
-function parseCSVLine(line, sep) {
-  var result = [], current = '', inQuotes = false;
-  for (var i = 0; i < line.length; i++) {
-    var c = line[i];
-    if (inQuotes) {
-      if (c === '"' && line[i+1] === '"') { current += '"'; i++; }
-      else if (c === '"') inQuotes = false;
-      else current += c;
-    } else {
-      if (c === '"') inQuotes = true;
-      else if (c === sep) { result.push(current); current = ''; }
-      else current += c;
-    }
-  }
-  result.push(current);
-  return result;
-}
-
-function extractAddress(z) {
-  var m = z.match(/nabij\s+(.+?)\s+te\s+(\w+)/i) ||
-          z.match(/(\S+\s+\d+\S*)\s+te\s+(\w+)/i) ||
-          z.match(/te\s+(\w+)/i);
-  if (m && m.length >= 3) return m[1] + ', ' + m[2] + ', Groningen';
-  if (m && m.length >= 2) return m[1] + ', Groningen';
-  return null;
-}
-
-function getCol(r, names) {
-  for (var i = 0; i < names.length; i++) {
-    if (r[names[i]] !== undefined && r[names[i]] !== '') return r[names[i]];
-  }
-  return '';
-}
-
-function loadData() {
-  var prg = $('ldgtxt');
-  $('ldg').classList.remove('done');
-  prg.textContent = 'Data ophalen uit Google Sheets...';
-  var csvUrl = config.csvUrl || DEFAULT_CSV;
-
-  fetch(csvUrl)
-    .then(function(resp) {
-      if (!resp.ok) throw new Error('HTTP ' + resp.status);
-      return resp.text();
-    })
-    .then(function(text) {
-      var rows = parseCSV(text);
-      prg.textContent = rows.length + ' rijen gevonden, verwerken...';
-      allData = [];
-      var queue = [];
-
-      for (var i = 0; i < rows.length; i++) {
-        var r = rows[i];
-        var zaak = getCol(r, ['Zaakonderwerp','zaakonderwerp']);
-        var adres = getCol(r, ['Adres','adres']);
-        if (!zaak && !adres) continue;
-
-        var item = {
-          nr: getCol(r, ['Nummer','nummer','Aantal']) || (i+1),
-          vzn: getCol(r, ['Vergunning_ZN','vergunning_zn','Vergunning ZN']),
-          ozn: getCol(r, ['Oplever_ZN','oplever_zn','Oplever ZN']),
-          zaakonderwerp: zaak,
-          adres: adres,
-          lat: parseNL(getCol(r, ['Lat','lat','Latitude'])),
-          lng: parseNL(getCol(r, ['Lng','lng','Lon','lon','Longitude'])),
-          status: mapStatus(getCol(r, ['Status','status','Gecontroleerd','Actie'])),
-          datum_aanvraag: getCol(r, ['Datum_aanvraag','datum_aanvraag','Datum aanvraag']),
-          datum_controle: getCol(r, ['Datum_controle','datum_controle','Datum controle']),
-          controleur: getCol(r, ['Controleur','controleur']),
-          notitie: getCol(r, ['Notitie','notitie','Opmerkingen']),
-          brief_geo: getCol(r, ['Brief verzonden GEO','brief_verzonden_geo','Brief_verzonden_GEO','Brief GEO']),
-          _row: i + 2
-        };
-
-        if (!item.adres && zaak) item.adres = extractAddress(zaak) || '';
-        if (item.lat && item.lng) {
-          allData.push(item);
-        } else if (item.adres) {
-          queue.push(item);
-        } else {
-          allData.push(item);
-        }
-      }
-
-      // Geocode items without coordinates
-      return geocodeQueue(queue, prg, rows.length);
-    })
-    .then(function() {
-      var geocoded = allData.filter(function(d){return d.lat && d.lng}).length;
-      $('ldgtxt').textContent = allData.length + ' controles, ' + geocoded + ' op kaart';
-      toast('✅ ' + allData.length + ' controles geladen');
-      apply();
-      buildFilters();
-      var coords = allData.filter(function(d){return d.lat && d.lng}).map(function(d){return [d.lat, d.lng]});
-      if (coords.length > 0) map.fitBounds(L.latLngBounds(coords).pad(0.1));
-      $('ldg').classList.add('done');
-    })
-    .catch(function(e) {
-      console.error('Laden mislukt:', e);
-      $('ldgtxt').textContent = 'Fout bij laden! Check Sheet-publicatie.';
-      toast('❌ Laden mislukt: ' + e.message);
-      setTimeout(function(){ $('ldg').classList.add('done'); }, 3000);
-    });
-}
-
-function geocodeQueue(queue, prg, total) {
-  var i = 0;
-  function next() {
-    if (i >= queue.length) return Promise.resolve();
-    var item = queue[i];
-    prg.textContent = 'Geocoderen ' + (i+1) + '/' + queue.length + ': ' + item.adres.substring(0,30) + '...';
-    return geocode(item.adres).then(function(geo) {
-      if (geo) { item.lat = geo.lat; item.lng = geo.lng; }
-      allData.push(item);
-      i++;
-      // Rate limit alleen als niet gecached
-      if (!gc[item.adres.toLowerCase().trim()]) {
-        return new Promise(function(r){ setTimeout(r, 1100); }).then(next);
-      }
-      return next();
-    });
-  }
-  return next();
-}
+function saveFilters(){localStorage.setItem('olc_filters',JSON.stringify(filters))}
+function detectSeparator(text){var fl=text.split('\n')[0];var c=(fl.match(/,/g)||[]).length;var s=(fl.match(/;/g)||[]).length;return s>c?';':','}
+function parseCSV(text){var sep=detectSeparator(text);var lines=text.split('\n');if(lines.length<2)return[];var hdr=parseCSVLine(lines[0],sep);var rows=[];for(var i=1;i<lines.length;i++){if(!lines[i].trim())continue;var vals=parseCSVLine(lines[i],sep);var obj={};hdr.forEach(function(h,idx){obj[h.trim()]=(vals[idx]||'').trim()});rows.push(obj)}return rows}
+function parseCSVLine(line,sep){var result=[],current='',inQ=false;for(var i=0;i<line.length;i++){var c=line[i];if(inQ){if(c==='"'&&line[i+1]==='"'){current+='"';i++}else if(c==='"')inQ=false;else current+=c}else{if(c==='"')inQ=true;else if(c===sep){result.push(current);current=''}else current+=c}}result.push(current);return result}
+function extractAddress(z){var m=z.match(/nabij\s+(.+?)\s+te\s+(\w+)/i)||z.match(/(\S+\s+\d+\S*)\s+te\s+(\w+)/i)||z.match(/te\s+(\w+)/i);if(m&&m.length>=3)return m[1]+', '+m[2]+', Groningen';if(m&&m.length>=2)return m[1]+', Groningen';return null}
+function getCol(r,names){for(var i=0;i<names.length;i++){if(r[names[i]]!==undefined&&r[names[i]]!=='')return r[names[i]]}return''}
+function loadData(){var prg=$('ldgtxt');$('ldg').classList.remove('done');prg.textContent='Data ophalen...';fetch(config.csvUrl||DEFAULT_CSV).then(function(r){if(!r.ok)throw new Error('HTTP '+r.status);return r.text()}).then(function(text){var rows=parseCSV(text);prg.textContent=rows.length+' rijen, verwerken...';allData=[];var queue=[];for(var i=0;i<rows.length;i++){var r=rows[i];var zaak=getCol(r,['Zaakonderwerp','zaakonderwerp']);var adres=getCol(r,['Adres','adres']);if(!zaak&&!adres)continue;var item={nr:getCol(r,['Nummer','nummer','Aantal'])||(i+1),vzn:getCol(r,['Vergunning_ZN','vergunning_zn','Vergunning ZN']),ozn:getCol(r,['Oplever_ZN','oplever_zn','Oplever ZN']),zaakonderwerp:zaak,adres:adres,lat:parseNL(getCol(r,['Lat','lat','Latitude'])),lng:parseNL(getCol(r,['Lng','lng','Lon','lon','Longitude'])),status:mapStatus(getCol(r,['Status','status','Gecontroleerd','Actie'])),datum_aanvraag:getCol(r,['Datum_aanvraag','datum_aanvraag','Datum aanvraag']),datum_controle:getCol(r,['Datum_controle','datum_controle','Datum controle']),controleur:getCol(r,['Controleur','controleur']),notitie:getCol(r,['Notitie','notitie','Opmerkingen']),brief_geo:getCol(r,['Brief verzonden GEO','brief_verzonden_geo','Brief_verzonden_GEO','Brief GEO']),_row:i+2};if(!item.adres&&zaak)item.adres=extractAddress(zaak)||'';if(item.lat&&item.lng)allData.push(item);else if(item.adres)queue.push(item);else allData.push(item)}return geocodeQueue(queue,prg)}).then(function(){var gc2=allData.filter(function(d){return d.lat&&d.lng}).length;toast('✅ '+allData.length+' controles geladen');apply();buildFilters();var coords=allData.filter(function(d){return d.lat&&d.lng}).map(function(d){return[d.lat,d.lng]});if(coords.length>0)map.fitBounds(L.latLngBounds(coords).pad(0.1));$('ldg').classList.add('done')}).catch(function(e){$('ldgtxt').textContent='Fout: '+e.message;toast('❌ Laden mislukt');setTimeout(function(){$('ldg').classList.add('done')},3000)})}
+function geocodeQueue(queue,prg){var i=0;function next(){if(i>=queue.length)return Promise.resolve();var item=queue[i];prg.textContent='Geocoderen '+(i+1)+'/'+queue.length;return geocode(item.adres).then(function(geo){if(geo){item.lat=geo.lat;item.lng=geo.lng}allData.push(item);i++;if(!gc[item.adres.toLowerCase().trim()])return new Promise(function(r){setTimeout(r,1100)}).then(next);return next()})}return next()}
 
 // ═══════════════════════════════════════════
 // RENDER
 // ═══════════════════════════════════════════
-function makeIcon(status) {
-  var s = STATUSES[status] || STATUSES.todo;
-  return L.divIcon({
-    className: '',
-    html: '<div style="width:28px;height:28px;border-radius:50%;background:'+s.color+';border:2px solid #fff;display:flex;align-items:center;justify-content:center;font-size:14px;box-shadow:0 2px 6px rgba(0,0,0,.3)">'+s.sym+'</div>',
-    iconSize: [28, 28], iconAnchor: [14, 14]
-  });
-}
-
-function apply() {
-  clusterGroup.clearLayers();
-  var search = ($('srch') ? $('srch').value : '').toLowerCase();
-  var visible = allData.filter(function(d) {
-    if (!d.lat || !d.lng) return false;
-    if (!filters[d.status]) return false;
-    if (search && d.zaakonderwerp.toLowerCase().indexOf(search) === -1 && d.adres.toLowerCase().indexOf(search) === -1) return false;
-    return true;
-  });
-
-  visible.forEach(function(d) {
-    var m = L.marker([d.lat, d.lng], { icon: makeIcon(d.status) });
-    m.on('click', function(){ openDetail(d); });
-    d._m = m;
-    clusterGroup.addLayer(m);
-  });
-
-  // Progress
-  var total = allData.length;
-  var done = allData.filter(function(d){ return d.status==='goed'||d.status==='vervallen'||d.status==='vanaf'; }).length;
-  var pct = total > 0 ? Math.round(done / total * 100) : 0;
-  $('pfill').style.width = pct + '%';
-  $('ptxt').textContent = done + ' / ' + total + ' afgehandeld (' + pct + '%)';
-
-  // List
-  var list = $('llist');
-  list.innerHTML = '';
-  $('lcnt').textContent = '(' + visible.length + ')';
-  visible.forEach(function(d) {
-    var s = STATUSES[d.status] || STATUSES.todo;
-    var div = document.createElement('div');
-    div.className = 'li';
-    div.innerHTML = '<div class="ldot" style="width:20px;height:20px;border-radius:50%;background:'+s.color+';display:flex;align-items:center;justify-content:center;font-size:11px">'+s.sym+'</div>'
-      +'<div class="ltxt"><b>'+d.zaakonderwerp.substring(0,60)+'</b><span>'+(d.adres||'Geen adres')+'</span></div>';
-    div.onclick = (function(dd){ return function(){ map.flyTo([dd.lat, dd.lng], 17); openDetail(dd); $('lp').classList.remove('open'); }; })(d);
-    list.appendChild(div);
-  });
-}
+function makeIcon(status){var s=STATUSES[status]||STATUSES.todo;return L.divIcon({className:'',html:'<div style="width:28px;height:28px;border-radius:50%;background:'+s.color+';border:2px solid #fff;display:flex;align-items:center;justify-content:center;font-size:14px;box-shadow:0 2px 6px rgba(0,0,0,.3)">'+s.sym+'</div>',iconSize:[28,28],iconAnchor:[14,14]})}
+function apply(){clusterGroup.clearLayers();var search=($('srch')?$('srch').value:'').toLowerCase();var visible=allData.filter(function(d){if(!d.lat||!d.lng)return false;if(!filters[d.status])return false;if(search&&d.zaakonderwerp.toLowerCase().indexOf(search)===-1&&d.adres.toLowerCase().indexOf(search)===-1)return false;return true});visible.forEach(function(d){var m=L.marker([d.lat,d.lng],{icon:makeIcon(d.status)});m.on('click',function(){openDetail(d)});d._m=m;clusterGroup.addLayer(m)});var total=allData.length;var done=allData.filter(function(d){return d.status==='goed'||d.status==='vervallen'||d.status==='vanaf'}).length;var pct=total>0?Math.round(done/total*100):0;$('pfill').style.width=pct+'%';$('ptxt').textContent=done+' / '+total+' afgehandeld ('+pct+'%)';var list=$('llist');list.innerHTML='';$('lcnt').textContent='('+visible.length+')';visible.forEach(function(d){var s=STATUSES[d.status]||STATUSES.todo;var div=document.createElement('div');div.className='li';div.innerHTML='<div class="ldot" style="width:20px;height:20px;border-radius:50%;background:'+s.color+';display:flex;align-items:center;justify-content:center;font-size:11px">'+s.sym+'</div><div class="ltxt"><b>'+d.zaakonderwerp.substring(0,60)+'</b><span>'+(d.adres||'Geen adres')+'</span></div>';div.onclick=(function(dd){return function(){map.flyTo([dd.lat,dd.lng],17);openDetail(dd);$('lp').classList.remove('open')}})(d);list.appendChild(div)})}
+function buildFilters(){var el=$('filters');el.innerHTML='';Object.keys(STATUSES).forEach(function(k){var v=STATUSES[k];var cnt=allData.filter(function(d){return d.status===k}).length;var lbl=document.createElement('label');lbl.className='fchk';lbl.innerHTML='<input type="checkbox" '+(filters[k]?'checked':'')+' data-st="'+k+'"><div class="fdot" style="background:'+v.color+'">'+v.sym+'</div> '+v.label+' <span style="color:#aaa;margin-left:auto">'+cnt+'</span>';lbl.querySelector('input').addEventListener('change',function(e){filters[e.target.getAttribute('data-st')]=e.target.checked;saveFilters();apply()});el.appendChild(lbl)})}
 
 // ═══════════════════════════════════════════
-// FILTERS
+// DETAIL + STATUS
 // ═══════════════════════════════════════════
-function buildFilters() {
-  var el = $('filters');
-  el.innerHTML = '';
-  Object.keys(STATUSES).forEach(function(k) {
-    var v = STATUSES[k];
-    var cnt = allData.filter(function(d){ return d.status === k; }).length;
-    var lbl = document.createElement('label');
-    lbl.className = 'fchk';
-    lbl.innerHTML = '<input type="checkbox" '+(filters[k]?'checked':'')+' data-st="'+k+'">'
-      +'<div class="fdot" style="background:'+v.color+'">'+v.sym+'</div> '+v.label+' <span style="color:#aaa;margin-left:auto">'+cnt+'</span>';
-    lbl.querySelector('input').addEventListener('change', function(e) {
-      filters[e.target.getAttribute('data-st')] = e.target.checked;
-      saveFilters();
-      apply();
-    });
-    el.appendChild(lbl);
-  });
-}
-
-// ═══════════════════════════════════════════
-// DETAIL
-// ═══════════════════════════════════════════
-var currentItem = null;
-function openDetail(d) {
-  currentItem = d;
-  var s = STATUSES[d.status] || STATUSES.todo;
-  var btns = '';
-  Object.keys(STATUSES).forEach(function(k) {
-    var v = STATUSES[k];
-    btns += '<button class="sbtn '+(d.status===k?'act':'')+'" onclick="changeStatus(\''+k+'\')">'+v.sym+' '+v.label+'</button>';
-  });
-  var briefGeoCheck = d.brief_geo && (d.brief_geo.toLowerCase() === 'ja' || d.brief_geo === '1' || d.brief_geo.toLowerCase() === 'true');
-  var geoBtn = '';
-  if (d.status === 'goed' && !briefGeoCheck) {
-    geoBtn = '<button onclick="openGeobeheer(currentItem)" style="display:block;width:100%;padding:12px;background:#27ae60;color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;margin-top:10px">📮 Melding Geobeheer versturen</button>';
-  } else if (d.status === 'goed' && briefGeoCheck) {
-    geoBtn = '<div style="display:flex;align-items:center;gap:6px;margin-top:10px;padding:10px;background:#eafaf1;border-radius:10px;font-size:13px;color:#27ae60;font-weight:600">✅ Brief verzonden naar Geobeheer</div>';
-  }
-  $('mc').innerHTML = '<h3 style="display:flex;align-items:center;gap:8px"><span style="font-size:20px">'+s.sym+'</span><span style="flex:1;font-size:14px">'+d.zaakonderwerp+'</span></h3>'
+var currentItem=null;
+function openDetail(d){
+  currentItem=d;var s=STATUSES[d.status]||STATUSES.todo;
+  var btns='';Object.keys(STATUSES).forEach(function(k){var v=STATUSES[k];btns+='<button class="sbtn '+(d.status===k?'act':'')+'" onclick="changeStatus(\''+k+'\')">'+v.sym+' '+v.label+'</button>'});
+  var briefGeoCheck=d.brief_geo&&(d.brief_geo.toLowerCase()==='ja'||d.brief_geo==='1');
+  var geoBtn='';
+  if(d.status==='goed'&&!briefGeoCheck)geoBtn='<button onclick="openGeobeheer(currentItem)" style="display:block;width:100%;padding:12px;background:#27ae60;color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;margin-top:10px">📮 Melding Geobeheer versturen</button>';
+  else if(d.status==='goed'&&briefGeoCheck)geoBtn='<div style="display:flex;align-items:center;gap:6px;margin-top:10px;padding:10px;background:#eafaf1;border-radius:10px;font-size:13px;color:#27ae60;font-weight:600">✅ Brief verzonden naar Geobeheer</div>';
+  $('mc').innerHTML='<h3 style="display:flex;align-items:center;gap:8px"><span style="font-size:20px">'+s.sym+'</span><span style="flex:1;font-size:14px">'+d.zaakonderwerp+'</span></h3>'
     +'<div class="dr"><span class="dl">Vergunning ZN</span><span class="dv">'+(d.vzn||'-')+'</span></div>'
     +'<div class="dr"><span class="dl">Oplever ZN</span><span class="dv">'+(d.ozn||'-')+'</span></div>'
     +'<div class="dr"><span class="dl">Adres</span><span class="dv">'+(d.adres||'-')+'</span></div>'
@@ -719,346 +413,122 @@ function openDetail(d) {
     +'<div class="dr"><span class="dl">Datum controle</span><span class="dv">'+(d.datum_controle||'-')+'</span></div>'
     +'<div class="dr"><span class="dl">Controleur</span><span class="dv">'+(d.controleur||'-')+'</span></div>'
     +'<div class="dr"><span class="dl">Status</span><span class="dv" style="color:'+s.color+';font-weight:700">'+s.label+'</span></div>'
-    +'<div class="dr"><span class="dl">Brief verzonden GEO</span><span class="dv">'+(briefGeoCheck ? '<span style="color:#27ae60;font-size:16px">✅</span> Ja' : '<span style="color:#e67e22;font-size:16px">⬜</span> Nee')+'</span></div>'
+    +'<div class="dr"><span class="dl">Brief verzonden GEO</span><span class="dv">'+(briefGeoCheck?'<span style="color:#27ae60">✅</span> Ja':'<span style="color:#e67e22">⬜</span> Nee')+'</span></div>'
     +'<div style="margin-top:14px"><b style="font-size:13px;color:var(--nz)">Status wijzigen:</b><br><div style="margin-top:6px;display:flex;flex-wrap:wrap">'+btns+'</div></div>'
     +geoBtn
-    +'<div style="margin-top:10px"><b style="font-size:13px;color:var(--nz)">Notitie:</b>'
-    +'<textarea class="ntxt" id="ntxt" placeholder="Opmerkingen...">'+(d.notitie||'')+'</textarea>'
-    +'<button onclick="saveNote()" style="margin-top:6px;padding:6px 16px;background:var(--nz);color:#fff;border:none;border-radius:6px;font-size:13px;cursor:pointer">💾 Notitie opslaan</button></div>'
+    +'<div style="margin-top:10px"><b style="font-size:13px;color:var(--nz)">Notitie:</b><textarea class="ntxt" id="ntxt" placeholder="Opmerkingen...">'+(d.notitie||'')+'</textarea><button onclick="saveNote()" style="margin-top:6px;padding:6px 16px;background:var(--nz);color:#fff;border:none;border-radius:6px;font-size:13px;cursor:pointer">💾 Notitie opslaan</button></div>'
     +'<button class="navbtn" onclick="window.open(\'https://maps.google.com/?daddr='+d.lat+','+d.lng+'\',\'_blank\')">🧭 Navigeer hierheen</button>'
     +'<button onclick="closeModal()" style="display:block;width:100%;padding:10px;margin-top:8px;background:#eee;border:none;border-radius:10px;font-size:14px;cursor:pointer">Sluiten</button>';
   $('mdl').classList.add('show');
 }
-function closeModal() { $('mdl').classList.remove('show'); }
-
-function changeStatus(ns) {
-  if (!currentItem) return;
-  var old = currentItem.status;
-  currentItem.status = ns;
-  currentItem.datum_controle = new Date().toLocaleDateString('nl-NL');
-  currentItem.controleur = 'Remko Meijer';
-  openDetail(currentItem);
-  apply();
-  buildFilters();
-  dayLog.push({
-    time: new Date().toLocaleTimeString('nl-NL',{hour:'2-digit',minute:'2-digit'}),
-    zaak: currentItem.zaakonderwerp.substring(0,50),
-    from: (STATUSES[old]||{}).label || old,
-    to: (STATUSES[ns]||{}).label || ns,
-    lat: currentItem.lat, lng: currentItem.lng,
-    vzn: currentItem.vzn || '',
-    ozn: currentItem.ozn || '',
-    status: ns
-  });
-  localStorage.setItem('olc_daylog', JSON.stringify(dayLog));
-  writeToSheet(currentItem, 'status');
-  toast('✅ Status → ' + STATUSES[ns].label);
-  // Bij goedkeuring: Geobeheer formulier openen
-  if (ns === 'goed') {
-    setTimeout(function(){ openGeobeheer(currentItem); }, 600);
-  }
+function closeModal(){$('mdl').classList.remove('show')}
+function changeStatus(ns){
+  if(!currentItem)return;var old=currentItem.status;
+  currentItem.status=ns;currentItem.datum_controle=new Date().toLocaleDateString('nl-NL');currentItem.controleur='Remko Meijer';
+  openDetail(currentItem);apply();buildFilters();
+  dayLog.push({time:new Date().toLocaleTimeString('nl-NL',{hour:'2-digit',minute:'2-digit'}),zaak:currentItem.zaakonderwerp.substring(0,50),from:(STATUSES[old]||{}).label||old,to:(STATUSES[ns]||{}).label||ns,lat:currentItem.lat,lng:currentItem.lng,vzn:currentItem.vzn||'',ozn:currentItem.ozn||'',status:ns});
+  localStorage.setItem('olc_daylog',JSON.stringify(dayLog));
+  writeToSheet(currentItem,'status');toast('✅ Status → '+STATUSES[ns].label);
+  if(ns==='goed')setTimeout(function(){openGeobeheer(currentItem)},600);
 }
-
-function saveNote() {
-  if (!currentItem) return;
-  currentItem.notitie = $('ntxt').value;
-  writeToSheet(currentItem, 'notitie');
-  toast('💾 Notitie opgeslagen');
-}
+function saveNote(){if(!currentItem)return;currentItem.notitie=$('ntxt').value;writeToSheet(currentItem,'notitie');toast('💾 Notitie opgeslagen')}
 
 // ═══════════════════════════════════════════
 // APPS SCRIPT
 // ═══════════════════════════════════════════
-function writeToSheet(item, field) {
-  var url = config.scriptUrl;
-  if (!url) { console.log('Geen Apps Script URL'); return; }
-  var payload = {
-    action: 'update', row: item._row, nr: item.nr,
-    vzn: item.vzn, ozn: item.ozn,
-    status: (STATUSES[item.status]||{}).label || '',
-    notitie: item.notitie || '',
-    datum_controle: item.datum_controle || '',
-    controleur: 'Remko Meijer',
-    brief_geo: item.brief_geo || '',
-    field: field
-  };
-  fetch(url, {
-    method: 'POST', mode: 'no-cors',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(payload)
-  }).catch(function(e) { console.error('Sheet update mislukt:', e); });
+function writeToSheet(item,field){
+  var url=config.scriptUrl;if(!url)return;
+  var payload={action:'update',row:item._row,nr:item.nr,vzn:item.vzn,ozn:item.ozn,status:(STATUSES[item.status]||{}).label||'',notitie:item.notitie||'',datum_controle:item.datum_controle||'',controleur:'Remko Meijer',brief_geo:item.brief_geo||'',field:field};
+  fetch(url,{method:'POST',mode:'no-cors',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)}).catch(function(e){console.error('Sheet update mislukt:',e)});
 }
 
 // ═══════════════════════════════════════════
-// DAGRAPPORT
+// GEOBEHEER
 // ═══════════════════════════════════════════
-function showReport() {
-  var now = new Date();
-  var datum = now.toLocaleDateString('nl-NL', { weekday:'long', year:'numeric', month:'long', day:'numeric' });
-  var elapsed = tripStart ? Math.round((Date.now() - tripStart) / 60000) : 0;
-  var sc = {};
-  Object.keys(STATUSES).forEach(function(k){ sc[k] = allData.filter(function(d){return d.status===k}).length; });
-  var logHtml = dayLog.length === 0 ? '<p style="color:#aaa;font-size:12px">Nog geen wijzigingen vandaag</p>' :
-    dayLog.map(function(l){return '<div style="padding:4px 0;border-bottom:1px solid #f5f5f5;font-size:12px"><b>'+l.time+'</b> '+l.zaak+'<br><span style="color:#888">'+l.from+' → '+l.to+'</span></div>';}).join('');
-  var statRows = Object.keys(STATUSES).map(function(k){var v=STATUSES[k]; return '<div class="rrow"><span>'+v.sym+' '+v.label+'</span><b style="color:'+v.color+'">'+sc[k]+'</b></div>';}).join('');
-
-  // Vandaag goedgekeurd
-  var goedVandaag = dayLog.filter(function(l){ return l.status === 'goed'; });
-  var goedHtml = goedVandaag.length === 0 ? '<p style="color:#aaa;font-size:12px">Geen controles goedgekeurd vandaag</p>' :
-    goedVandaag.map(function(l){return '<div style="padding:6px 0;border-bottom:1px solid #f0f0f0;font-size:12px">'
-      +'<b style="color:#27ae60">✅ '+l.time+'</b> '+l.zaak
-      +'<br><span style="color:#555">Vergunning ZN: <b>'+(l.vzn||'-')+'</b> | Oplever ZN: <b>'+(l.ozn||'-')+'</b></span>'
-      +'</div>';}).join('');
-
-  $('rpc').innerHTML = '<h3>📊 Dagrapport</h3><div style="font-size:12px;color:#888;margin-bottom:16px">'+datum+'</div>'
-    +'<div class="rrow"><span>Totaal controles</span><b>'+allData.length+'</b></div>'
-    +statRows
-    +'<hr style="margin:12px 0;border:none;border-top:1px solid #eee">'
-    +'<div class="rrow"><span>🚗 Gereden</span><b>'+tripKm.toFixed(1)+' km</b></div>'
-    +'<div class="rrow"><span>⏱️ Rijtijd</span><b>'+elapsed+' min</b></div>'
-    +'<hr style="margin:12px 0;border:none;border-top:1px solid #eee">'
-    +'<b style="font-size:13px;color:#27ae60">✅ Vandaag goedgekeurd ('+goedVandaag.length+'):</b>'
-    +'<div style="max-height:180px;overflow-y:auto;margin-top:8px">'+goedHtml+'</div>'
-    +'<hr style="margin:12px 0;border:none;border-top:1px solid #eee">'
-    +'<b style="font-size:13px;color:var(--nz)">Alle wijzigingen vandaag ('+dayLog.length+'):</b>'
-    +'<div style="max-height:200px;overflow-y:auto;margin-top:8px">'+logHtml+'</div>'
-    +'<button class="rpdf" onclick="downloadPDF()">📄 Download PDF Rapport</button>'
-    +'<button onclick="$(' + "'rpt'" + ').classList.remove(' + "'show'" + ')" class="cbtn" style="background:#eee;color:#333;margin-top:8px">Sluiten</button>';
-  $('rpt').classList.add('show');
-}
-
-// ═══════════════════════════════════════════
-// PDF
-// ═══════════════════════════════════════════
-function downloadPDF() {
-  var jsPDF = window.jspdf.jsPDF;
-  var doc = new jsPDF('p','mm','a4');
-  var now = new Date();
-  var datum = now.toLocaleDateString('nl-NL',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
-  var y = 20;
-  doc.setFillColor(26,82,118); doc.rect(0,0,210,35,'F');
-  doc.setTextColor(255,255,255); doc.setFontSize(18);
-  doc.text('Dagrapport Oplevercontroles',14,15);
-  doc.setFontSize(10); doc.text('Waterschap Noorderzijlvest',14,22);
-  doc.text(datum,14,28); doc.text('Controleur: Remko Meijer',196,22,{align:'right'});
-  y=42;
-  doc.setTextColor(26,82,118); doc.setFontSize(14); doc.text('Samenvatting',14,y); y+=8;
-  doc.setTextColor(60,60,60); doc.setFontSize(10);
-  var sc={}; Object.keys(STATUSES).forEach(function(k){sc[k]=allData.filter(function(d){return d.status===k}).length;});
-  var sum=[['Totaal',allData.length]];
-  Object.keys(STATUSES).forEach(function(k){sum.push([STATUSES[k].sym+' '+STATUSES[k].label, sc[k]]);});
-  sum.push(['Gereden', tripKm.toFixed(1)+' km']);
-  sum.forEach(function(r){doc.text(r[0],14,y);doc.text(String(r[1]),120,y);y+=6;});
-
-  // Goedgekeurde controles vandaag
-  var goedPdf = dayLog.filter(function(l){ return l.status === 'goed'; });
-  y+=6; doc.setTextColor(39,174,96); doc.setFontSize(14); doc.text('Goedgekeurd vandaag ('+goedPdf.length+')',14,y); y+=8;
-  doc.setFontSize(9);
-  if(goedPdf.length===0){doc.setTextColor(150,150,150);doc.text('Geen controles goedgekeurd vandaag',14,y);y+=6;}
-  else{
-    doc.setFillColor(234,250,241);doc.rect(14,y-4,182,7,'F');
-    doc.setTextColor(39,174,96);doc.text('Tijd',16,y);doc.text('Zaak',36,y);doc.text('Verg. ZN',130,y);doc.text('Opl. ZN',165,y);y+=8;
-    goedPdf.forEach(function(l){
-      if(y>270){doc.addPage();y=20;}
-      doc.setTextColor(60,60,60);doc.text(l.time,16,y);
-      doc.text(doc.splitTextToSize(l.zaak,90)[0],36,y);
-      doc.setTextColor(100,100,100);doc.text(l.vzn||'-',130,y);doc.text(l.ozn||'-',165,y);y+=6;
-    });
-  }
-
-  y+=6; doc.setTextColor(26,82,118); doc.setFontSize(14); doc.text('Alle wijzigingen vandaag',14,y); y+=8;
-  doc.setFontSize(9); doc.setTextColor(100,100,100);
-  if(dayLog.length===0){doc.text('Geen wijzigingen',14,y);}
-  else{
-    doc.setFillColor(240,240,240);doc.rect(14,y-4,182,7,'F');
-    doc.setTextColor(60,60,60);doc.text('Tijd',16,y);doc.text('Zaak',36,y);doc.text('Van → Naar',130,y);y+=8;
-    dayLog.forEach(function(l){
-      if(y>270){doc.addPage();y=20;}
-      doc.setTextColor(60,60,60);doc.text(l.time,16,y);
-      doc.text(doc.splitTextToSize(l.zaak,90)[0],36,y);
-      doc.setTextColor(100,100,100);doc.text(l.from+' → '+l.to,130,y);y+=6;
-    });
-  }
-  doc.setFontSize(7);doc.setTextColor(150,150,150);
-  doc.text('Waterschap Noorderzijlvest — Oplevercontrole Dagrapport',14,290);
-  doc.text(now.toLocaleString('nl-NL'),196,290,{align:'right'});
-  var blob=doc.output('blob');
-  var url=URL.createObjectURL(blob);
-  var a=document.createElement('a');
-  a.href=url;a.download='dagrapport_oplevercontrole_'+now.toISOString().split('T')[0]+'.pdf';
-  document.body.appendChild(a);a.click();document.body.removeChild(a);
-  setTimeout(function(){URL.revokeObjectURL(url)},3000);
-  toast('📄 PDF gedownload');
-}
-
-// ═══════════════════════════════════════════
-// GEOBEHEER FORMULIER
-// ═══════════════════════════════════════════
-var geoItem = null;
-
-function wgs84toRD(lat, lng) {
-  var dLat = 0.36 * (lat - 52.15517440);
-  var dLng = 0.36 * (lng - 5.38720621);
-  var X = 155029.13 + (-0.00738*dLat) + (190094.945*dLng) + (-11832.228*dLat*dLng) + (-114.221*dLng*dLng*dLng) + (-32.391*dLat*dLat*dLng);
-  var Y = 463099.98 + (309056.544*dLat) + (3638.893*dLng) + (73.077*dLat*dLng*dLng) + (-157.984*dLat*dLat*dLat) + (59.788*dLat*dLng) + (0.433*dLng*dLng*dLng) + (-6.439*dLat*dLat*dLng);
-  return { x: Math.round(X*100)/100, y: Math.round(Y*100)/100 };
-}
-
-function fmtRD(v) { return String(v).replace('.',','); }
-
-function openGeobeheer(item) {
-  geoItem = item;
-  closeModal();
-  $('g-zn').value = item.ozn || item.vzn || '';
-  $('g-omschr').value = item.zaakonderwerp || '';
-  if (item.lat && item.lng) {
-    var rd = wgs84toRD(item.lat, item.lng);
-    $('g-rdx').value = fmtRD(rd.x);
-    $('g-rdy').value = fmtRD(rd.y);
-  } else {
-    $('g-rdx').value = '';
-    $('g-rdy').value = '';
-  }
-  $('g-type').selectedIndex = 0;
-  $('g-oh-type').selectedIndex = 0;
-  $('g-oh-wie').selectedIndex = 0;
-  $('g-extra').value = '';
-  document.querySelectorAll('.gcond').forEach(function(el){el.classList.remove('show')});
-  gUpdatePreview();
-  $('geo').classList.add('show');
-}
-
-function gShowCond() {
-  document.querySelectorAll('.gcond').forEach(function(el){el.classList.remove('show')});
-  var type = $('g-type').value;
-  var gm = {'Duiker':'gc-duiker','Dam':'gc-dam','Watergang graven':'gc-wg','Watergang dempen':'gc-wg','Watergang verbreden':'gc-wg','Steiger':'gc-steiger','Beschoeiing':'gc-besch','Brug':'gc-brug','Uitstroomvoorziening':'gc-uitstr','Overig':'gc-overig'};
-  if (gm[type]) $(gm[type]).classList.add('show');
-  gUpdatePreview();
-}
-
-function gBuildBody() {
-  var zn = $('g-zn').value;
-  var type = $('g-type').value;
-  var ohType = $('g-oh-type').value;
-  var ohWie = $('g-oh-wie').value;
-  var extra = $('g-extra').value.trim();
-  var rdx = $('g-rdx').value.trim() || '(niet ingevuld)';
-  var rdy = $('g-rdy').value.trim() || '(niet ingevuld)';
-  var det = '';
-  switch(type) {
-    case 'Duiker':
-      det='Duiker '+$('g-d-actie').value.toLowerCase();
-      if($('g-d-mat').value) det+='\nMateriaal: '+$('g-d-mat').value;
-      if($('g-d-dia').value) det+=', diameter '+$('g-d-dia').value+' mm';
-      if($('g-d-len').value) det+='\nLengte: '+$('g-d-len').value+' m';
-      break;
-    case 'Dam':
-      det='Dam '+$('g-dam-actie').value.toLowerCase();
-      if($('g-dam-mat').value) det+='\nMateriaal: '+$('g-dam-mat').value;
-      break;
-    case 'Watergang graven': case 'Watergang dempen': case 'Watergang verbreden':
-      det=type;
-      if($('g-wg-len').value) det+='\nLengte: '+$('g-wg-len').value+' m';
-      if($('g-wg-br').value) det+=', breedte: '+$('g-wg-br').value+' m';
-      break;
-    case 'Steiger':
-      det=$('g-st-type').value+'e steiger '+$('g-st-actie').value.toLowerCase();
-      if($('g-st-len').value) det+='\nLengte: '+$('g-st-len').value+' m';
-      if($('g-st-br').value) det+=', breedte: '+$('g-st-br').value+' m';
-      break;
-    case 'Beschoeiing':
-      det='Beschoeiing '+$('g-be-actie').value.toLowerCase();
-      if($('g-be-mat').value) det+='\nMateriaal: '+$('g-be-mat').value;
-      if($('g-be-len').value) det+='\nLengte: '+$('g-be-len').value+' m';
-      break;
-    case 'Brug':
-      det='Brug '+$('g-br-actie').value.toLowerCase();
-      if($('g-br-over').value) det+='\nOverspanning: '+$('g-br-over').value+' m';
-      if($('g-br-br').value) det+=', breedte: '+$('g-br-br').value+' m';
-      break;
-    case 'Uitstroomvoorziening':
-      det='Uitstroomvoorziening '+$('g-ui-actie').value.toLowerCase();
-      if($('g-ui-type').value) det+='\nType: '+$('g-ui-type').value;
-      break;
-    case 'Overig':
-      det=$('g-ov-txt').value.trim()||'Overig'; break;
-    default: det='(niet ingevuld)';
+var geoItem=null;
+function wgs84toRD(lat,lng){var dLat=0.36*(lat-52.15517440);var dLng=0.36*(lng-5.38720621);var X=155029.13+(-0.00738*dLat)+(190094.945*dLng)+(-11832.228*dLat*dLng)+(-114.221*dLng*dLng*dLng)+(-32.391*dLat*dLat*dLng);var Y=463099.98+(309056.544*dLat)+(3638.893*dLng)+(73.077*dLat*dLng*dLng)+(-157.984*dLat*dLat*dLat)+(59.788*dLat*dLng)+(0.433*dLng*dLng*dLng)+(-6.439*dLat*dLat*dLng);return{x:Math.round(X*100)/100,y:Math.round(Y*100)/100}}
+function fmtRD(v){return String(v).replace('.',',')}
+function openGeobeheer(item){geoItem=item;closeModal();$('g-zn').value=item.ozn||item.vzn||'';$('g-omschr').value=item.zaakonderwerp||'';if(item.lat&&item.lng){var rd=wgs84toRD(item.lat,item.lng);$('g-rdx').value=fmtRD(rd.x);$('g-rdy').value=fmtRD(rd.y)}else{$('g-rdx').value='';$('g-rdy').value=''}$('g-type').selectedIndex=0;$('g-oh-type').selectedIndex=0;$('g-oh-wie').selectedIndex=0;$('g-extra').value='';document.querySelectorAll('.gcond').forEach(function(el){el.classList.remove('show')});gUpdatePreview();$('geo').classList.add('show')}
+function gShowCond(){document.querySelectorAll('.gcond').forEach(function(el){el.classList.remove('show')});var type=$('g-type').value;var gm={'Duiker':'gc-duiker','Dam':'gc-dam','Watergang graven':'gc-wg','Watergang dempen':'gc-wg','Watergang verbreden':'gc-wg','Steiger':'gc-steiger','Beschoeiing':'gc-besch','Brug':'gc-brug','Uitstroomvoorziening':'gc-uitstr','Overig':'gc-overig'};if(gm[type])$(gm[type]).classList.add('show');gUpdatePreview()}
+function gBuildBody(){
+  var zn=$('g-zn').value,type=$('g-type').value,ohType=$('g-oh-type').value,ohWie=$('g-oh-wie').value,extra=$('g-extra').value.trim();
+  var rdx=$('g-rdx').value.trim()||'(niet ingevuld)',rdy=$('g-rdy').value.trim()||'(niet ingevuld)';
+  var det='';
+  switch(type){
+    case'Duiker':det='Duiker '+$('g-d-actie').value.toLowerCase();if($('g-d-mat').value)det+='\nMateriaal: '+$('g-d-mat').value;if($('g-d-dia').value)det+=', diameter '+$('g-d-dia').value+' mm';if($('g-d-len').value)det+='\nLengte: '+$('g-d-len').value+' m';break;
+    case'Dam':det='Dam '+$('g-dam-actie').value.toLowerCase();if($('g-dam-mat').value)det+='\nMateriaal: '+$('g-dam-mat').value;break;
+    case'Watergang graven':case'Watergang dempen':case'Watergang verbreden':det=type;if($('g-wg-len').value)det+='\nLengte: '+$('g-wg-len').value+' m';if($('g-wg-br').value)det+=', breedte: '+$('g-wg-br').value+' m';break;
+    case'Steiger':det=$('g-st-type').value+'e steiger '+$('g-st-actie').value.toLowerCase();if($('g-st-len').value)det+='\nLengte: '+$('g-st-len').value+' m';if($('g-st-br').value)det+=', breedte: '+$('g-st-br').value+' m';break;
+    case'Beschoeiing':det='Beschoeiing '+$('g-be-actie').value.toLowerCase();if($('g-be-mat').value)det+='\nMateriaal: '+$('g-be-mat').value;if($('g-be-len').value)det+='\nLengte: '+$('g-be-len').value+' m';break;
+    case'Brug':det='Brug '+$('g-br-actie').value.toLowerCase();if($('g-br-over').value)det+='\nOverspanning: '+$('g-br-over').value+' m';if($('g-br-br').value)det+=', breedte: '+$('g-br-br').value+' m';break;
+    case'Uitstroomvoorziening':det='Uitstroomvoorziening '+$('g-ui-actie').value.toLowerCase();if($('g-ui-type').value)det+='\nType: '+$('g-ui-type').value;break;
+    case'Overig':det=$('g-ov-txt').value.trim()||'Overig';break;
+    default:det='(niet ingevuld)';
   }
   var body='Zaaknummer:\n'+(zn||'?')+'\n\nObject:\n'+det+'\n\nRD-coördinaten:\nX: '+rdx+'\nY: '+rdy+'\n\nOnderhoudsplichtige: ('+(ohType||'niet ingevuld')+')\n'+(ohWie||'(niet ingevuld)')+'\n';
-  if(extra) body+='\nExtra opmerkingen:\n'+extra+'\n';
+  if(extra)body+='\nExtra opmerkingen:\n'+extra+'\n';
   body+='\nVergeet niet een schermafbeelding vanuit GeoWEB mee te sturen als bijlage!!!!';
-  return {body:body, subject:'Oplevercontrole '+(type||'object')+' — ZN '+(zn||'?')};
+  return{body:body,subject:'Oplevercontrole '+(type||'object')+' — ZN '+(zn||'?')}
 }
-
-function gUpdatePreview() {
-  $('g-prev').textContent = gBuildBody().body;
+function gUpdatePreview(){$('g-prev').textContent=gBuildBody().body}
+function gSendMail(){
+  var type=$('g-type').value;if(!type){toast('⚠️ Selecteer een objecttype');return}
+  var r=gBuildBody();
+  var to='geo-gegevensbeheer@noorderzijlvest.nl';
+  var cc='P.Zwartenkot@noorderzijlvest.nl';
+  window.location.href='mailto:'+to+'?cc='+cc+'&subject='+encodeURIComponent(r.subject)+'&body='+encodeURIComponent(r.body);
+  if(geoItem){geoItem.brief_geo='Ja';writeToSheet(geoItem,'brief_geo')}
+  toast('📧 Mail geopend — Brief verzonden GEO = Ja');$('geo').classList.remove('show');
 }
+function gSkip(){$('geo').classList.remove('show');toast('📋 Overgeslagen — later via popup versturen')}
+function openGeoWeb(){window.open('https://geo.noorderzijlvest.nl/Geoweb/index.html?viewer=Waterschapskaart.Waterschapskaart','_blank');toast('🗺️ GeoWeb geopend')}
+$('geo').addEventListener('input',function(){gUpdatePreview()});
+$('geo').addEventListener('change',function(){gUpdatePreview()});
 
-function gSendMail() {
-  var type = $('g-type').value;
-  if(!type){toast('⚠️ Selecteer een objecttype');return;}
-  var r = gBuildBody();
-  window.location.href = 'mailto:geo-gegevensbeheer@noorderzijlvest.nl?subject='+encodeURIComponent(r.subject)+'&body='+encodeURIComponent(r.body);
-  // Brief verzonden GEO op Ja zetten
-  if (geoItem) {
-    geoItem.brief_geo = 'Ja';
-    writeToSheet(geoItem, 'brief_geo');
-  }
-  toast('📧 Mail geopend — Brief verzonden GEO = Ja');
-  $('geo').classList.remove('show');
+// ═══════════════════════════════════════════
+// DAGRAPPORT + PDF
+// ═══════════════════════════════════════════
+function showReport(){
+  var now=new Date();var datum=now.toLocaleDateString('nl-NL',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+  var elapsed=tripStart?Math.round((Date.now()-tripStart)/60000):0;
+  var sc={};Object.keys(STATUSES).forEach(function(k){sc[k]=allData.filter(function(d){return d.status===k}).length});
+  var logHtml=dayLog.length===0?'<p style="color:#aaa;font-size:12px">Nog geen wijzigingen</p>':dayLog.map(function(l){return'<div style="padding:4px 0;border-bottom:1px solid #f5f5f5;font-size:12px"><b>'+l.time+'</b> '+l.zaak+'<br><span style="color:#888">'+l.from+' → '+l.to+'</span></div>'}).join('');
+  var statRows=Object.keys(STATUSES).map(function(k){var v=STATUSES[k];return'<div class="rrow"><span>'+v.sym+' '+v.label+'</span><b style="color:'+v.color+'">'+sc[k]+'</b></div>'}).join('');
+  var goedVandaag=dayLog.filter(function(l){return l.status==='goed'});
+  var goedHtml=goedVandaag.length===0?'<p style="color:#aaa;font-size:12px">Geen</p>':goedVandaag.map(function(l){return'<div style="padding:6px 0;border-bottom:1px solid #f0f0f0;font-size:12px"><b style="color:#27ae60">✅ '+l.time+'</b> '+l.zaak+'<br><span style="color:#555">Verg. ZN: <b>'+(l.vzn||'-')+'</b> | Opl. ZN: <b>'+(l.ozn||'-')+'</b></span></div>'}).join('');
+  $('rpc').innerHTML='<h3 style="font-size:16px;color:#0e2f44">📊 Dagrapport</h3><div style="font-size:12px;color:#888;margin-bottom:16px">'+datum+'</div><div class="rrow"><span>Totaal</span><b>'+allData.length+'</b></div>'+statRows+'<hr style="margin:12px 0;border:none;border-top:1px solid #eee"><div class="rrow"><span>🚗 Gereden</span><b>'+tripKm.toFixed(1).replace('.',',')+' km</b></div><div class="rrow"><span>⏱️ Rijtijd</span><b>'+elapsed+' min</b></div><hr style="margin:12px 0;border:none;border-top:1px solid #eee"><b style="font-size:13px;color:#27ae60">✅ Vandaag goedgekeurd ('+goedVandaag.length+'):</b><div style="max-height:180px;overflow-y:auto;margin-top:8px">'+goedHtml+'</div><hr style="margin:12px 0;border:none;border-top:1px solid #eee"><b style="font-size:13px;color:var(--nz)">Alle wijzigingen ('+dayLog.length+'):</b><div style="max-height:200px;overflow-y:auto;margin-top:8px">'+logHtml+'</div><button class="rpdf" onclick="downloadPDF()">📄 Download PDF</button><button onclick="$(\'rpt\').classList.remove(\'show\')" class="cbtn" style="background:#eee;color:#333;margin-top:8px">Sluiten</button>';
+  $('rpt').classList.add('show');
 }
-
-function gSkip() {
-  $('geo').classList.remove('show');
-  toast('📋 Overgeslagen — je kunt later via de popup alsnog versturen');
-}
-
-function openGeoWeb() {
-  window.open('https://geo.noorderzijlvest.nl/Geoweb/index.html?viewer=Waterschapskaart.Waterschapskaart','_blank');
-  toast('🗺️ GeoWeb geopend — maak een schermafbeelding');
+function downloadPDF(){
+  var jsPDF=window.jspdf.jsPDF;var doc=new jsPDF('p','mm','a4');var now=new Date();var datum=now.toLocaleDateString('nl-NL',{weekday:'long',year:'numeric',month:'long',day:'numeric'});var y=20;
+  doc.setFillColor(26,82,118);doc.rect(0,0,210,35,'F');doc.setTextColor(255,255,255);doc.setFontSize(18);doc.text('Dagrapport Oplevercontroles',14,15);doc.setFontSize(10);doc.text('Waterschap Noorderzijlvest',14,22);doc.text(datum,14,28);doc.text('Controleur: Remko Meijer',196,22,{align:'right'});y=42;
+  doc.setTextColor(26,82,118);doc.setFontSize(14);doc.text('Samenvatting',14,y);y+=8;doc.setTextColor(60,60,60);doc.setFontSize(10);
+  var sc={};Object.keys(STATUSES).forEach(function(k){sc[k]=allData.filter(function(d){return d.status===k}).length});
+  var sum=[['Totaal',allData.length]];Object.keys(STATUSES).forEach(function(k){sum.push([STATUSES[k].sym+' '+STATUSES[k].label,sc[k]])});sum.push(['Gereden',tripKm.toFixed(1)+' km']);
+  sum.forEach(function(r){doc.text(r[0],14,y);doc.text(String(r[1]),120,y);y+=6});
+  var goedPdf=dayLog.filter(function(l){return l.status==='goed'});
+  y+=6;doc.setTextColor(39,174,96);doc.setFontSize(14);doc.text('Goedgekeurd vandaag ('+goedPdf.length+')',14,y);y+=8;doc.setFontSize(9);
+  if(goedPdf.length===0){doc.setTextColor(150,150,150);doc.text('Geen',14,y);y+=6}
+  else{doc.setFillColor(234,250,241);doc.rect(14,y-4,182,7,'F');doc.setTextColor(39,174,96);doc.text('Tijd',16,y);doc.text('Zaak',36,y);doc.text('Verg. ZN',130,y);doc.text('Opl. ZN',165,y);y+=8;goedPdf.forEach(function(l){if(y>270){doc.addPage();y=20}doc.setTextColor(60,60,60);doc.text(l.time,16,y);doc.text(doc.splitTextToSize(l.zaak,90)[0],36,y);doc.setTextColor(100,100,100);doc.text(l.vzn||'-',130,y);doc.text(l.ozn||'-',165,y);y+=6})}
+  y+=6;doc.setTextColor(26,82,118);doc.setFontSize(14);doc.text('Alle wijzigingen vandaag',14,y);y+=8;doc.setFontSize(9);doc.setTextColor(100,100,100);
+  if(dayLog.length===0){doc.text('Geen',14,y)}else{doc.setFillColor(240,240,240);doc.rect(14,y-4,182,7,'F');doc.setTextColor(60,60,60);doc.text('Tijd',16,y);doc.text('Zaak',36,y);doc.text('Van → Naar',130,y);y+=8;dayLog.forEach(function(l){if(y>270){doc.addPage();y=20}doc.setTextColor(60,60,60);doc.text(l.time,16,y);doc.text(doc.splitTextToSize(l.zaak,90)[0],36,y);doc.setTextColor(100,100,100);doc.text(l.from+' → '+l.to,130,y);y+=6})}
+  doc.setFontSize(7);doc.setTextColor(150,150,150);doc.text('Waterschap Noorderzijlvest — Oplevercontrole Dagrapport',14,290);doc.text(now.toLocaleString('nl-NL'),196,290,{align:'right'});
+  var blob=doc.output('blob');var url=URL.createObjectURL(blob);var a=document.createElement('a');a.href=url;a.download='dagrapport_oplevercontrole_'+now.toISOString().split('T')[0]+'.pdf';document.body.appendChild(a);a.click();document.body.removeChild(a);setTimeout(function(){URL.revokeObjectURL(url)},3000);toast('📄 PDF gedownload');
 }
 
 // ═══════════════════════════════════════════
-// CONFIG
+// CONFIG + INIT
 // ═══════════════════════════════════════════
-function showConfig() {
-  $('scriptUrl').value = config.scriptUrl || '';
-  $('csvUrl').value = config.csvUrl || DEFAULT_CSV;
-  $('cfgp').classList.add('show');
-}
-function saveConfig() {
-  config.scriptUrl = $('scriptUrl').value.trim();
-  config.csvUrl = $('csvUrl').value.trim() || DEFAULT_CSV;
-  localStorage.setItem('olc_config', JSON.stringify(config));
-  $('cfgp').classList.remove('show');
-  toast('✅ Opgeslagen, data wordt herladen...');
-  loadData();
-}
-
-function togglePanel(id) {
-  var el = $(id);
-  var wasOpen = el.classList.contains('open');
-  $('fp').classList.remove('open');
-  $('lp').classList.remove('open');
-  if (!wasOpen) el.classList.add('open');
-}
-
-// ═══════════════════════════════════════════
-// INIT
-// ═══════════════════════════════════════════
-map.on('click', function(){ $('fp').classList.remove('open'); $('lp').classList.remove('open'); });
-$('mdl').addEventListener('click', function(e){ if(e.target===e.currentTarget) closeModal(); });
-$('rpt').addEventListener('click', function(e){ if(e.target===e.currentTarget) $('rpt').classList.remove('show'); });
-$('cfgp').addEventListener('click', function(e){ if(e.target===e.currentTarget) $('cfgp').classList.remove('show'); });
-$('geo').addEventListener('click', function(e){ if(e.target===e.currentTarget) $('geo').classList.remove('show'); });
-$('geo').addEventListener('input', function(){gUpdatePreview()});
-$('geo').addEventListener('change', function(){gUpdatePreview()});
-
-// Laad opgeslagen Apps Script URL
-if (config.scriptUrl) $('scriptUrl').value = config.scriptUrl;
-
-startGPS();
-loadData();
+function showConfig(){$('scriptUrl').value=config.scriptUrl||'';$('csvUrl').value=config.csvUrl||DEFAULT_CSV;$('cfgp').classList.add('show')}
+function saveConfig(){config.scriptUrl=$('scriptUrl').value.trim();config.csvUrl=$('csvUrl').value.trim()||DEFAULT_CSV;localStorage.setItem('olc_config',JSON.stringify(config));$('cfgp').classList.remove('show');toast('✅ Opgeslagen');loadData()}
+function togglePanel(id){var el=$(id);var w=el.classList.contains('open');$('fp').classList.remove('open');$('lp').classList.remove('open');if(!w)el.classList.add('open')}
+map.on('click',function(){$('fp').classList.remove('open');$('lp').classList.remove('open')});
+$('mdl').addEventListener('click',function(e){if(e.target===e.currentTarget)closeModal()});
+$('rpt').addEventListener('click',function(e){if(e.target===e.currentTarget)$('rpt').classList.remove('show')});
+$('cfgp').addEventListener('click',function(e){if(e.target===e.currentTarget)$('cfgp').classList.remove('show')});
+$('geo').addEventListener('click',function(e){if(e.target===e.currentTarget)$('geo').classList.remove('show')});
+if(config.scriptUrl)$('scriptUrl').value=config.scriptUrl;
+startGPS();loadData();
 </script>
 </body>
 </html>
