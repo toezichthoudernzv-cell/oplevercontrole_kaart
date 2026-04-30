@@ -597,8 +597,9 @@ function openGeoWeb(){
   var rdx=$('g-rdx').value.trim().replace(',','.');
   var rdy=$('g-rdy').value.trim().replace(',','.');
   if(rdx&&rdy){
-    var x=parseFloat(rdx),y=parseFloat(rdy),buf=500;
+    var x=parseFloat(rdx),y=parseFloat(rdy),buf=150;
     baseUrl+='&extent='+(x-buf)+','+(y-buf)+','+(x+buf)+','+(y+buf);
+    baseUrl+='&marker='+x+','+y;
   }
   window.open(baseUrl,'_blank');
   toast('🗺️ GeoWeb geopend op locatie');
