@@ -104,6 +104,11 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;overflow
 .gcond{display:none}.gcond.show{display:block}
 #geoc .gprev{background:#f0f2f5;border:1px solid #e0e3e8;border-radius:8px;padding:12px;font-size:12px;line-height:1.7;white-space:pre-wrap;font-family:Menlo,monospace;color:#444;max-height:200px;overflow-y:auto;margin-top:8px}
 .gbtn{display:block;width:100%;padding:12px;border:none;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;margin-top:8px;text-align:center}
+.gphoto{width:70px;height:70px;border-radius:8px;object-fit:cover;border:2px solid #dde;position:relative;cursor:pointer}
+.gphoto-wrap{position:relative;display:inline-block}
+.gphoto-del{position:absolute;top:-6px;right:-6px;width:20px;height:20px;background:#e74c3c;color:#fff;border:none;border-radius:50%;font-size:11px;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1}
+.gphoto-hint{display:none;position:fixed;bottom:100px;left:50%;transform:translateX(-50%);background:#27ae60;color:#fff;padding:14px 20px;border-radius:12px;font-size:14px;font-weight:600;z-index:2100;text-align:center;max-width:90%;box-shadow:0 8px 24px rgba(0,0,0,.3)}
+.gphoto-hint.show{display:block}
 @media(max-width:600px){#lp{width:100%}#fp{width:100%}}
 </style>
 </head>
@@ -208,7 +213,23 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;overflow
       <h4>📍 RD-Coördinaten</h4>
       <p style="font-size:11px;color:#888;margin-bottom:8px">Automatisch berekend uit GPS, of handmatig invullen vanuit GeoWeb</p>
       <div class="grow"><div><label>X (RD)</label><input type="text" id="g-rdx" placeholder="218497,38"></div><div><label>Y (RD)</label><input type="text" id="g-rdy" placeholder="578592,61"></div></div>
+      <div id="g-minimap" style="height:180px;border-radius:8px;margin-top:8px;display:none;border:1px solid #dde"></div>
       <button class="gbtn" onclick="openGeoWeb()" style="background:#27ae60;color:#fff;margin-top:8px;font-size:13px;padding:10px">🗺️ Open GeoWeb (schermafbeelding)</button>
+    </div>
+    <div class="gcard">
+      <h4>📸 Foto</h4>
+      <p style="font-size:11px;color:#888;margin-bottom:8px">Maak een foto of kies er een uit je fotobibliotheek. De foto wordt opgeslagen zodat je hem als bijlage kunt toevoegen in Outlook.</p>
+      <div style="display:flex;gap:8px">
+        <label style="flex:1;display:flex;align-items:center;justify-content:center;padding:10px;background:var(--nzl);color:#fff;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;margin:0">
+          📷 Camera
+          <input type="file" accept="image/*" capture="environment" onchange="gAddPhoto(this)" style="display:none">
+        </label>
+        <label style="flex:1;display:flex;align-items:center;justify-content:center;padding:10px;background:#607d8b;color:#fff;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;margin:0">
+          🖼️ Kies foto
+          <input type="file" accept="image/*" onchange="gAddPhoto(this)" style="display:none">
+        </label>
+      </div>
+      <div id="g-photos" style="display:flex;flex-wrap:wrap;gap:6px;margin-top:8px"></div>
     </div>
     <div class="gcard">
       <h4>👷 Onderhoudsplichtige</h4>
@@ -229,6 +250,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;overflow
   <button onclick="loadData()" style="background:var(--nz)" title="Vernieuwen">🔄</button>
 </div>
 <button id="followbtn" onclick="toggleFollow()" title="Volg auto">🎯</button>
+<div class="gphoto-hint" id="photohint">📸 Voeg de foto('s) toe als bijlage in Outlook<br><small style="opacity:.8">Tik lang op een foto hieronder → Kopieer → Plak in Outlook</small><br><button onclick="$('photohint').classList.remove('show')" style="margin-top:8px;padding:6px 20px;background:#fff;color:#27ae60;border:none;border-radius:6px;font-size:13px;font-weight:600;cursor:pointer">👍 Begrepen</button></div>
 <div id="toast"></div>
 
 <script>
@@ -522,7 +544,9 @@ function openGeobeheer(item){
   // Laad opgeslagen concept
   var hasDraft=gLoadDraft(item);
   if(hasDraft)toast('📝 Concept geladen');
+  gLoadPhotos(item);
   gUpdatePreview();$('geo').classList.add('show');
+  setTimeout(function(){gShowMiniMap()},400);
 }
 function gShowCond(){document.querySelectorAll('.gcond').forEach(function(el){el.classList.remove('show')});var type=$('g-type').value;var gm={'Duiker':'gc-duiker','Dam':'gc-dam','Watergang graven':'gc-wg','Watergang dempen':'gc-wg','Watergang verbreden':'gc-wg','Steiger':'gc-steiger','Beschoeiing':'gc-besch','Brug':'gc-brug','Uitstroomvoorziening':'gc-uitstr','Overig':'gc-overig'};if(gm[type])$(gm[type]).classList.add('show');gUpdatePreview()}
 function gBuildBody(){
@@ -552,15 +576,112 @@ function gSendMail(){
   var to='geo-gegevensbeheer@noorderzijlvest.nl';
   var cc='P.Zwartenkot@noorderzijlvest.nl';
   window.location.href='mailto:'+to+'?cc='+cc+'&subject='+encodeURIComponent(r.subject)+'&body='+encodeURIComponent(r.body);
-  if(geoItem){geoItem.brief_geo='Ja';writeToSheet(geoItem,'brief_geo');gDeleteDraft(geoItem)}
-  toast('📧 Mail geopend — Brief verzonden GEO = Ja');$('geo').classList.remove('show');
+  if(geoItem){geoItem.brief_geo='Ja';writeToSheet(geoItem,'brief_geo');gDeleteDraft(geoItem);gDeletePhotos(geoItem)}
+  $('geo').classList.remove('show');
+  // Toon foto-hint als er foto's zijn
+  if(gPhotos.length>0){
+    $('photohint').classList.add('show');
+    setTimeout(function(){$('photohint').classList.remove('show')},10000);
+  }else{
+    toast('📧 Mail geopend in Outlook');
+  }
 }
 function gSkip(){
   gSaveDraft();
+  gSavePhotos();
   $('geo').classList.remove('show');
-  toast('💾 Concept opgeslagen — later via popup versturen');
+  toast('💾 Concept + foto\'s opgeslagen');
 }
-function openGeoWeb(){window.open('https://geo.noorderzijlvest.nl/Geoweb/index.html?viewer=Waterschapskaart.Waterschapskaart','_blank');toast('🗺️ GeoWeb geopend')}
+function openGeoWeb(){
+  var baseUrl='https://geo.noorderzijlvest.nl/Geoweb/index.html?viewer=Waterschapskaart.Waterschapskaart';
+  var rdx=$('g-rdx').value.trim().replace(',','.');
+  var rdy=$('g-rdy').value.trim().replace(',','.');
+  if(rdx&&rdy){
+    var x=parseFloat(rdx),y=parseFloat(rdy),buf=500;
+    baseUrl+='&extent='+(x-buf)+','+(y-buf)+','+(x+buf)+','+(y+buf);
+  }
+  window.open(baseUrl,'_blank');
+  toast('🗺️ GeoWeb geopend op locatie');
+}
+
+// ═══════════════════════════════════════════
+// MINIMAP PREVIEW
+// ═══════════════════════════════════════════
+var gMiniMap=null,gMiniMarker=null;
+function gShowMiniMap(){
+  if(!geoItem||!geoItem.lat||!geoItem.lng)return;
+  var el=$('g-minimap');el.style.display='block';
+  if(!gMiniMap){
+    gMiniMap=L.map('g-minimap',{zoomControl:false,attributionControl:false,dragging:false,scrollWheelZoom:false,doubleClickZoom:false,touchZoom:false});
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19}).addTo(gMiniMap);
+  }
+  var ll=[geoItem.lat,geoItem.lng];
+  gMiniMap.setView(ll,16);
+  if(gMiniMarker)gMiniMap.removeLayer(gMiniMarker);
+  gMiniMarker=L.marker(ll,{icon:L.divIcon({className:'',html:'<div style="width:24px;height:24px;border-radius:50%;background:#e74c3c;border:3px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,.4)"></div>',iconSize:[24,24],iconAnchor:[12,12]})}).addTo(gMiniMap);
+  setTimeout(function(){gMiniMap.invalidateSize()},300);
+}
+
+// ═══════════════════════════════════════════
+// FOTO'S
+// ═══════════════════════════════════════════
+var gPhotos=[];
+function gAddPhoto(input){
+  if(!input.files||!input.files[0])return;
+  var file=input.files[0];
+  // Resize foto voor opslag
+  var reader=new FileReader();
+  reader.onload=function(e){
+    var img=new Image();
+    img.onload=function(){
+      var canvas=document.createElement('canvas');
+      var maxW=1200,maxH=1200;
+      var w=img.width,h=img.height;
+      if(w>maxW){h=h*(maxW/w);w=maxW}
+      if(h>maxH){w=w*(maxH/h);h=maxH}
+      canvas.width=w;canvas.height=h;
+      canvas.getContext('2d').drawImage(img,0,0,w,h);
+      var dataUrl=canvas.toDataURL('image/jpeg',0.8);
+      gPhotos.push(dataUrl);
+      gRenderPhotos();
+      // Sla foto op in localStorage gekoppeld aan zaaknummer
+      gSavePhotos();
+      toast('📸 Foto toegevoegd');
+    };
+    img.src=e.target.result;
+  };
+  reader.readAsDataURL(file);
+  input.value=''; // Reset zodat je dezelfde foto opnieuw kunt kiezen
+}
+function gRemovePhoto(idx){
+  gPhotos.splice(idx,1);
+  gRenderPhotos();
+  gSavePhotos();
+}
+function gRenderPhotos(){
+  var el=$('g-photos');el.innerHTML='';
+  gPhotos.forEach(function(p,i){
+    var wrap=document.createElement('div');wrap.className='gphoto-wrap';
+    wrap.innerHTML='<img src="'+p+'" class="gphoto"><button class="gphoto-del" onclick="gRemovePhoto('+i+')">✕</button>';
+    el.appendChild(wrap);
+  });
+}
+function gSavePhotos(){
+  if(!geoItem)return;
+  var key='olc_photo_'+(geoItem.ozn||geoItem.vzn||geoItem._row);
+  try{localStorage.setItem(key,JSON.stringify(gPhotos))}catch(e){console.warn('Foto opslag vol:',e)}
+}
+function gLoadPhotos(item){
+  var key='olc_photo_'+(item.ozn||item.vzn||item._row);
+  var s=localStorage.getItem(key);
+  if(s){try{gPhotos=JSON.parse(s)}catch(e){gPhotos=[]}}
+  else{gPhotos=[]}
+  gRenderPhotos();
+}
+function gDeletePhotos(item){
+  var key='olc_photo_'+(item.ozn||item.vzn||item._row);
+  localStorage.removeItem(key);
+}
 $('geo').addEventListener('input',function(){gUpdatePreview()});
 $('geo').addEventListener('change',function(){gUpdatePreview()});
 
