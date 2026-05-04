@@ -474,11 +474,13 @@ function writeToSheet(item,field){
     +'&controleur='+encodeURIComponent('Remko Meijer')
     +'&brief_geo='+encodeURIComponent(item.brief_geo||'')
     +'&field='+encodeURIComponent(field);
-  // Image-tag bypass: geen CORS-restricties
-  var img=new Image();
-  img.onload=function(){console.log('Sheet update OK')};
-  img.onerror=function(){console.log('Sheet update verstuurd (redirect)')};
-  img.src=url+p;
+  // Iframe methode: volgt redirects correct
+  var iframe=document.createElement('iframe');
+  iframe.style.display='none';
+  iframe.src=url+p;
+  document.body.appendChild(iframe);
+  // Opruimen na 15 seconden
+  setTimeout(function(){try{document.body.removeChild(iframe)}catch(e){}},15000);
 }
 
 // ═══════════════════════════════════════════
