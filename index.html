@@ -448,6 +448,20 @@ function loadFromCSV(prg){
     processRows(rows,prg);
   }).catch(function(e){$('ldgtxt').textContent='Fout: '+e.message;toast('❌ Laden mislukt');setTimeout(function(){$('ldg').classList.add('done')},3000)});
 }
+function formatDatum(v){
+  if(!v)return'';
+  var s=String(v).trim();
+  // Als het al dd-MM-yyyy of dd-M-yyyy format is, laat het
+  if(/^\d{1,2}-\d{1,2}-\d{4}$/.test(s))return s;
+  // Probeer als Date te parsen (voor JavaScript Date strings)
+  var d=new Date(s);
+  if(!isNaN(d.getTime())){
+    var dag=d.getDate();var maand=d.getMonth()+1;var jaar=d.getFullYear();
+    return dag+'-'+maand+'-'+jaar;
+  }
+  // Anders gewoon teruggeven
+  return s;
+}
 function processRows(rows,prg){
   allData=[];var queue=[];
   for(var i=0;i<rows.length;i++){
@@ -463,8 +477,8 @@ function processRows(rows,prg){
       lat:parseNL(getCol(r,['Lat','lat','Latitude'])),
       lng:parseNL(getCol(r,['Lng','lng','Lon','lon','Longitude'])),
       status:mapStatus(getCol(r,['Status','status','Gecontroleerd','Actie'])),
-      datum_aanvraag:getCol(r,['Datum_aanvraag','datum_aanvraag','Datum aanvraag']),
-      datum_controle:getCol(r,['Datum_controle','datum_controle','Datum controle']),
+      datum_aanvraag:formatDatum(getCol(r,['Datum_aanvraag','datum_aanvraag','Datum aanvraag'])),
+      datum_controle:formatDatum(getCol(r,['Datum_controle','datum_controle','Datum controle'])),
       controleur:getCol(r,['Controleur','controleur']),
       notitie:getCol(r,['Notitie','notitie','Opmerkingen']),
       brief_geo:getCol(r,['Brief verzonden GEO','brief_verzonden_geo','Brief_verzonden_GEO','Brief GEO']),
