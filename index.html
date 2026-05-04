@@ -262,15 +262,21 @@ var config=JSON.parse(localStorage.getItem('olc_config')||'{}');
 if(!config.csvUrl)config.csvUrl=DEFAULT_CSV;
 var STATUSES={
   todo:{label:'Nog te controleren',color:'#e67e22',sym:'⏳'},
-  bezig:{label:'Niet begonnen (bezig)',color:'#3498db',sym:'🔨'},
-  begonnen:{label:'Zijn begonnen',color:'#2196F3',sym:'🏗️'},
+  nietbegonnen:{label:'Gecontroleerd, niet begonnen',color:'#3498db',sym:'🔍'},
+  uitvoering:{label:'In uitvoering',color:'#2196F3',sym:'🏗️'},
   goed:{label:'Goedgekeurd',color:'#27ae60',sym:'✅'},
-  vervallen:{label:'Vervallen',color:'#95a5a6',sym:'🚫'},
-  vanaf:{label:'Ziet er vanaf',color:'#607d8b',sym:'👋'},
-  overig:{label:'Overige',color:'#8e44ad',sym:'📌'}
+  afgekeurd:{label:'Afgekeurd',color:'#e74c3c',sym:'❌'},
+  vervallen:{label:'Vervallen',color:'#95a5a6',sym:'🚫'}
 };
-var DEFAULT_OFF=['goed','vervallen','vanaf'];
-function mapStatus(s){if(!s)return'todo';var n=s.toLowerCase().replace(/[^a-zà-ÿ]/g,'');if(n.includes('goedgekeurd')||n==='goed'||n==='ja')return'goed';if(n.includes('zietervanaf')||(n.includes('ziet')&&n.includes('vanaf')))return'vanaf';if(n.includes('vervallen'))return'vervallen';if(n.includes('zijnbegonnen'))return'begonnen';if(n.includes('nietbegonnen')||n.includes('bezig'))return'bezig';if(n.includes('nogte')||n.includes('nogtecontroleren'))return'todo';if(n.includes('overig'))return'overig';return'todo'}
+var DEFAULT_OFF=['goed','vervallen'];
+function mapStatus(s){if(!s)return'todo';var n=s.toLowerCase().replace(/[^a-zà-ÿ,]/g,'');
+  if(n.includes('goedgekeurd')||n==='goed'||n==='ja')return'goed';
+  if(n.includes('afgekeurd'))return'afgekeurd';
+  if(n.includes('vervallen')||n.includes('zietervanaf')||(n.includes('ziet')&&n.includes('vanaf')))return'vervallen';
+  if(n.includes('inuitvoering')||n.includes('zijnbegonnen')||n.includes('begonnen'))return'uitvoering';
+  if(n.includes('gecontroleerd')||n.includes('nietbegonnen')||n.includes('bezig'))return'nietbegonnen';
+  if(n.includes('nogte')||n.includes('nogtecontroleren'))return'todo';
+  return'todo'}
 function parseNL(v){if(!v&&v!==0)return null;var s=String(v).trim();if(s.indexOf(',')!==-1&&s.indexOf('.')===-1)s=s.replace(',','.');else if(s.indexOf('.')!==-1&&s.indexOf(',')!==-1)s=s.replace('.','').replace(',','.');var n=parseFloat(s);return isNaN(n)?null:n}
 var $=function(id){return document.getElementById(id)};
 function toast(msg){var t=$('toast');t.textContent=msg;t.classList.add('show');setTimeout(function(){t.classList.remove('show')},2500)}
@@ -362,7 +368,7 @@ function checkProximity(){
   if(!myPos||allData.length===0)return;
   var closest=null,minDist=Infinity;
   allData.forEach(function(d){
-    if(!d.lat||!d.lng||d.status==='goed'||d.status==='vervallen'||d.status==='vanaf')return;
+    if(!d.lat||!d.lng||d.status==='goed'||d.status==='vervallen'||d.status==='afgekeurd')return;
     var dist=map.distance(myPos,[d.lat,d.lng]);
     if(dist<300&&dist<minDist){closest=d;minDist=dist}
   });
@@ -385,7 +391,7 @@ function checkAutoCheckin(){
   // Zoek dichtstbijzijnde controle binnen 80m
   var closest=null,minDist=Infinity;
   allData.forEach(function(d){
-    if(!d.lat||!d.lng||d.status==='goed'||d.status==='vervallen'||d.status==='vanaf')return;
+    if(!d.lat||!d.lng||d.status==='goed'||d.status==='vervallen'||d.status==='afgekeurd')return;
     var dist=map.distance(myPos,[d.lat,d.lng]);
     if(dist<80&&dist<minDist){closest=d;minDist=dist}
   });
@@ -488,7 +494,7 @@ function geocodeQueue(queue,prg){var i=0;function next(){if(i>=queue.length)retu
 // RENDER
 // ═══════════════════════════════════════════
 function makeIcon(status){var s=STATUSES[status]||STATUSES.todo;return L.divIcon({className:'',html:'<div style="width:28px;height:28px;border-radius:50%;background:'+s.color+';border:2px solid #fff;display:flex;align-items:center;justify-content:center;font-size:14px;box-shadow:0 2px 6px rgba(0,0,0,.3)">'+s.sym+'</div>',iconSize:[28,28],iconAnchor:[14,14]})}
-function apply(){clusterGroup.clearLayers();var search=($('srch')?$('srch').value:'').toLowerCase();var visible=allData.filter(function(d){if(!d.lat||!d.lng)return false;if(!filters[d.status])return false;if(search&&d.zaakonderwerp.toLowerCase().indexOf(search)===-1&&d.adres.toLowerCase().indexOf(search)===-1)return false;return true});visible.forEach(function(d){var m=L.marker([d.lat,d.lng],{icon:makeIcon(d.status)});m.on('click',function(){openDetail(d)});d._m=m;clusterGroup.addLayer(m)});var total=allData.length;var done=allData.filter(function(d){return d.status==='goed'||d.status==='vervallen'||d.status==='vanaf'}).length;var todo=allData.filter(function(d){return d.status==='todo'||d.status==='bezig'||d.status==='begonnen'}).length;var pct=total>0?Math.round(done/total*100):0;$('pfill').style.width=pct+'%';$('ptxt').textContent='✅ '+done+' afgehandeld | 📋 '+todo+' te doen | Totaal: '+total+' ('+pct+'%)';var list=$('llist');list.innerHTML='';$('lcnt').textContent='('+visible.length+')';visible.forEach(function(d){var s=STATUSES[d.status]||STATUSES.todo;var div=document.createElement('div');div.className='li';div.innerHTML='<div class="ldot" style="width:20px;height:20px;border-radius:50%;background:'+s.color+';display:flex;align-items:center;justify-content:center;font-size:11px">'+s.sym+'</div><div class="ltxt"><b>'+d.zaakonderwerp.substring(0,60)+'</b><span>'+(d.adres||'Geen adres')+'</span></div>';div.onclick=(function(dd){return function(){map.flyTo([dd.lat,dd.lng],17);openDetail(dd);$('lp').classList.remove('open')}})(d);list.appendChild(div)})}
+function apply(){clusterGroup.clearLayers();var search=($('srch')?$('srch').value:'').toLowerCase();var visible=allData.filter(function(d){if(!d.lat||!d.lng)return false;if(!filters[d.status])return false;if(search&&d.zaakonderwerp.toLowerCase().indexOf(search)===-1&&d.adres.toLowerCase().indexOf(search)===-1)return false;return true});visible.forEach(function(d){var m=L.marker([d.lat,d.lng],{icon:makeIcon(d.status)});m.on('click',function(){openDetail(d)});d._m=m;clusterGroup.addLayer(m)});var total=allData.length;var done=allData.filter(function(d){return d.status==='goed'||d.status==='vervallen'||d.status==='afgekeurd'}).length;var todo=allData.filter(function(d){return d.status==='todo'||d.status==='nietbegonnen'||d.status==='uitvoering'}).length;var pct=total>0?Math.round(done/total*100):0;$('pfill').style.width=pct+'%';$('ptxt').textContent='✅ '+done+' afgehandeld | 📋 '+todo+' te doen | Totaal: '+total+' ('+pct+'%)';var list=$('llist');list.innerHTML='';$('lcnt').textContent='('+visible.length+')';visible.forEach(function(d){var s=STATUSES[d.status]||STATUSES.todo;var div=document.createElement('div');div.className='li';div.innerHTML='<div class="ldot" style="width:20px;height:20px;border-radius:50%;background:'+s.color+';display:flex;align-items:center;justify-content:center;font-size:11px">'+s.sym+'</div><div class="ltxt"><b>'+d.zaakonderwerp.substring(0,60)+'</b><span>'+(d.adres||'Geen adres')+'</span></div>';div.onclick=(function(dd){return function(){map.flyTo([dd.lat,dd.lng],17);openDetail(dd);$('lp').classList.remove('open')}})(d);list.appendChild(div)})}
 function buildFilters(){var el=$('filters');el.innerHTML='';Object.keys(STATUSES).forEach(function(k){var v=STATUSES[k];var cnt=allData.filter(function(d){return d.status===k}).length;var lbl=document.createElement('label');lbl.className='fchk';lbl.innerHTML='<input type="checkbox" '+(filters[k]?'checked':'')+' data-st="'+k+'"><div class="fdot" style="background:'+v.color+'">'+v.sym+'</div> '+v.label+' <span style="color:#aaa;margin-left:auto">'+cnt+'</span>';lbl.querySelector('input').addEventListener('change',function(e){filters[e.target.getAttribute('data-st')]=e.target.checked;saveFilters();apply()});el.appendChild(lbl)})}
 
 // ═══════════════════════════════════════════
@@ -771,8 +777,8 @@ function showReport(){
   var elapsed=tripStart?Math.round((Date.now()-tripStart)/60000):0;
   var sc={};Object.keys(STATUSES).forEach(function(k){sc[k]=allData.filter(function(d){return d.status===k}).length});
   var total=allData.length;
-  var done=allData.filter(function(d){return d.status==='goed'||d.status==='vervallen'||d.status==='vanaf'}).length;
-  var todo=allData.filter(function(d){return d.status==='todo'||d.status==='bezig'||d.status==='begonnen'||d.status==='overig'}).length;
+  var done=allData.filter(function(d){return d.status==='goed'||d.status==='vervallen'||d.status==='afgekeurd'}).length;
+  var todo=allData.filter(function(d){return d.status==='todo'||d.status==='nietbegonnen'||d.status==='uitvoering'}).length;
   var donePct=total>0?Math.round(done/total*100):0;
   var logHtml=dayLog.length===0?'<p style="color:#aaa;font-size:12px">Nog geen wijzigingen</p>':dayLog.map(function(l){return'<div style="padding:4px 0;border-bottom:1px solid #f5f5f5;font-size:12px"><b>'+l.time+'</b> '+l.zaak+'<br><span style="color:#888">'+l.from+' → '+l.to+'</span></div>'}).join('');
   var statRows=Object.keys(STATUSES).map(function(k){var v=STATUSES[k];return'<div class="rrow"><span>'+v.sym+' '+v.label+'</span><b style="color:'+v.color+'">'+sc[k]+'</b></div>'}).join('');
