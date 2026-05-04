@@ -410,7 +410,78 @@ function parseCSV(text){var sep=detectSeparator(text);var lines=text.split('\n')
 function parseCSVLine(line,sep){var result=[],current='',inQ=false;for(var i=0;i<line.length;i++){var c=line[i];if(inQ){if(c==='"'&&line[i+1]==='"'){current+='"';i++}else if(c==='"')inQ=false;else current+=c}else{if(c==='"')inQ=true;else if(c===sep){result.push(current);current=''}else current+=c}}result.push(current);return result}
 function extractAddress(z){var m=z.match(/nabij\s+(.+?)\s+te\s+(\w+)/i)||z.match(/(\S+\s+\d+\S*)\s+te\s+(\w+)/i)||z.match(/te\s+(\w+)/i);if(m&&m.length>=3)return m[1]+', '+m[2]+', Groningen';if(m&&m.length>=2)return m[1]+', Groningen';return null}
 function getCol(r,names){for(var i=0;i<names.length;i++){if(r[names[i]]!==undefined&&r[names[i]]!=='')return r[names[i]]}return''}
-function loadData(){var prg=$('ldgtxt');$('ldg').classList.remove('done');prg.textContent='Data ophalen...';fetch(config.csvUrl||DEFAULT_CSV).then(function(r){if(!r.ok)throw new Error('HTTP '+r.status);return r.text()}).then(function(text){var rows=parseCSV(text);prg.textContent=rows.length+' rijen, verwerken...';allData=[];var queue=[];for(var i=0;i<rows.length;i++){var r=rows[i];var zaak=getCol(r,['Zaakonderwerp','zaakonderwerp']);var adres=getCol(r,['Adres','adres']);if(!zaak&&!adres)continue;var item={nr:getCol(r,['Nummer','nummer','Aantal'])||(i+1),vzn:getCol(r,['Vergunning_ZN','vergunning_zn','Vergunning ZN']),ozn:getCol(r,['Oplever_ZN','oplever_zn','Oplever ZN']),zaakonderwerp:zaak,adres:adres,lat:parseNL(getCol(r,['Lat','lat','Latitude'])),lng:parseNL(getCol(r,['Lng','lng','Lon','lon','Longitude'])),status:mapStatus(getCol(r,['Status','status','Gecontroleerd','Actie'])),datum_aanvraag:getCol(r,['Datum_aanvraag','datum_aanvraag','Datum aanvraag']),datum_controle:getCol(r,['Datum_controle','datum_controle','Datum controle']),controleur:getCol(r,['Controleur','controleur']),notitie:getCol(r,['Notitie','notitie','Opmerkingen']),brief_geo:getCol(r,['Brief verzonden GEO','brief_verzonden_geo','Brief_verzonden_GEO','Brief GEO']),_row:i+2};if(!item.adres&&zaak)item.adres=extractAddress(zaak)||'';if(item.lat&&item.lng)allData.push(item);else if(item.adres)queue.push(item);else allData.push(item)}return geocodeQueue(queue,prg)}).then(function(){var gc2=allData.filter(function(d){return d.lat&&d.lng}).length;toast('✅ '+allData.length+' controles geladen');apply();buildFilters();var coords=allData.filter(function(d){return d.lat&&d.lng}).map(function(d){return[d.lat,d.lng]});if(coords.length>0)map.fitBounds(L.latLngBounds(coords).pad(0.1));$('ldg').classList.add('done')}).catch(function(e){$('ldgtxt').textContent='Fout: '+e.message;toast('❌ Laden mislukt');setTimeout(function(){$('ldg').classList.add('done')},3000)})}
+function loadData(){
+  var prg=$('ldgtxt');$('ldg').classList.remove('done');prg.textContent='Data ophalen...';
+  var scriptUrl=config.scriptUrl;
+  if(scriptUrl){
+    // Gebruik Apps Script voor live data (geen cache)
+    prg.textContent='Live data ophalen via Apps Script...';
+    var cbName='olcData_'+Date.now();
+    window[cbName]=function(result){
+      delete window[cbName];
+      if(!result.ok){prg.textContent='Fout: '+(result.error||'onbekend');toast('❌ Laden mislukt');setTimeout(function(){$('ldg').classList.add('done')},3000);return}
+      processRows(result.rows,prg);
+    };
+    var script=document.createElement('script');
+    script.src=scriptUrl+'?action=getData&callback='+cbName;
+    script.onerror=function(){
+      delete window[cbName];
+      prg.textContent='Apps Script mislukt, CSV laden...';
+      loadFromCSV(prg);
+    };
+    document.body.appendChild(script);
+    setTimeout(function(){try{document.body.removeChild(script)}catch(e){}},30000);
+  } else {
+    loadFromCSV(prg);
+  }
+}
+function loadFromCSV(prg){
+  fetch(config.csvUrl||DEFAULT_CSV).then(function(r){if(!r.ok)throw new Error('HTTP '+r.status);return r.text()}).then(function(text){
+    var rows=parseCSV(text);
+    prg.textContent=rows.length+' rijen, verwerken...';
+    processRows(rows,prg);
+  }).catch(function(e){$('ldgtxt').textContent='Fout: '+e.message;toast('❌ Laden mislukt');setTimeout(function(){$('ldg').classList.add('done')},3000)});
+}
+function processRows(rows,prg){
+  allData=[];var queue=[];
+  for(var i=0;i<rows.length;i++){
+    var r=rows[i];
+    var zaak=getCol(r,['Zaakonderwerp','zaakonderwerp']);
+    var adres=getCol(r,['Adres','adres']);
+    if(!zaak&&!adres)continue;
+    var item={
+      nr:getCol(r,['Nummer','nummer','Aantal'])||(i+1),
+      vzn:getCol(r,['Vergunning_ZN','vergunning_zn','Vergunning ZN']),
+      ozn:getCol(r,['Oplever_ZN','oplever_zn','Oplever ZN']),
+      zaakonderwerp:zaak,adres:adres,
+      lat:parseNL(getCol(r,['Lat','lat','Latitude'])),
+      lng:parseNL(getCol(r,['Lng','lng','Lon','lon','Longitude'])),
+      status:mapStatus(getCol(r,['Status','status','Gecontroleerd','Actie'])),
+      datum_aanvraag:getCol(r,['Datum_aanvraag','datum_aanvraag','Datum aanvraag']),
+      datum_controle:getCol(r,['Datum_controle','datum_controle','Datum controle']),
+      controleur:getCol(r,['Controleur','controleur']),
+      notitie:getCol(r,['Notitie','notitie','Opmerkingen']),
+      brief_geo:getCol(r,['Brief verzonden GEO','brief_verzonden_geo','Brief_verzonden_GEO','Brief GEO']),
+      _row:i+2
+    };
+    if(!item.adres&&zaak)item.adres=extractAddress(zaak)||'';
+    if(item.lat&&item.lng)allData.push(item);
+    else if(item.adres)queue.push(item);
+    else allData.push(item);
+  }
+  if(queue.length>0){
+    geocodeQueue(queue,prg).then(function(){finishLoad()});
+  } else {
+    finishLoad();
+  }
+}
+function finishLoad(){
+  toast('✅ '+allData.length+' controles geladen');
+  apply();buildFilters();
+  var coords=allData.filter(function(d){return d.lat&&d.lng}).map(function(d){return[d.lat,d.lng]});
+  if(coords.length>0)map.fitBounds(L.latLngBounds(coords).pad(0.1));
+  $('ldg').classList.add('done');
+}
 function geocodeQueue(queue,prg){var i=0;function next(){if(i>=queue.length)return Promise.resolve();var item=queue[i];prg.textContent='Geocoderen '+(i+1)+'/'+queue.length;return geocode(item.adres).then(function(geo){if(geo){item.lat=geo.lat;item.lng=geo.lng}allData.push(item);i++;if(!gc[item.adres.toLowerCase().trim()])return new Promise(function(r){setTimeout(r,1100)}).then(next);return next()})}return next()}
 
 // ═══════════════════════════════════════════
