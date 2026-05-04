@@ -325,7 +325,7 @@ function startGPS(){
     myPos=[lat,lng];
     if(h&&!isNaN(h))heading=h;
     var ico=L.divIcon({className:'car-icon',html:'<div style="transform:rotate('+heading+'deg);width:30px;height:50px">'+carSvg+'</div>',iconSize:[30,50],iconAnchor:[15,25]});
-    if(!carMarker){carMarker=L.marker(myPos,{icon:ico,zIndexOffset:9999}).addTo(map)}
+    if(!carMarker){carMarker=L.marker(myPos,{icon:ico,zIndexOffset:9999}).addTo(map);toast('📡 GPS actief')}
     else{carMarker.setLatLng(myPos);carMarker.setIcon(ico)}
     // Auto-center
     if(followCar&&tripActive&&!tripPaused)map.setView(myPos,map.getZoom(),{animate:true,duration:1});
@@ -340,11 +340,15 @@ function startGPS(){
       else if(!tripPaused){stillSince=null;autoCheckedItem=null}
     }
     lastTripPos=myPos;
-    if(!tripActive){/* GPS loopt, maar rit niet gestart */}
     checkProximity();
     checkAutoCheckin();
     updateTripInfo();
-  },null,{enableHighAccuracy:true,maximumAge:3000});
+  },function(err){
+    console.error('GPS fout:',err.message);
+    if(err.code===1)toast('❌ GPS geweigerd — sta locatietoegang toe in instellingen');
+    else if(err.code===2)toast('❌ GPS niet beschikbaar');
+    else toast('❌ GPS timeout');
+  },{enableHighAccuracy:true,maximumAge:3000,timeout:10000});
   if('wakeLock' in navigator){navigator.wakeLock.request('screen').catch(function(){});document.addEventListener('visibilitychange',function(){if(document.visibilityState==='visible')navigator.wakeLock.request('screen').catch(function(){})})}
 }
 // Disable follow when user drags map
@@ -413,7 +417,7 @@ function geocodeQueue(queue,prg){var i=0;function next(){if(i>=queue.length)retu
 // RENDER
 // ═══════════════════════════════════════════
 function makeIcon(status){var s=STATUSES[status]||STATUSES.todo;return L.divIcon({className:'',html:'<div style="width:28px;height:28px;border-radius:50%;background:'+s.color+';border:2px solid #fff;display:flex;align-items:center;justify-content:center;font-size:14px;box-shadow:0 2px 6px rgba(0,0,0,.3)">'+s.sym+'</div>',iconSize:[28,28],iconAnchor:[14,14]})}
-function apply(){clusterGroup.clearLayers();var search=($('srch')?$('srch').value:'').toLowerCase();var visible=allData.filter(function(d){if(!d.lat||!d.lng)return false;if(!filters[d.status])return false;if(search&&d.zaakonderwerp.toLowerCase().indexOf(search)===-1&&d.adres.toLowerCase().indexOf(search)===-1)return false;return true});visible.forEach(function(d){var m=L.marker([d.lat,d.lng],{icon:makeIcon(d.status)});m.on('click',function(){openDetail(d)});d._m=m;clusterGroup.addLayer(m)});var total=allData.length;var done=allData.filter(function(d){return d.status==='goed'||d.status==='vervallen'||d.status==='vanaf'}).length;var pct=total>0?Math.round(done/total*100):0;$('pfill').style.width=pct+'%';$('ptxt').textContent=done+' / '+total+' afgehandeld ('+pct+'%)';var list=$('llist');list.innerHTML='';$('lcnt').textContent='('+visible.length+')';visible.forEach(function(d){var s=STATUSES[d.status]||STATUSES.todo;var div=document.createElement('div');div.className='li';div.innerHTML='<div class="ldot" style="width:20px;height:20px;border-radius:50%;background:'+s.color+';display:flex;align-items:center;justify-content:center;font-size:11px">'+s.sym+'</div><div class="ltxt"><b>'+d.zaakonderwerp.substring(0,60)+'</b><span>'+(d.adres||'Geen adres')+'</span></div>';div.onclick=(function(dd){return function(){map.flyTo([dd.lat,dd.lng],17);openDetail(dd);$('lp').classList.remove('open')}})(d);list.appendChild(div)})}
+function apply(){clusterGroup.clearLayers();var search=($('srch')?$('srch').value:'').toLowerCase();var visible=allData.filter(function(d){if(!d.lat||!d.lng)return false;if(!filters[d.status])return false;if(search&&d.zaakonderwerp.toLowerCase().indexOf(search)===-1&&d.adres.toLowerCase().indexOf(search)===-1)return false;return true});visible.forEach(function(d){var m=L.marker([d.lat,d.lng],{icon:makeIcon(d.status)});m.on('click',function(){openDetail(d)});d._m=m;clusterGroup.addLayer(m)});var total=allData.length;var done=allData.filter(function(d){return d.status==='goed'||d.status==='vervallen'||d.status==='vanaf'}).length;var todo=allData.filter(function(d){return d.status==='todo'||d.status==='bezig'||d.status==='begonnen'}).length;var pct=total>0?Math.round(done/total*100):0;$('pfill').style.width=pct+'%';$('ptxt').textContent='✅ '+done+' afgehandeld | 📋 '+todo+' te doen | Totaal: '+total+' ('+pct+'%)';var list=$('llist');list.innerHTML='';$('lcnt').textContent='('+visible.length+')';visible.forEach(function(d){var s=STATUSES[d.status]||STATUSES.todo;var div=document.createElement('div');div.className='li';div.innerHTML='<div class="ldot" style="width:20px;height:20px;border-radius:50%;background:'+s.color+';display:flex;align-items:center;justify-content:center;font-size:11px">'+s.sym+'</div><div class="ltxt"><b>'+d.zaakonderwerp.substring(0,60)+'</b><span>'+(d.adres||'Geen adres')+'</span></div>';div.onclick=(function(dd){return function(){map.flyTo([dd.lat,dd.lng],17);openDetail(dd);$('lp').classList.remove('open')}})(d);list.appendChild(div)})}
 function buildFilters(){var el=$('filters');el.innerHTML='';Object.keys(STATUSES).forEach(function(k){var v=STATUSES[k];var cnt=allData.filter(function(d){return d.status===k}).length;var lbl=document.createElement('label');lbl.className='fchk';lbl.innerHTML='<input type="checkbox" '+(filters[k]?'checked':'')+' data-st="'+k+'"><div class="fdot" style="background:'+v.color+'">'+v.sym+'</div> '+v.label+' <span style="color:#aaa;margin-left:auto">'+cnt+'</span>';lbl.querySelector('input').addEventListener('change',function(e){filters[e.target.getAttribute('data-st')]=e.target.checked;saveFilters();apply()});el.appendChild(lbl)})}
 
 // ═══════════════════════════════════════════
@@ -693,11 +697,21 @@ function showReport(){
   var now=new Date();var datum=now.toLocaleDateString('nl-NL',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
   var elapsed=tripStart?Math.round((Date.now()-tripStart)/60000):0;
   var sc={};Object.keys(STATUSES).forEach(function(k){sc[k]=allData.filter(function(d){return d.status===k}).length});
+  var total=allData.length;
+  var done=allData.filter(function(d){return d.status==='goed'||d.status==='vervallen'||d.status==='vanaf'}).length;
+  var todo=allData.filter(function(d){return d.status==='todo'||d.status==='bezig'||d.status==='begonnen'||d.status==='overig'}).length;
+  var donePct=total>0?Math.round(done/total*100):0;
   var logHtml=dayLog.length===0?'<p style="color:#aaa;font-size:12px">Nog geen wijzigingen</p>':dayLog.map(function(l){return'<div style="padding:4px 0;border-bottom:1px solid #f5f5f5;font-size:12px"><b>'+l.time+'</b> '+l.zaak+'<br><span style="color:#888">'+l.from+' → '+l.to+'</span></div>'}).join('');
   var statRows=Object.keys(STATUSES).map(function(k){var v=STATUSES[k];return'<div class="rrow"><span>'+v.sym+' '+v.label+'</span><b style="color:'+v.color+'">'+sc[k]+'</b></div>'}).join('');
   var goedVandaag=dayLog.filter(function(l){return l.status==='goed'});
   var goedHtml=goedVandaag.length===0?'<p style="color:#aaa;font-size:12px">Geen</p>':goedVandaag.map(function(l){return'<div style="padding:6px 0;border-bottom:1px solid #f0f0f0;font-size:12px"><b style="color:#27ae60">✅ '+l.time+'</b> '+l.zaak+'<br><span style="color:#555">Verg. ZN: <b>'+(l.vzn||'-')+'</b> | Opl. ZN: <b>'+(l.ozn||'-')+'</b></span></div>'}).join('');
-  $('rpc').innerHTML='<h3 style="font-size:16px;color:#0e2f44">📊 Dagrapport</h3><div style="font-size:12px;color:#888;margin-bottom:16px">'+datum+'</div><div class="rrow"><span>Totaal</span><b>'+allData.length+'</b></div>'+statRows+'<hr style="margin:12px 0;border:none;border-top:1px solid #eee"><div class="rrow"><span>🚗 Gereden</span><b>'+tripKm.toFixed(1).replace('.',',')+' km</b></div><div class="rrow"><span>⏱️ Rijtijd</span><b>'+elapsed+' min</b></div><hr style="margin:12px 0;border:none;border-top:1px solid #eee"><b style="font-size:13px;color:#27ae60">✅ Vandaag goedgekeurd ('+goedVandaag.length+'):</b><div style="max-height:180px;overflow-y:auto;margin-top:8px">'+goedHtml+'</div><hr style="margin:12px 0;border:none;border-top:1px solid #eee"><b style="font-size:13px;color:var(--nz)">Alle wijzigingen ('+dayLog.length+'):</b><div style="max-height:200px;overflow-y:auto;margin-top:8px">'+logHtml+'</div><button class="rpdf" onclick="downloadPDF()">📄 Download PDF</button><button onclick="$(\'rpt\').classList.remove(\'show\')" class="cbtn" style="background:#eee;color:#333;margin-top:8px">Sluiten</button>';
+  $('rpc').innerHTML='<h3 style="font-size:16px;color:#0e2f44">📊 Dagrapport</h3><div style="font-size:12px;color:#888;margin-bottom:16px">'+datum+'</div>'
+    +'<div style="background:#eaf2f8;border-radius:10px;padding:12px;margin-bottom:14px"><div style="font-size:13px;font-weight:700;color:#0e2f44;margin-bottom:6px">📋 Jaaroverzicht — Remko Meijer</div>'
+    +'<div style="display:flex;justify-content:space-between;font-size:24px;font-weight:700;text-align:center"><div style="flex:1"><div style="color:#0e2f44">'+total+'</div><div style="font-size:10px;color:#888;font-weight:400">Totaal</div></div><div style="flex:1"><div style="color:#27ae60">'+done+'</div><div style="font-size:10px;color:#888;font-weight:400">Afgehandeld</div></div><div style="flex:1"><div style="color:#e67e22">'+todo+'</div><div style="font-size:10px;color:#888;font-weight:400">Te doen</div></div></div>'
+    +'<div style="background:#ddd;border-radius:4px;height:8px;margin-top:8px;overflow:hidden"><div style="background:#27ae60;height:100%;width:'+donePct+'%;border-radius:4px"></div></div>'
+    +'<div style="font-size:11px;color:#888;text-align:center;margin-top:4px">'+donePct+'% afgehandeld</div></div>'
+    +statRows
+    +'<hr style="margin:12px 0;border:none;border-top:1px solid #eee"><div class="rrow"><span>🚗 Gereden</span><b>'+tripKm.toFixed(1).replace('.',',')+' km</b></div><div class="rrow"><span>⏱️ Rijtijd</span><b>'+elapsed+' min</b></div><hr style="margin:12px 0;border:none;border-top:1px solid #eee"><b style="font-size:13px;color:#27ae60">✅ Vandaag goedgekeurd ('+goedVandaag.length+'):</b><div style="max-height:180px;overflow-y:auto;margin-top:8px">'+goedHtml+'</div><hr style="margin:12px 0;border:none;border-top:1px solid #eee"><b style="font-size:13px;color:var(--nz)">Alle wijzigingen ('+dayLog.length+'):</b><div style="max-height:200px;overflow-y:auto;margin-top:8px">'+logHtml+'</div><button class="rpdf" onclick="downloadPDF()">📄 Download PDF</button><button onclick="$(\'rpt\').classList.remove(\'show\')" class="cbtn" style="background:#eee;color:#333;margin-top:8px">Sluiten</button>';
   $('rpt').classList.add('show');
 }
 function downloadPDF(){
