@@ -246,6 +246,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;overflow
 <!-- Trip controls -->
 <div id="tripbar">
   <button id="tripbtn" onclick="toggleTrip()" style="background:#27ae60" title="Start rit">▶️</button>
+  <button id="stopbtn" onclick="stopTrip()" style="background:#333;display:none" title="Stop rit">⏹️</button>
   <div id="tripinfo">0,0 km | 0 min</div>
   <button onclick="loadData()" style="background:var(--nz)" title="Vernieuwen">🔄</button>
 </div>
@@ -305,24 +306,69 @@ var stillSince=null,autoCheckedItem=null;
 var dayLog=JSON.parse(localStorage.getItem('olc_daylog')||'[]');
 var carSvg='<svg viewBox="0 0 30 50" xmlns="http://www.w3.org/2000/svg"><rect x="5" y="8" width="20" height="34" rx="6" fill="#1a5276" stroke="#fff" stroke-width="1.5"/><rect x="8" y="10" width="14" height="8" rx="2" fill="#85c1e9"/><rect x="8" y="32" width="14" height="6" rx="2" fill="#85c1e9"/><circle cx="8" cy="12" r="2.5" fill="#222"/><circle cx="22" cy="12" r="2.5" fill="#222"/><circle cx="8" cy="40" r="2.5" fill="#222"/><circle cx="22" cy="40" r="2.5" fill="#222"/><text x="15" y="27" text-anchor="middle" font-size="5" fill="#fff" font-weight="bold">NZV</text></svg>';
 
+var wakeLockObj=null;
+function requestWakeLock(){
+  if('wakeLock' in navigator){
+    navigator.wakeLock.request('screen').then(function(wl){
+      wakeLockObj=wl;
+      wl.addEventListener('release',function(){wakeLockObj=null});
+      console.log('WakeLock actief');
+    }).catch(function(e){console.log('WakeLock mislukt:',e)});
+  }
+}
+function releaseWakeLock(){
+  if(wakeLockObj){wakeLockObj.release();wakeLockObj=null}
+}
+// Heractiveer WakeLock als scherm terugkomt
+document.addEventListener('visibilitychange',function(){
+  if(document.visibilityState==='visible'&&tripActive&&!tripPaused)requestWakeLock();
+});
+
 function toggleTrip(){
-  if(!tripActive){tripActive=true;tripPaused=false;tripStart=tripStart||Date.now();toast('🚗 Rit gestart');if(myPos)map.setView(myPos,15)}
-  else if(!tripPaused){tripPaused=true;toast('⏸️ Pauze')}
-  else{tripPaused=false;toast('▶️ Rit hervat')}
+  if(!tripActive){tripActive=true;tripPaused=false;tripStart=tripStart||Date.now();requestWakeLock();toast('🚗 Rit gestart — scherm blijft aan');if(myPos)map.setView(myPos,15)}
+  else if(!tripPaused){tripPaused=true;releaseWakeLock();toast('⏸️ Pauze')}
+  else{tripPaused=false;requestWakeLock();toast('▶️ Rit hervat — scherm blijft aan')}
   updateTripBtn();
 }
+function stopTrip(){
+  if(!tripActive)return;
+  if(!confirm('Rit stoppen? Km\'s en tijd worden bewaard in het dagrapport.'))return;
+  tripActive=false;tripPaused=false;
+  releaseWakeLock();
+  updateTripBtn();
+  toast('🏁 Rit gestopt — '+tripKm.toFixed(1).replace('.',',')+' km');
+}
 function updateTripBtn(){
-  var b=$('tripbtn');
-  if(!tripActive){b.textContent='▶️';b.title='Start rit';b.style.background='#27ae60'}
-  else if(tripPaused){b.textContent='▶️';b.title='Hervat';b.style.background='#e67e22'}
-  else{b.textContent='⏸️';b.title='Pauze';b.style.background='#e74c3c'}
+  var b=$('tripbtn');var s=$('stopbtn');
+  if(!tripActive){b.textContent='▶️';b.title='Start rit';b.style.background='#27ae60';s.style.display='none'}
+  else if(tripPaused){b.textContent='▶️';b.title='Hervat';b.style.background='#e67e22';s.style.display='flex'}
+  else{b.textContent='⏸️';b.title='Pauze';b.style.background='#e74c3c';s.style.display='flex'}
 }
 function toggleFollow(){followCar=!followCar;$('followbtn').textContent=followCar?'🎯':'📍';$('followbtn').style.background=followCar?'#fff':'#ddd';toast(followCar?'🎯 Auto volgen AAN':'📍 Auto volgen UIT');if(followCar&&myPos)map.setView(myPos,map.getZoom())}
 function updateTripInfo(){
   var elapsed=tripStart?Math.round((Date.now()-tripStart)/60000):0;
-  $('tripinfo').textContent=tripKm.toFixed(1).replace('.',',')+' km | '+elapsed+' min'+(tripPaused?' ⏸️':'');
+  var status=tripPaused?' ⏸️':tripActive?' 🚗':'';
+  $('tripinfo').textContent=tripKm.toFixed(1).replace('.',',')+' km | '+elapsed+' min'+status;
 }
 setInterval(updateTripInfo,5000);
+
+// Auto-terugzoomen na handmatig uitzomen
+var autoZoomTimer=null;
+var normalZoom=15;
+map.on('zoomend',function(){
+  if(!tripActive||tripPaused||!followCar)return;
+  var z=map.getZoom();
+  if(z<13){
+    // Te ver uitgezoomd, na 5 seconden terugzoomen
+    if(autoZoomTimer)clearTimeout(autoZoomTimer);
+    autoZoomTimer=setTimeout(function(){
+      if(followCar&&tripActive&&!tripPaused&&myPos){
+        map.setView(myPos,normalZoom,{animate:true,duration:1.5});
+        toast('🔍 Automatisch teruggezoomd');
+      }
+    },5000);
+  }
+});
 
 function startGPS(){
   if(!navigator.geolocation)return;
@@ -355,7 +401,6 @@ function startGPS(){
     else if(err.code===2)toast('❌ GPS niet beschikbaar');
     else toast('❌ GPS timeout');
   },{enableHighAccuracy:true,maximumAge:3000,timeout:10000});
-  if('wakeLock' in navigator){navigator.wakeLock.request('screen').catch(function(){});document.addEventListener('visibilitychange',function(){if(document.visibilityState==='visible')navigator.wakeLock.request('screen').catch(function(){})})}
 }
 // Disable follow when user drags map
 map.on('dragstart',function(){if(followCar){followCar=false;$('followbtn').textContent='📍';$('followbtn').style.background='#ddd'}});
