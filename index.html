@@ -465,23 +465,33 @@ function loadData(){
   var prg=$('ldgtxt');$('ldg').classList.remove('done');prg.textContent='Data ophalen...';
   var scriptUrl=config.scriptUrl;
   if(scriptUrl){
-    // Gebruik Apps Script voor live data (geen cache)
-    prg.textContent='Live data ophalen via Apps Script...';
-    var cbName='olcData_'+Date.now();
-    window[cbName]=function(result){
-      delete window[cbName];
-      if(!result.ok){prg.textContent='Fout: '+(result.error||'onbekend');toast('❌ Laden mislukt');setTimeout(function(){$('ldg').classList.add('done')},3000);return}
+    prg.textContent='Live data ophalen...';
+    // Methode 1: fetch met redirect follow
+    fetch(scriptUrl+'?action=getData',{redirect:'follow'})
+    .then(function(r){return r.json()})
+    .then(function(result){
+      if(!result.ok){throw new Error(result.error||'onbekend')}
       processRows(result.rows,prg);
-    };
-    var script=document.createElement('script');
-    script.src=scriptUrl+'?action=getData&callback='+cbName;
-    script.onerror=function(){
-      delete window[cbName];
-      prg.textContent='Apps Script mislukt, CSV laden...';
-      loadFromCSV(prg);
-    };
-    document.body.appendChild(script);
-    setTimeout(function(){try{document.body.removeChild(script)}catch(e){}},30000);
+    })
+    .catch(function(e){
+      console.log('Fetch mislukt, probeer JSONP:',e.message);
+      // Methode 2: JSONP fallback
+      var cbName='olcData_'+Date.now();
+      window[cbName]=function(result){
+        delete window[cbName];
+        if(!result.ok){prg.textContent='Fout: '+(result.error||'onbekend');loadFromCSV(prg);return}
+        processRows(result.rows,prg);
+      };
+      var sc=document.createElement('script');
+      sc.src=scriptUrl+'?action=getData&callback='+cbName;
+      sc.onerror=function(){
+        delete window[cbName];
+        console.log('JSONP mislukt, CSV laden');
+        loadFromCSV(prg);
+      };
+      document.body.appendChild(sc);
+      setTimeout(function(){try{document.body.removeChild(sc)}catch(e){}},30000);
+    });
   } else {
     loadFromCSV(prg);
   }
