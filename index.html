@@ -466,35 +466,52 @@ function loadData(){
   var scriptUrl=config.scriptUrl;
   if(scriptUrl){
     prg.textContent='Live data ophalen...';
-    // Methode 1: fetch met redirect follow
+    // Probeer fetch eerst (werkt op laptop)
     fetch(scriptUrl+'?action=getData',{redirect:'follow'})
-    .then(function(r){return r.json()})
-    .then(function(result){
-      if(!result.ok){throw new Error(result.error||'onbekend')}
+    .then(function(r){
+      if(!r.ok)throw new Error('HTTP '+r.status);
+      return r.text();
+    })
+    .then(function(text){
+      // Apps Script redirect geeft soms HTML terug i.p.v. JSON
+      text=text.trim();
+      if(text.charAt(0)!=='{'&&text.charAt(0)!=='['){throw new Error('Geen JSON')}
+      var result=JSON.parse(text);
+      if(!result.ok)throw new Error(result.error||'onbekend');
+      console.log('Data via fetch OK:',result.count,'rijen');
       processRows(result.rows,prg);
     })
     .catch(function(e){
-      console.log('Fetch mislukt, probeer JSONP:',e.message);
-      // Methode 2: JSONP fallback
-      var cbName='olcData_'+Date.now();
-      window[cbName]=function(result){
-        delete window[cbName];
-        if(!result.ok){prg.textContent='Fout: '+(result.error||'onbekend');loadFromCSV(prg);return}
-        processRows(result.rows,prg);
-      };
-      var sc=document.createElement('script');
-      sc.src=scriptUrl+'?action=getData&callback='+cbName;
-      sc.onerror=function(){
-        delete window[cbName];
-        console.log('JSONP mislukt, CSV laden');
-        loadFromCSV(prg);
-      };
-      document.body.appendChild(sc);
-      setTimeout(function(){try{document.body.removeChild(sc)}catch(e){}},30000);
+      console.log('Fetch mislukt:',e.message,', probeer JSONP');
+      loadViaJSONP(scriptUrl,prg);
     });
   } else {
     loadFromCSV(prg);
   }
+}
+function loadViaJSONP(scriptUrl,prg){
+  var cbName='olcData_'+Date.now();
+  var timeout=setTimeout(function(){
+    delete window[cbName];
+    console.log('JSONP timeout, CSV laden');
+    loadFromCSV(prg);
+  },15000);
+  window[cbName]=function(result){
+    clearTimeout(timeout);
+    delete window[cbName];
+    if(!result.ok){console.log('JSONP fout');loadFromCSV(prg);return}
+    console.log('Data via JSONP OK:',result.count,'rijen');
+    processRows(result.rows,prg);
+  };
+  var sc=document.createElement('script');
+  sc.src=scriptUrl+'?action=getData&callback='+cbName;
+  sc.onerror=function(){
+    clearTimeout(timeout);
+    delete window[cbName];
+    console.log('JSONP script error, CSV laden');
+    loadFromCSV(prg);
+  };
+  document.body.appendChild(sc);
 }
 function loadFromCSV(prg){
   fetch(config.csvUrl||DEFAULT_CSV).then(function(r){if(!r.ok)throw new Error('HTTP '+r.status);return r.text()}).then(function(text){
@@ -620,13 +637,18 @@ function writeToSheet(item,field){
     +'&controleur='+encodeURIComponent('Remko Meijer')
     +'&brief_geo='+encodeURIComponent(item.brief_geo||'')
     +'&field='+encodeURIComponent(field);
-  // Iframe methode: volgt redirects correct
+  var fullUrl=url+p;
+  // Methode 1: fetch (werkt op laptop)
+  fetch(fullUrl,{method:'GET',mode:'no-cors',redirect:'follow'}).catch(function(){});
+  // Methode 2: iframe (volgt redirects)
   var iframe=document.createElement('iframe');
   iframe.style.display='none';
-  iframe.src=url+p;
+  iframe.src=fullUrl;
   document.body.appendChild(iframe);
-  // Opruimen na 15 seconden
   setTimeout(function(){try{document.body.removeChild(iframe)}catch(e){}},15000);
+  // Methode 3: image (extra backup)
+  var img=new Image();img.src=fullUrl;
+  console.log('Sheet update verstuurd (3 methodes):',field);
 }
 
 // ═══════════════════════════════════════════
