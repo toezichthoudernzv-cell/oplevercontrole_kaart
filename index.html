@@ -172,7 +172,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;overflow
         <option value="Duiker">Duiker</option><option value="Dam">Dam</option>
         <option value="Watergang graven">Watergang graven</option><option value="Watergang dempen">Watergang dempen</option><option value="Watergang verbreden">Watergang verbreden</option>
         <option value="Steiger">Steiger</option><option value="Beschoeiing">Beschoeiing</option>
-        <option value="Brug">Brug</option><option value="Uitstroomvoorziening">Uitstroomvoorziening</option><option value="Overig">Overig</option>
+        <option value="Brug">Brug</option><option value="Vijver">Vijver</option><option value="Uitstroomvoorziening">Uitstroomvoorziening</option><option value="Overig">Overig</option>
       </select>
       <div class="gcond" id="gc-duiker">
         <label>Actie</label>
@@ -233,7 +233,11 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;overflow
     </div>
     <div class="gcard">
       <h4>👷 Onderhoudsplichtige</h4>
-      <label>Type onderhoud</label><select id="g-oh-type"><option value="">Selecteer...</option><option>Gewoon onderhoud</option><option>Buitengewoon onderhoud</option></select>
+      <label>Type onderhoud</label>
+      <div style="display:flex;gap:12px;margin-top:4px;margin-bottom:8px">
+        <label style="display:flex;align-items:center;gap:4px;font-size:13px;margin:0;cursor:pointer"><input type="checkbox" id="g-oh-gewoon" style="width:18px;height:18px"> Gewoon onderhoud</label>
+        <label style="display:flex;align-items:center;gap:4px;font-size:13px;margin:0;cursor:pointer"><input type="checkbox" id="g-oh-buitengewoon" style="width:18px;height:18px"> Buitengewoon onderhoud</label>
+      </div>
       <label>Onderhoudsplichtige</label><select id="g-oh-wie"><option value="">Selecteer...</option><option>Vergunninghouder</option><option>Gemeente</option><option>Waterschap</option><option>Provincie</option><option>Rijkswaterstaat</option><option>Particulier</option><option>Overig</option></select>
     </div>
     <div class="gcard"><h4>👁️ Voorbeeld mail</h4><div class="gprev" id="g-prev">Vul het formulier in...</div></div>
@@ -664,7 +668,7 @@ function gSaveDraft(){
   var draft={
     type:$('g-type').value,
     rdx:$('g-rdx').value,rdy:$('g-rdy').value,
-    ohType:$('g-oh-type').value,ohWie:$('g-oh-wie').value,
+    ohGewoon:$('g-oh-gewoon').checked,ohBuitengewoon:$('g-oh-buitengewoon').checked,ohWie:$('g-oh-wie').value,
     extra:$('g-extra').value,
     d_actie:$('g-d-actie').value,d_mat:$('g-d-mat').value,d_dia:$('g-d-dia').value,d_len:$('g-d-len').value,
     dam_actie:$('g-dam-actie').value,dam_mat:$('g-dam-mat').value,
@@ -684,7 +688,7 @@ function gLoadDraft(item){
   try{var d=JSON.parse(s);
     if(d.type){$('g-type').value=d.type;gShowCond()}
     if(d.rdx)$('g-rdx').value=d.rdx;if(d.rdy)$('g-rdy').value=d.rdy;
-    if(d.ohType)$('g-oh-type').value=d.ohType;if(d.ohWie)$('g-oh-wie').value=d.ohWie;
+    if(d.ohGewoon)$('g-oh-gewoon').checked=d.ohGewoon;if(d.ohBuitengewoon)$('g-oh-buitengewoon').checked=d.ohBuitengewoon;if(d.ohWie)$('g-oh-wie').value=d.ohWie;
     if(d.extra)$('g-extra').value=d.extra;
     if(d.d_actie)$('g-d-actie').value=d.d_actie;if(d.d_mat)$('g-d-mat').value=d.d_mat;
     if(d.d_dia)$('g-d-dia').value=d.d_dia;if(d.d_len)$('g-d-len').value=d.d_len;
@@ -713,7 +717,7 @@ function openGeobeheer(item){
   if(item.lat&&item.lng){var rd=wgs84toRD(item.lat,item.lng);$('g-rdx').value=fmtRD(rd.x);$('g-rdy').value=fmtRD(rd.y)}
   else{$('g-rdx').value='';$('g-rdy').value=''}
   // Reset velden
-  $('g-type').selectedIndex=0;$('g-oh-type').selectedIndex=0;$('g-oh-wie').selectedIndex=0;$('g-extra').value='';
+  $('g-type').selectedIndex=0;$('g-oh-gewoon').checked=false;$('g-oh-buitengewoon').checked=false;$('g-oh-wie').selectedIndex=0;$('g-extra').value='';
   document.querySelectorAll('.gcond').forEach(function(el){el.classList.remove('show')});
   // Laad opgeslagen concept
   var hasDraft=gLoadDraft(item);
@@ -722,9 +726,13 @@ function openGeobeheer(item){
   gUpdatePreview();$('geo').classList.add('show');
   setTimeout(function(){gShowMiniMap()},400);
 }
-function gShowCond(){document.querySelectorAll('.gcond').forEach(function(el){el.classList.remove('show')});var type=$('g-type').value;var gm={'Duiker':'gc-duiker','Dam':'gc-dam','Watergang graven':'gc-wg','Watergang dempen':'gc-wg','Watergang verbreden':'gc-wg','Steiger':'gc-steiger','Beschoeiing':'gc-besch','Brug':'gc-brug','Uitstroomvoorziening':'gc-uitstr','Overig':'gc-overig'};if(gm[type])$(gm[type]).classList.add('show');gUpdatePreview()}
+function gShowCond(){document.querySelectorAll('.gcond').forEach(function(el){el.classList.remove('show')});var type=$('g-type').value;var gm={'Duiker':'gc-duiker','Dam':'gc-dam','Watergang graven':'gc-wg','Watergang dempen':'gc-wg','Watergang verbreden':'gc-wg','Steiger':'gc-steiger','Beschoeiing':'gc-besch','Brug':'gc-brug','Vijver':'gc-overig','Uitstroomvoorziening':'gc-uitstr','Overig':'gc-overig'};if(gm[type])$(gm[type]).classList.add('show');gUpdatePreview()}
 function gBuildBody(){
-  var zn=$('g-zn').value,type=$('g-type').value,ohType=$('g-oh-type').value,ohWie=$('g-oh-wie').value,extra=$('g-extra').value.trim();
+  var zn=$('g-zn').value,type=$('g-type').value,ohWie=$('g-oh-wie').value,extra=$('g-extra').value.trim();
+  var ohParts=[];
+  if($('g-oh-gewoon').checked)ohParts.push('Gewoon onderhoud');
+  if($('g-oh-buitengewoon').checked)ohParts.push('Buitengewoon onderhoud');
+  var ohType=ohParts.join(' + ')||'niet ingevuld';
   var rdx=$('g-rdx').value.trim()||'(niet ingevuld)',rdy=$('g-rdy').value.trim()||'(niet ingevuld)';
   var det='';
   switch(type){
@@ -734,6 +742,7 @@ function gBuildBody(){
     case'Steiger':det=$('g-st-type').value+'e steiger '+$('g-st-actie').value.toLowerCase();if($('g-st-len').value)det+='\nLengte: '+$('g-st-len').value+' m';if($('g-st-br').value)det+=', breedte: '+$('g-st-br').value+' m';break;
     case'Beschoeiing':det='Beschoeiing '+$('g-be-actie').value.toLowerCase();if($('g-be-mat').value)det+='\nMateriaal: '+$('g-be-mat').value;if($('g-be-len').value)det+='\nLengte: '+$('g-be-len').value+' m';break;
     case'Brug':det='Brug '+$('g-br-actie').value.toLowerCase();if($('g-br-over').value)det+='\nOverspanning: '+$('g-br-over').value+' m';if($('g-br-br').value)det+=', breedte: '+$('g-br-br').value+' m';break;
+    case'Vijver':var vt=$('g-ov-txt').value.trim();det='Vijver'+(vt?'\n'+vt:'');break;
     case'Uitstroomvoorziening':det='Uitstroomvoorziening '+$('g-ui-actie').value.toLowerCase();if($('g-ui-type').value)det+='\nType: '+$('g-ui-type').value;break;
     case'Overig':det=$('g-ov-txt').value.trim()||'Overig';break;
     default:det='(niet ingevuld)';
@@ -748,7 +757,7 @@ function gSendMail(){
   var type=$('g-type').value;if(!type){toast('⚠️ Selecteer een objecttype');return}
   var r=gBuildBody();
   var to='geo-gegevensbeheer@noorderzijlvest.nl';
-  var cc='P.Zwartenkot@noorderzijlvest.nl';
+  var cc='vergunningen@noorderzijlvest.nl';
   window.location.href='mailto:'+to+'?cc='+cc+'&subject='+encodeURIComponent(r.subject)+'&body='+encodeURIComponent(r.body);
   if(geoItem){geoItem.brief_geo='Ja';writeToSheet(geoItem,'brief_geo');gDeleteDraft(geoItem);gDeletePhotos(geoItem)}
   $('geo').classList.remove('show');
