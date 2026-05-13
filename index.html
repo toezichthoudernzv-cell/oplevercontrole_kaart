@@ -284,7 +284,7 @@ function mapStatus(s){if(!s)return'todo';var n=s.toLowerCase().replace(/[^a-zà-
   if(n.includes('afgekeurd'))return'afgekeurd';
   if(n.includes('vervallen')||n.includes('zietervanaf')||(n.includes('ziet')&&n.includes('vanaf')))return'vervallen';
   if(n.includes('inuitvoering')||n.includes('zijnbegonnen')||n.includes('begonnen'))return'uitvoering';
-  if(n.includes('gecontroleerd')||n.includes('nietbegonnen')||n.includes('bezig'))return'nietbegonnen';
+  if(n.includes('gecontroleerd')||n.includes('nietbegonnen')||n.includes('nietuitgevoerd')||n.includes('bezig'))return'nietbegonnen';
   if(n.includes('nogte')||n.includes('nogtecontroleren'))return'todo';
   return'todo'}
 function parseNL(v){if(!v&&v!==0)return null;var s=String(v).trim();if(s.indexOf(',')!==-1&&s.indexOf('.')===-1)s=s.replace(',','.');else if(s.indexOf('.')!==-1&&s.indexOf(',')!==-1)s=s.replace('.','').replace(',','.');var n=parseFloat(s);return isNaN(n)?null:n}
