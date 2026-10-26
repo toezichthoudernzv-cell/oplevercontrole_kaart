@@ -272,9 +272,9 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;overflow
 // ═══════════════════════════════════════════
 // CONFIG & STATUSES
 // ═══════════════════════════════════════════
-var DEFAULT_CSV='https://docs.google.com/spreadsheets/d/e/2PACX-1vR_NrG6KU4uNBlnMdZ3K9Ibk5f6to8L-sc80B-SZ0XtWwYSQ2D12EaS1shEynPhLg/pub?gid=1328454275&single=true&output=csv';
+var DEFAULT_CSV='https://docs.google.com/spreadsheets/d/e/2PACX-1vSlxf75B3xBpcUtTuyTD0YsGp_1v2GBUSIboh3JLBrmGyq-OTjjtM7-MXoB0QDLJg6bZNhexqxz78IT/pub?output=csv';
 var config=JSON.parse(localStorage.getItem('olc_config')||'{}');
-if(!config.csvUrl)config.csvUrl=DEFAULT_CSV;
+if(!config.csvUrl||config.csvUrl.indexOf('2PACX-1vR_NrG6KU4uNBlnMdZ3K9Ibk5f6to8L')>-1)config.csvUrl=DEFAULT_CSV;
 var STATUSES={
   todo:{label:'Nog te controleren',color:'#e67e22',sym:'⏳'},
   nietbegonnen:{label:'Gecontroleerd, niet begonnen',color:'#3498db',sym:'🔍'},
